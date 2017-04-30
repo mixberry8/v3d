@@ -2,6 +2,7 @@
 *.db
 *.nvact
 *.spv
+*.opendb
 
 .git/
 
