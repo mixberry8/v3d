@@ -1,38 +1,38 @@
 ### version 0.0.1
-* �ŏ��̃����[�X�ł��B  
+* 最初のリリースです。  
   
 ### version 0.0.2  
 
-* #### �ύX
-  * V3DGraphicsPipelineDesc �\���̂̃����o�ł�����
+* #### 変更
+  * V3DGraphicsPipelineDesc 構造体のメンバであった
     vertexElementCount pVertexElements vertexLayoutCount pVertexLayouts
-    �� V3DPipelineVertexInputDesc �\���̂Ɉړ����AV3DGraphicsPipelineDesc �\���̂� vertexInput �Ƃ��Đ錾����悤�ɂ��܂����B  
+    を V3DPipelineVertexInputDesc 構造体に移動し、V3DGraphicsPipelineDesc 構造体に vertexInput として宣言するようにしました。  
   
-  * V3DSwapChainDesc �\���̂̃C���[�W�̎g�p���@�ł��� imageUsageFlags ��ǉ����܂����B
-    �C���[�W�̎g�p���@��C�ӂŎw��ł��܂��B  
-    �܂��o�͐�̃J���[�A�^�b�`�����g�Ƃ��Ďg�p����͂��Ȃ̂ŁAV3D_IMAGE_USAGE_COLOR_ATTACHMENT �͕K���w�肷�邱�ƂɂȂ�͂��ł��B  
+  * V3DSwapChainDesc 構造体のイメージの使用方法である imageUsageFlags を追加しました。
+    イメージの使用方法を任意で指定できます。  
+    また出力先のカラーアタッチメントとして使用するはずなので、V3D_IMAGE_USAGE_COLOR_ATTACHMENT は必ず指定することになるはずです。  
   
-  * �W���̃��O��\������񋓒萔�g�ݍ��킹�ł��� V3D_LOG_STANDARD ���� V3D_LOG_PERFORMANCE_WARNING ���O���܂����B  
+  * 標準のログを表示する列挙定数組み合わせである V3D_LOG_STANDARD から V3D_LOG_PERFORMANCE_WARNING を外しました。  
   
-* #### �C��
-  * IV3DCommandBuffer::BlitImage �̕s����C�����܂����B  
+* #### 修正
+  * IV3DCommandBuffer::BlitImage の不具合を修正しました。  
   
-  * IV3DCommandBuffer::ResolveImage ����� IV3DCommandBuffer::ResolveImageView �̕s����C�����܂����B  
+  * IV3DCommandBuffer::ResolveImage および IV3DCommandBuffer::ResolveImageView の不具合を修正しました。  
   
-  * �R�}���h�o�b�t�@�[�̃o���A�n�̃��\�b�h�̕s����C�����܂����B  
+  * コマンドバッファーのバリア系のメソッドの不具合を修正しました。  
   
-  * �}���`�X���b�h���Ń��O��\�������ۂɗ�����s����C�����܂����B  
+  * マルチスレッド環境でログを表示した際に落ちる不具合を修正しました。  
   
-  * �T���v���Ŏ��̃C���[�W�̎擾�^�C�~���O���Ԉ���Ă����̂��C�����܂����B  
+  * サンプルで次のイメージの取得タイミングが間違っていたのを修正しました。  
 
-* ### ����
-  * IV3DResource::Map �̑������ł��� size �� V3D_WHOLE_SIZE ���w�肷�邱�ƂŁA�������� offset ���烁�����̏I�[�܂ł��}�b�v�ł���悤�ɂ��܂����B  
+* ### 改良
+  * IV3DResource::Map の第二引数である size に V3D_WHOLE_SIZE を指定することで、第一引数の offset からメモリの終端までをマップできるようにしました。  
   
-  * �T���v���ɂ��� multiSample �Ń����_�[�p�X���g�p���� IV3DCommandBuffer::ResolveImageView ���g�p�����}���`�T���v�����O���ł���悤�ɂ��܂����B
+  * サンプルにある multiSample でレンダーパスを使用せず IV3DCommandBuffer::ResolveImageView を使用したマルチサンプリングもできるようにしました。
   
-* ### �ǉ�
-  * �T���v���̃C���[�W�̓ǂݍ��ݎ��� IV3DCommandBuffer::BlitImage ���g�p�����~�b�v�}�b�v�𐶐�����@�\��ǉ����܂����B( 2D�C���[�W�Ɍ��肳��܂��B ) 
+* ### 追加
+  * サンプルのイメージの読み込み時に IV3DCommandBuffer::BlitImage を使用したミップマップを生成する機能を追加しました。( 2Dイメージに限定されます。 ) 
     
-  * �T���v���Ƀ}���`�X���b�h�ŕ`�悷�� multithread ��ǉ����܂����B  
+  * サンプルにマルチスレッドで描画する multithread を追加しました。  
   
-  * �V�F�[�_�[�̓��ꉻ�萔�ɑΉ����܂����B V3DPipelineShader �\���̂��m�F���Ă��������B  
+  * シェーダーの特殊化定数に対応しました。 V3DPipelineShader 構造体を確認してください。  
