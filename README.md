@@ -1,36 +1,36 @@
 # v3d
-***
-### �͂��߂�
-v3d �� Vulkan �����b�v���� 3D �O���t�B�b�N�X���C�u�����ł��B
+  
+### はじめに
+v3d は Vulkan をラップした 3D グラフィックスライブラリです。
 
-���݊J�����̂��߁A����`�F�b�N�����S�ł͂Ȃ��A�啝�ȏC����������ꍇ������܂��B  
-�܂��A��������Ă��Ȃ��@�\�ȂǑ�������܂��̂ŁA���̕ӂ͂������肢���܂��B  
+現在開発中のため、動作チェックが完全ではなく、大幅な修正がかかる場合があります。  
+また、実装されていない機能など多数ありますので、その辺はご了承願いします。  
 
-### �r���h
-v3d ���r���h����ɂ͈ȉ��̂��̂��C���X�g�[������Ă���K�v������܂��B  
+### ビルド
+v3d をビルドするには以下のものがインストールされている必要があります。  
 
-* Microsoft Visual Studio 2015 Update 3 �܂��� Microsoft Visual Studio Community 2015 Update 3  
+* Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3  
 * Vulkan SDK 1.0.64.0
 
-�r���h�ɕK�v�ȃt�@�C���� "build" �t�H���_�ɏW�񂳂ꂨ��A
-�܂��\�����[�V�����t�@�C���� "build/runtime/solutions" �t�H���_�� Visual Studio �̃o�[�W�������Ƃɕ�����ē����Ă��܂��̂�
-���g�����ɂ��킹�Ă��I�т��������B( �����݂� vs2015 �݂̂ƂȂ��Ă���܂� )  
+ビルドに必要なファイルは "build" フォルダに集約されおり、
+またソリューションファイルは "build/runtime/solutions" フォルダに Visual Studio のバージョンごとに分かれて入っていますので
+お使い環境にあわせてお選びください。( 今現在は vs2015 のみとなっております )  
   
-�܂��̓o�b�`�r���h�� test �ȊO�̂��̂����ׂăr���h���Ă��������B  
-�r���h����������ƃ��[�g�f�B���N�g���� "bin" �t�H���_���쐬����A����ɃT�u�t�H���_�Ƃ���  
-"Visula Studio �̃o�[�W����" / "�v���b�g�t�H�[��" / "�R���t�B�M�����[�V����" ���쐬����A���̒��Ƀ��C�u�����t�@�C�����z�u����܂��B  
+まずはバッチビルドで test 以外のものをすべてビルドしてください。  
+ビルドが完了するとルートディレクトリに "bin" フォルダが作成され、さらにサブフォルダとして  
+"Visula Studio のバージョン" / "プラットフォーム" / "コンフィギュレーション" が作成され、その中にライブラリファイルが配置されます。  
   
 * v3d.lib  
-���I�����N�p�� LIB �t�@�C���ł��B  
-���̃t�@�C���� "v3d.dll" �ƃZ�b�g�Ŏg�p���܂��B  
+動的リンク用の LIB ファイルです。  
+このファイルは "v3d.dll" とセットで使用します。  
 * v3d.dll  
-���I�����N�p�� DLL �t�@�C���ł��B  
-���̃t�@�C���� "v3d.lib" �ƃZ�b�g�Ŏg�p���܂��B  
+動的リンク用の DLL ファイルです。  
+このファイルは "v3d.lib" とセットで使用します。  
 * v3d_static.lib  
-�ÓI�����N�p�� LIB �t�@�C���ł��B
-���̃t�@�C���͒P�̂Ŏg�p���܂��B 
+静的リンク用の LIB ファイルです。
+このファイルは単体で使用します。 
   
-���̑��ڂ������Ƃ� "doc/v3d.chm" ���������������B  
+その他詳しいことは "doc/v3d.chm" をご覧ください。  
   
-### ���C�Z���X
+### ライセンス
 MIT
