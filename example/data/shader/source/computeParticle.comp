@@ -1,0 +1,64 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+
+// ----------------------------------------------------------------------------------------------------
+// struct
+// ----------------------------------------------------------------------------------------------------
+
+struct Particle
+{
+	vec4 pos;
+	vec4 velocity;
+};
+
+// ----------------------------------------------------------------------------------------------------
+// input
+// ----------------------------------------------------------------------------------------------------
+
+layout(local_size_x = 256) in;
+
+layout(push_constant) uniform Scene
+{
+	float deltaTime;
+	int particleCount;
+};
+
+layout(std140, set = 0, binding = 0) buffer ParticleBuffer 
+{
+	Particle particles[];
+};
+
+layout(std140, set = 0, binding = 1) buffer InitParticleBuffer 
+{
+	Particle initParticles[];
+};
+
+// ----------------------------------------------------------------------------------------------------
+// entry point
+// ----------------------------------------------------------------------------------------------------
+
+void main()
+{
+	uint index = gl_GlobalInvocationID.x;
+
+	if(particleCount <= index)
+	{
+		return;
+	}
+
+	vec4 pos = particles[index].pos;
+	vec4 velocity = particles[index].velocity;
+
+	velocity.xyz += vec3(0.0, 0.98, 0.0) * deltaTime;
+	pos.xyz += velocity.xyz * deltaTime;
+	
+	if(pos.y >= 0.5)
+	{
+		pos = initParticles[index].pos;
+		velocity = initParticles[index].velocity;
+	}
+
+	particles[index].pos = pos;
+	particles[index].velocity = velocity;
+}

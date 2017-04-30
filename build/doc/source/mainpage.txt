@@ -1,0 +1,151 @@
+/*!
+@mainpage はじめに
+v3d は Vulkan をラップした３Ｄグラフィックスライブラリです。<br>
+<br>
+まずは @ref intro_page をご覧いただき、必要な準備、構成の確認をしてください。<br>
+また @ref example_page を一通り動かしてもらい、動作の確認をしてから @ref create_project_page を行ってください。<br>
+<table border="0"><tr><td>\image html top.png</td></tr></table>
+<br>
+Copyright (c) 2017 mixberry<br>
+*/
+
+/*!
+@page intro_page 導入
+@section openv_section 動作環境
+<table>
+  <tr><td>OS</td><td>Microsoft Windows 10 64bit</td></tr>
+  <tr><td>CPU</td><td>Intel(R) Core(TM) i5 以上</td></tr>
+  <tr><td>メインメモリ</td><td>8GB 以上</td></tr>
+  <tr><td>HDD / SSD の空き容量</td><td>2GB 以上</td></tr>
+  <tr><td>グラフィックカード</td><td>Vulkan に対応しているもの</td></tr>
+</table>
+必ずしもこの動作環境を満たしている必要はありませんが、目安としてお考え下さい。<br>
+また OS が 64Bit 限定になっていますが、ライブラリには 32Bit 版も用意しております。<br>
+ただし 32Bit 環境での動作確認は行っていないため、動作の保証はいたしかねます。
+@section prepare_section 準備
+v3d を使用するためには以下のものがインストールされている必要があります。<br>
+<ul>
+  <li>Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3</li>
+  <li>Vulkan SDK 1.0.64.0</li>
+</ul>
+@section structure_section 構成
+<ul>
+  <li>bin</li><br>
+  ライブラリファイルが Visual Studio のバージョン、プラットフォーム、コンフィギュレーションごとにわかれて入っています。
+  <ul>
+    <li>v3d.lib</li><br>
+    動的リンク用の LIB ファイルです。<br>
+    このファイルは "v3d.dll" とセットで使用します。<br>
+    <li>v3d.dll</li><br>
+    動的リンク用の DLL ファイルです。<br>
+    このファイルは "v3d.lib" とセットで使用します。<br>
+    <li>v3d_static.lib</li><br>
+    静的リンク用の LIB ファイルです。<br>
+    このファイルは単体で使用します。
+  </ul>
+  <li>build</li><br>
+  v3d をビルドするのに必要なファイルが入っています。
+  <ul>
+    <li>doc</li><br>
+	ドキュメントを生成するのに必要なファイルが入っています。
+    <li>runtime</li><br>
+	v3d ランタイムのプロジェクト、ソースなどのファイルが入っています。
+  </ul>
+  <li>doc</li><br>
+  今開いているドキュメントのファイルが入っています。
+  <li>example</li><br>
+  サンプルのデータ、プロジェクト、ソースなどのファイルが入っています。
+  <li>include</li><br>
+  v3d のインクルードファイルが入っています。
+</ul>
+*/
+
+/*!
+@page create_project_page プロジェクトの作成
+@section setting_app_section アプリケーションの設定
+Visual Studio を起動して、メインメニューの「ファイル」→「新規作成」→「プロジェクト」を選択し、ダイアログを開いてください。<br>
+「Win32 コンソールアプリケーション」を選択し、「Windows アプリケーション」を作成します。<br>
+「ソリューションエクスプローラー」のプロジェクトを右クリックしてコンテキストメニューの「プロパティ」を選択し「構成プロパティ」の以下の項目を設定してください。<br>
+<ul>
+  <li>VC++ ディレクトリ</li><br>
+  インクルードディレクトリに "v3d\include" を追加します。<br>
+  ライブラリディレクトリに "v3d\bin\vs2015\$(PlatformTarget)\$(Configuration)" を追加します。
+  <li>リンカー</li>
+  <ul>
+    <li>入力</li><br>
+      追加の依存ファイルに "v3d.lib" または "v3d_static.lib" を追加します。
+  </ul>
+  <li>ビルドイベント</li>
+  <ul>
+    <li>ビルド後のイベント</li><br>
+    コマンドラインに DLL ファイルをコピーする "copy v3d\bin\vs2015\$(PlatformTarget)\$(Configuration)\v3d.dll $(OutDir)" を入力します。<br>
+    ※ この設定は追加の依存ファイルに v3d.lib を指定した場合に必要です。
+  </ul>
+</ul>
+@section create_app_section ライブラリの初期化および解放
+アプリケーションの基礎となるものは @ref example_page にある @ref simpl_section を参考にしてください。<br>
+<br>
+*/
+
+/*!
+@page example_page サンプル
+サンプルは "example" フォルダに入っています。<br>
+各種プロジェクトは以下のような内容になっています。<br>
+
+@section simpl_section simple
+初期化からウィンドウの表示、解放までのベースとなるサンプルです。<br>
+シェーダーバージョン N/A<br>
+<table border="0"><tr><td>\image html simple.png</td></tr></table>
+
+@section simpl2d_section simple2d
+2D のポリゴンを表示するサンプルです。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html simple2d.png</td></tr></table>
+
+@section simpl3d_section simple3d
+3D のキューブを表示するサンプルです。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html simple3d.png</td></tr></table>
+
+@section texture2d_section texture2d
+2D テクスチャを表示するサンプルです。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html texture2d.png</td></tr></table>
+
+@section texture3d_section texture3d
+3D テクスチャを表示するサンプルです。<br>
+サンプルではテクスチャの w 座標を変化させて X → Y → Z と線形補完をしながら表示します。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html texture3d.png</td></tr></table>
+
+@section textureCube_section textureCube
+キューブテクスチャを使用して環境マッピングを行うサンプルです。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html textureCube.png</td></tr></table>
+
+@section multiSample_section multiSample
+画像ではわかりずらいですが、レンダーパスでマルチサンプルを行うサンプルです。<br>
+また main.cpp の先頭に定義されている RENDER_PASS_MULTISAMPLE をコメントアウトするとレンダーパスを使用しない IV3DCommandBuffer::ResolveImageView を使用したマルチサンプルを行うことができます。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html multisample.png</td></tr></table>
+
+@section tessAndGeomShader_section tessAndGeomShader
+テッセレーション制御シェーダー、テッセレーション評価シェーダー、ジオメトリシェーダーを使用して、ディスプレイスメントマッピングを行うサンプルです。<br>
+シェーダーバージョン 400<br>
+<table border="0"><tr><td>\image html tessAndGeomShader.png</td></tr></table>
+
+@section computeParticle_section computeParticle
+コンピュートシェーダーを使用してパーティクルの描画を行うサンプルです。<br>
+シェーダーバージョン 450<br>
+<table border="0"><tr><td>\image html computeParticle.png</td></tr></table>
+
+@section multiThread_section multiThread
+セカンダリコマンドバッファーを使用し、マルチスレッドで 64000個のキューブを描画をするサンプルです。<br>
+かなり重たいので Release で実行することをお勧めします。<br>
+また main.cpp の先頭に定義されている ENABLE_MULTITREAD をコメントアウトすることでシングルスレッドによる描画も行うことができます。<br>
+さらに今回はフレームの待機方法を変えています。<br>
+今ではキューの送信直後に現在のフレームのフェンスで待機するようにしていましたが、今回はキューの送信直後は次のフレームのフェンスで待機しています。<br>
+シェーダーバージョン 330<br>
+<table border="0"><tr><td>\image html multithread.png</td></tr></table>
+<br>
+*/
