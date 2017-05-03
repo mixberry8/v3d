@@ -404,7 +404,7 @@ protected:
 		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
 		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_MeshDrawDesc.vertexOffset);
 		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_MeshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
-		pCommandBufer->DrawIndexed(36, 1, 0, 0, 0);
+		pCommandBufer->DrawIndexed(m_MeshDrawDesc.indexCount, m_MeshDrawDesc.instanceCount, 0, 0, 0);
 
 		pCommandBufer->EndRenderPass();
 

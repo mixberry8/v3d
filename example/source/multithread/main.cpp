@@ -408,17 +408,8 @@ protected:
 		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
 
 		// サブパス 0
-		V3DViewport viewport{};
-		viewport.rect.width = swapChainDesc.imageWidth;
-		viewport.rect.height = swapChainDesc.imageHeight;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		pCommandBufer->SetViewport(0, 1, &viewport);
-
-		V3DRectangle2D scissor{};
-		scissor.width = swapChainDesc.imageWidth;
-		scissor.height = swapChainDesc.imageHeight;
-		pCommandBufer->SetScissor(0, 1, &scissor);
+		pCommandBufer->SetViewport(0, 1, &m_ParallelData.viewport);
+		pCommandBufer->SetScissor(0, 1, &m_ParallelData.scissor);
 
 		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &m_ParallelData.sceneConstant);
 
@@ -433,6 +424,7 @@ protected:
 		for (it_mesh = it_mesh_begin; it_mesh != it_mesh_end; ++it_mesh)
 		{
 			MultiThreadWindow::Mesh& mesh = (*it_mesh);
+
 
 			pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pDescriptorSet, 1, &uniformDynamicOffset);
 			pCommandBufer->DrawIndexed(drawDesc.indexCount, drawDesc.instanceCount, 0, 0, 0);
