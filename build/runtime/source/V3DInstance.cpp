@@ -544,7 +544,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 		pObjectName = objectNameTable[0];
 	}
 
+#ifdef _WIN64
 	V3D_LOG_A(logType, "object[%s] location[%I64u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectName, location, messageCode, pLayerPrefix, pMessage);
+#else //_WIN64
+	V3D_LOG_A(logType, "object[%s] location[%u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectName, location, messageCode, pLayerPrefix, pMessage);
+#endif //_WIN64
 
 	return VK_FALSE;
 }
