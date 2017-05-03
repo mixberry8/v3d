@@ -101,9 +101,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Matrix3x3.cpp">
       <Filter>source\common</Filter>
     </ClCompile>
@@ -166,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\ParallelManager.cpp">
       <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
