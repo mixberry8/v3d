@@ -47,7 +47,14 @@ V3D_RESULT MeshManager::Initialize(GraphicsManager* pGraphicsManager, TextureMan
 		return result;
 	}
 
-	result = m_pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, m_pUniformBuffer);
+	V3DFlags memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE | V3D_MEMORY_PROPERTY_HOST_COHERENT;
+	result = m_pGraphicsManager->GetDevicePtr()->CheckResourceMemoryProperty(memoryPropertyFlags, m_pUniformBuffer);
+	if (result != V3D_OK)
+	{
+		memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE;
+	}
+
+	result = m_pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(memoryPropertyFlags, m_pUniformBuffer);
 	if (result != V3D_OK)
 	{
 		return result;
