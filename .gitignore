@@ -12,6 +12,7 @@ build/doc/obj/
 
 build/runtime/solutions/vs2015/.vs/
 build/runtime/solutions/vs2015/bin/
+build/runtime/solutions/vs2015/ipch/
 build/runtime/solutions/vs2015/obj/
 build/runtime/solutions/vs2015/projects/test/data/
 
@@ -19,4 +20,5 @@ build/resource/
 
 example/solutions/vs2015/.vs/
 example/solutions/vs2015/bin/
+example/solutions/vs2015/ipch/
 example/solutions/vs2015/obj/
