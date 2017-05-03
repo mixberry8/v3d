@@ -17,8 +17,8 @@ public:
 		m_pDescriptorSetLayout(nullptr),
 		m_pPipelineLayout(nullptr),
 		m_pMeshBuffer(nullptr),
-		m_pVertexBufferView(nullptr),
-		m_pIndexBufferView(nullptr),
+		m_VertexOffset(0),
+		m_IndexOffset(0),
 		m_pImageView(nullptr),
 		m_pSampler(nullptr),
 		m_pDescriptorSet(nullptr),
@@ -233,15 +233,24 @@ protected:
 			uint64_t vertexBufferSize = sizeof(TessellationShaderWindow::Vertex) * vertices.size();
 			uint64_t indexBufferSize = sizeof(uint16_t) * indices.size();
 
-			Array1<V3DBufferSubresourceDesc, 2> bufferSubresources =
-			{
-				{
-					{ V3D_BUFFER_USAGE_VERTEX, vertexBufferSize },
-					{ V3D_BUFFER_USAGE_INDEX, indexBufferSize },
-				}
-			};
+			Array1<BufferSubresourceDesc, 2> meshSubresources;
+			meshSubresources[0].usageFlags = V3D_BUFFER_USAGE_VERTEX;
+			meshSubresources[0].size = vertexBufferSize;
+			meshSubresources[0].count = 1;
+			meshSubresources[1].usageFlags = V3D_BUFFER_USAGE_INDEX;
+			meshSubresources[1].size = indexBufferSize;
+			meshSubresources[1].count = 1;
 
-			V3D_RESULT result = Application::GetDevice()->CreateBuffer(static_cast<uint32_t>(bufferSubresources.size()), bufferSubresources.data(), &m_pMeshBuffer);
+			Array1<BufferMemoryLayout, 2> meshMemoryLayouts;
+			uint64_t meshMemorySize;
+
+			CalcBufferMemoryLayout(Application::GetDevice(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, TO_UI32(meshSubresources.size()), meshSubresources.data(), meshMemoryLayouts.data(), &meshMemorySize);
+
+			V3DBufferDesc meshBufferDesc{};
+			meshBufferDesc.usageFlags = V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+			meshBufferDesc.size = meshMemorySize;
+
+			V3D_RESULT result = Application::GetDevice()->CreateBuffer(meshBufferDesc, &m_pMeshBuffer);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -262,18 +271,14 @@ protected:
 			}
 
 			uint8_t* pMemory;
-			result = m_pMeshBuffer->Map(0, m_pMeshBuffer->GetResourceDesc().memorySize, reinterpret_cast<void**>(&pMemory));
+			result = m_pMeshBuffer->Map(0, V3D_WHOLE_SIZE, reinterpret_cast<void**>(&pMemory));
 			if (result == V3D_OK)
 			{
-				V3DBufferSubresourceLayout layout;
-
 				// バーテックスを書き込む
-				layout = m_pMeshBuffer->GetSubresourceLayout(0);
-				memcpy_s(pMemory + layout.offset, layout.size, vertices.data(), vertexBufferSize);
+				MemCopy(pMemory + meshMemoryLayouts[0].offset, meshMemoryLayouts[0].stride, vertices.data(), vertexBufferSize);
 
 				// インデックスを書き込む
-				layout = m_pMeshBuffer->GetSubresourceLayout(1);
-				memcpy_s(pMemory + layout.offset, layout.size, indices.data(), indexBufferSize);
+				MemCopy(pMemory + meshMemoryLayouts[1].offset, meshMemoryLayouts[1].stride, indices.data(), indexBufferSize);
 
 				result = m_pMeshBuffer->Unmap();
 				if (result != V3D_OK)
@@ -281,26 +286,9 @@ protected:
 					return false;
 				}
 			}
-		}
 
-		// ----------------------------------------------------------------------------------------------------
-		// バーテックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		V3D_RESULT result = Application::GetDevice()->CreateBufferView(m_pMeshBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pVertexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// インデックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pMeshBuffer, 1, V3D_FORMAT_UNDEFINED, &m_pIndexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
+			m_VertexOffset = meshMemoryLayouts[0].offset;
+			m_IndexOffset = meshMemoryLayouts[1].offset;
 		}
 
 		// ----------------------------------------------------------------------------------------------------
@@ -311,7 +299,7 @@ protected:
 			std::wstring srcFilePath;
 			CreateFilePath(L"image\\tessAndGeomShader.dds", srcFilePath);
 
-			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), false, &m_pImageView);
+			V3D_RESULT result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), false, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -339,7 +327,7 @@ protected:
 			samplerDesc.maxLod = 0.0f;
 			samplerDesc.borderColor = V3D_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
-			result = Application::GetDevice()->CreateSampler(samplerDesc, &m_pSampler);
+			V3D_RESULT result = Application::GetDevice()->CreateSampler(samplerDesc, &m_pSampler);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -350,7 +338,7 @@ protected:
 		// デスクリプタセットを作成
 		// ----------------------------------------------------------------------------------------------------
 
-		result = Application::GetDevice()->CreateDescriptorSet(m_pDescriptorSetLayout, &m_pDescriptorSet);
+		V3D_RESULT result = Application::GetDevice()->CreateDescriptorSet(m_pDescriptorSetLayout, &m_pDescriptorSet);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -388,8 +376,6 @@ protected:
 		SAFE_RELEASE(m_pDescriptorSet);
 		SAFE_RELEASE(m_pSampler);
 		SAFE_RELEASE(m_pImageView);
-		SAFE_RELEASE(m_pIndexBufferView);
-		SAFE_RELEASE(m_pVertexBufferView);
 		SAFE_RELEASE(m_pMeshBuffer);
 		SAFE_RELEASE(m_pPipelineLayout);
 		SAFE_RELEASE(m_pDescriptorSetLayout);
@@ -507,9 +493,9 @@ protected:
 		pCommandBufer->PushConstant(m_pPipelineLayout, 2, &fragConstant);
 
 		pCommandBufer->BindPipeline(m_pPipelines[m_PipelineType]);
-		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
-		pCommandBufer->BindIndexBufferView(m_pIndexBufferView, V3D_INDEX_TYPE_UINT16);
+		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
+		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_VertexOffset);
+		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_IndexOffset, V3D_INDEX_TYPE_UINT16);
 		pCommandBufer->DrawIndexed(m_IndexCount, 1, 0, 0, 0);
 
 		// サブパス 1 - テキストの描画
@@ -932,8 +918,8 @@ private:
 	IV3DPipelineLayout* m_pPipelineLayout;
 
 	IV3DBuffer* m_pMeshBuffer;
-	IV3DBufferView* m_pVertexBufferView;
-	IV3DBufferView* m_pIndexBufferView;
+	uint64_t m_VertexOffset;
+	uint64_t m_IndexOffset;
 
 	IV3DImageView* m_pImageView;
 	IV3DSampler* m_pSampler;
@@ -970,7 +956,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"tessellationShader", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"tessellationShader", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

@@ -91,7 +91,7 @@ protected:
 			Array1<V3DDescriptorDesc, 2> descriptors =
 			{
 				{
-					{ 0, V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER, V3D_SHADER_STAGE_VERTEX },
+					{ 0, V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, V3D_SHADER_STAGE_VERTEX },
 					{ 1, V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, V3D_SHADER_STAGE_FRAGMENT },
 				}
 			};
@@ -184,7 +184,7 @@ protected:
 		const float meshBasePos = -(meshInterval * MESH_SIDE_COUNT) / 2.0f;
 
 		// バッファー
-		V3D_RESULT result = CreatePrefab(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), PREFAB_TYPE_CUBE, &m_ParallelData.pVertexBufferView, &m_ParallelData.pIndexBufferView, &m_ParallelData.drawIndexedDesc);
+		V3D_RESULT result = CreatePrefab(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), PREFAB_TYPE_CUBE, &m_ParallelData.pMeshBuffer, &m_ParallelData.meshDrawDesc);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -246,40 +246,37 @@ protected:
 
 		if (m_Meshes.empty() == false)
 		{
-			std::vector<MultiThreadWindow::Mesh>::iterator it_begin = m_Meshes.begin();
-			std::vector<MultiThreadWindow::Mesh>::iterator it_end = m_Meshes.end();
-			std::vector<MultiThreadWindow::Mesh>::iterator it;
-
-			for (it = it_begin; it != it_end; ++it)
-			{
-				if ((*it).descriptorSets.empty() == false)
-				{
-					for (size_t i = 0; i < (*it).descriptorSets.size(); i++)
-					{
-						SAFE_RELEASE((*it).descriptorSets[i]);
-					}
-					(*it).descriptorSets.clear();
-				}
-
-				if ((*it).uniformBufferViews.empty() == false)
-				{
-					for (size_t i = 0; i < (*it).uniformBufferViews.size(); i++)
-					{
-						SAFE_RELEASE((*it).uniformBufferViews[i]);
-					}
-					(*it).uniformBufferViews.clear();
-				}
-
-				SAFE_RELEASE((*it).pUniformBuffer);
-			}
-
 			m_Meshes.clear();
 		}
 
-		SAFE_RELEASE(m_ParallelData.pIndexBufferView);
-		SAFE_RELEASE(m_ParallelData.pVertexBufferView);
+		SAFE_RELEASE(m_ParallelData.pMeshBuffer);
 
-		m_ResourceHeap.Dispose();
+		if (m_ParallelData.descriptorSets.empty() == false)
+		{
+			for (size_t i = 0; i < m_ParallelData.descriptorSets.size(); i++)
+			{
+				SAFE_RELEASE(m_ParallelData.descriptorSets[i]);
+			}
+			m_ParallelData.descriptorSets.clear();
+		}
+
+		if (m_ParallelData.uniformBuffers.empty() == false)
+		{
+			for (size_t i = 0; i < m_ParallelData.uniformBuffers.size(); i++)
+			{
+				SAFE_RELEASE(m_ParallelData.uniformBuffers[i]);
+			}
+			m_ParallelData.uniformBuffers.clear();
+		}
+
+		if (m_ParallelData.uniformMemories.empty() == false)
+		{
+			for (size_t i = 0; i < m_ParallelData.uniformMemories.size(); i++)
+			{
+				SAFE_RELEASE(m_ParallelData.uniformMemories[i]);
+			}
+			m_ParallelData.uniformMemories.clear();
+		}
 
 		SAFE_RELEASE(m_pSampler);
 		SAFE_RELEASE(m_pImageView);
@@ -332,9 +329,9 @@ protected:
 #ifdef ENABLE_MULTITREAD
 
 		// 更新
-		m_ResourceHeap.GetMemory()->BeginMap();
+		m_ParallelData.uniformMemories[currentImageIndex]->BeginMap();
 		m_ParallelManager.Execute(MultiThreadWindow::ParallelUpdate, TO_UI32(m_Meshes.size()), &m_ParallelData);
-		m_ResourceHeap.GetMemory()->EndMap();
+		m_ParallelData.uniformMemories[currentImageIndex]->EndMap();
 
 		// セカンダリコマンドバッファーに描画コマンドを記録
 		m_ParallelManager.Execute(MultiThreadWindow::ParallelDraw, TO_UI32(m_Meshes.size()), &m_ParallelData);
@@ -342,26 +339,28 @@ protected:
 #else //ENABLE_MULTITREAD
 
 		const Matrix4x4& viewProjMatrix = GetCamera()->GetViewProjectionMatrix();
+		uint8_t* pMemory;
 
-		for (it_mesh = it_mesh_begin; it_mesh != it_mesh_end; ++it_mesh)
+		V3D_RESULT result = m_ParallelData.uniformBuffers[m_ParallelData.frame]->Map(0, sizeof(MultiThreadWindow::MeshUniform), reinterpret_cast<void**>(&pMemory));
+		if (result == V3D_OK)
 		{
-			MultiThreadWindow::Mesh& mesh = (*it_mesh);
-			void* pMemory;
-
-			V3D_RESULT result = mesh.pUniformBuffer->Map(0, sizeof(MultiThreadWindow::MeshUniform), &pMemory);
-			if (result == V3D_OK)
+			for (it_mesh = it_mesh_begin; it_mesh != it_mesh_end; ++it_mesh)
 			{
+				MultiThreadWindow::Mesh& mesh = (*it_mesh);
+
 				mesh.uniform.worldViewProjectionMatrix = viewProjMatrix * mesh.uniform.worldMatrix;
 
 				memcpy_s(pMemory, sizeof(MultiThreadWindow::MeshUniform), &mesh.uniform, sizeof(MultiThreadWindow::MeshUniform));
 
-				result = mesh.pUniformBuffer->Unmap();
+				pMemory += m_ParallelData.uniformStride;
 			}
 
-			if (result != V3D_OK)
-			{
-				return false;
-			}
+			result = m_ParallelData.uniformBuffers[m_ParallelData.frame]->Unmap();
+		}
+
+		if (result != V3D_OK)
+		{
+			return false;
 		}
 
 #endif //ENABLE_MULTITREAD
@@ -375,7 +374,7 @@ protected:
 		IV3DImageView* pImageView;
 		pFrameBuffer->GetAttachment(0, &pImageView);
 
-		IV3DCommandBuffer* pCommandBufer = BeginGraphicsEx();
+		IV3DCommandBuffer* pCommandBufer = BeginGraphics();
 		if (pCommandBufer == nullptr)
 		{
 			return false;
@@ -424,17 +423,21 @@ protected:
 		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &m_ParallelData.sceneConstant);
 
 		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_ParallelData.pVertexBufferView);
-		pCommandBufer->BindIndexBufferView(m_ParallelData.pIndexBufferView, V3D_INDEX_TYPE_UINT16);
+		pCommandBufer->BindVertexBuffers(0, 1, &m_ParallelData.pMeshBuffer, &m_ParallelData.meshDrawDesc.vertexOffset);
+		pCommandBufer->BindIndexBuffer(m_ParallelData.pMeshBuffer, m_ParallelData.meshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
 
-		const DrawIndexedDesc& drawIndexedDesc = m_ParallelData.drawIndexedDesc;
+		const DrawDesc& drawDesc = m_ParallelData.meshDrawDesc;
+		IV3DDescriptorSet* pDescriptorSet = m_ParallelData.descriptorSets[m_ParallelData.frame];
+		uint32_t uniformDynamicOffset = 0;
 
 		for (it_mesh = it_mesh_begin; it_mesh != it_mesh_end; ++it_mesh)
 		{
 			MultiThreadWindow::Mesh& mesh = (*it_mesh);
 
-			pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &mesh.descriptorSets[currentImageIndex]);
-			pCommandBufer->DrawIndexed(drawIndexedDesc.indexCount, drawIndexedDesc.instanceCount, 0, 0, 0);
+			pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pDescriptorSet, 1, &uniformDynamicOffset);
+			pCommandBufer->DrawIndexed(drawDesc.indexCount, drawDesc.instanceCount, 0, 0, 0);
+
+			uniformDynamicOffset += m_ParallelData.uniformStride;
 		}
 
 #endif //ENABLE_MULTITREAD
@@ -446,7 +449,7 @@ protected:
 		// レンダーパスを終了
 		pCommandBufer->EndRenderPass();
 
-		if (EndGraphicsEx() == false)
+		if (EndGraphics() == false)
 		{
 			SAFE_RELEASE(pImageView);
 			return false;
@@ -478,37 +481,32 @@ protected:
 			m_ParallelData.commandBuffers.clear();
 		}
 
-		if (m_Meshes.empty() == false)
+		if (m_ParallelData.descriptorSets.empty() == false)
 		{
-			std::vector<MultiThreadWindow::Mesh>::iterator it_begin = m_Meshes.begin();
-			std::vector<MultiThreadWindow::Mesh>::iterator it_end = m_Meshes.end();
-			std::vector<MultiThreadWindow::Mesh>::iterator it;
-
-			for (it = it_begin; it != it_end; ++it)
+			for (size_t i = 0; i < m_ParallelData.descriptorSets.size(); i++)
 			{
-				if ((*it).descriptorSets.empty() == false)
-				{
-					for (size_t i = 0; i < (*it).descriptorSets.size(); i++)
-					{
-						SAFE_RELEASE((*it).descriptorSets[i]);
-					}
-					(*it).descriptorSets.clear();
-				}
-
-				if ((*it).uniformBufferViews.empty() == false)
-				{
-					for (size_t i = 0; i < (*it).uniformBufferViews.size(); i++)
-					{
-						SAFE_RELEASE((*it).uniformBufferViews[i]);
-					}
-					(*it).uniformBufferViews.clear();
-				}
-
-				SAFE_RELEASE((*it).pUniformBuffer);
+				SAFE_RELEASE(m_ParallelData.descriptorSets[i]);
 			}
+			m_ParallelData.descriptorSets.clear();
 		}
 
-		m_ResourceHeap.Dispose();
+		if (m_ParallelData.uniformBuffers.empty() == false)
+		{
+			for (size_t i = 0; i < m_ParallelData.uniformBuffers.size(); i++)
+			{
+				SAFE_RELEASE(m_ParallelData.uniformBuffers[i]);
+			}
+			m_ParallelData.uniformBuffers.clear();
+		}
+
+		if (m_ParallelData.uniformMemories.empty() == false)
+		{
+			for (size_t i = 0; i < m_ParallelData.uniformMemories.size(); i++)
+			{
+				SAFE_RELEASE(m_ParallelData.uniformMemories[i]);
+			}
+			m_ParallelData.uniformMemories.clear();
+		}
 
 		m_Font.Lost();
 
@@ -828,97 +826,72 @@ protected:
 		m_Font.Restore(m_pRenderPass, 1);
 
 		// ----------------------------------------------------------------------------------------------------
-		// リソースヒープ
+		// ユニフォーム
 		// ----------------------------------------------------------------------------------------------------
 
 		uint32_t meshCount = MESH_SIDE_COUNT * MESH_SIDE_COUNT * MESH_SIDE_COUNT;
 
-		const V3DDeviceCaps& deviceCaps = Application::GetDevice()->GetCaps();
-		uint64_t resourceAlignment = MAXIMUM(deviceCaps.minMemoryMapAlignment, deviceCaps.minUniformBufferOffsetAlignment);
-		uint64_t resourceMemorySize = sizeof(MultiThreadWindow::MeshUniform);
+		BufferSubresourceDesc uniformBufferSubresource;
+		uniformBufferSubresource.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+		uniformBufferSubresource.size = sizeof(MultiThreadWindow::MeshUniform);
+		uniformBufferSubresource.count = meshCount;
 
-		if (resourceMemorySize % resourceAlignment)
+		BufferMemoryLayout uniformMemoryLayout;
+		uint64_t uniformMemorySize;
+
+		CalcBufferMemoryLayout(Application::GetDevice(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, 1, &uniformBufferSubresource, &uniformMemoryLayout, &uniformMemorySize);
+
+		for (uint32_t i = 0; i < swapChainDesc.imageCount; i++)
 		{
-			resourceMemorySize = ((resourceMemorySize / resourceAlignment) + 1) * resourceAlignment;
-		}
+			// バッファ
+			V3DBufferDesc uniformBufferDesc{};
+			uniformBufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+			uniformBufferDesc.size = uniformMemorySize;
 
-		result = m_ResourceHeap.Initialize(Application::GetDevice(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, resourceMemorySize * meshCount * swapChainDesc.imageCount);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// メッシュ
-		// ----------------------------------------------------------------------------------------------------
-
-		{
-			std::vector<MultiThreadWindow::Mesh>::iterator it_begin = m_Meshes.begin();
-			std::vector<MultiThreadWindow::Mesh>::iterator it_end = m_Meshes.end();
-			std::vector<MultiThreadWindow::Mesh>::iterator it;
-
-			std::vector<V3DBufferSubresourceDesc> bufferSubresources;
-			bufferSubresources.reserve(swapChainDesc.imageCount);
-
-			for (uint32_t i = 0; i < swapChainDesc.imageCount; i++)
+			IV3DBuffer* pUniformBuffer;
+			result = Application::GetDevice()->CreateBuffer(uniformBufferDesc, &pUniformBuffer);
+			if (result != V3D_OK)
 			{
-				V3DBufferSubresourceDesc desc;
-				desc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-				desc.size = sizeof(MeshUniform);
-				bufferSubresources.push_back(desc);
+				return false;
 			}
 
-			for (it = it_begin; it != it_end; ++it)
+			m_ParallelData.uniformBuffers.push_back(pUniformBuffer);
+
+			// メモリ
+			result = Application::GetDevice()->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, pUniformBuffer);
+			if (result != V3D_OK)
 			{
-				MultiThreadWindow::Mesh& mesh = (*it);
-
-				// ユニフォームバッファ
-				result = Application::GetDevice()->CreateBuffer(TO_UI32(bufferSubresources.size()), bufferSubresources.data(), &mesh.pUniformBuffer);
-				if (result != V3D_OK)
-				{
-					return false;
-				}
-
-				ResourceHeap::Handle heapHandle;
-				result = m_ResourceHeap.Bind(mesh.pUniformBuffer, &heapHandle);
-				if (result != V3D_OK)
-				{
-					return false;
-				}
-
-				mesh.uniformBufferViews.resize(swapChainDesc.imageCount);
-				mesh.descriptorSets.resize(swapChainDesc.imageCount);
-
-				for (uint32_t i = 0; i < swapChainDesc.imageCount; i++)
-				{
-					result = Application::GetDevice()->CreateBufferView(mesh.pUniformBuffer, 0, V3D_FORMAT_UNDEFINED, &mesh.uniformBufferViews[i]);
-					if (result != V3D_OK)
-					{
-						return false;
-					}
-
-					// デスクリプタセット
-					result = Application::GetDevice()->CreateDescriptorSet(m_pDescriptorSetLayout, &mesh.descriptorSets[i]);
-					if (result != V3D_OK)
-					{
-						return false;
-					}
-
-					result = mesh.descriptorSets[i]->SetBufferView(0, mesh.uniformBufferViews[i]);
-					if (result != V3D_OK)
-					{
-						return false;
-					}
-
-					result = mesh.descriptorSets[i]->SetImageViewAndSampler(1, m_pImageView, V3D_IMAGE_LAYOUT_SHADER_READ_ONLY, m_pSampler);
-					if (result != V3D_OK)
-					{
-						return false;
-					}
-
-					mesh.descriptorSets[i]->Update();
-				}
+				return false;
 			}
+
+			IV3DResourceMemory* pUniformMemory;
+			pUniformBuffer->GetResourceMemory(&pUniformMemory);
+			m_ParallelData.uniformMemories.push_back(pUniformMemory);
+
+			// デスクリプタセット
+			IV3DDescriptorSet* pDescriptorSet;
+			result = Application::GetDevice()->CreateDescriptorSet(m_pDescriptorSetLayout, &pDescriptorSet);
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+
+			m_ParallelData.descriptorSets.push_back(pDescriptorSet);
+
+			result = pDescriptorSet->SetBuffer(0, pUniformBuffer, 0, uniformBufferSubresource.size);
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+
+			result = pDescriptorSet->SetImageViewAndSampler(1, m_pImageView, V3D_IMAGE_LAYOUT_SHADER_READ_ONLY, m_pSampler);
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+
+			pDescriptorSet->Update();
+
 		}
 
 		// ----------------------------------------------------------------------------------------------------
@@ -926,6 +899,8 @@ protected:
 		// ----------------------------------------------------------------------------------------------------
 
 		uint32_t threadCount = m_ParallelManager.GetThreadCount();
+
+		m_ParallelData.uniformStride = TO_UI32(uniformMemoryLayout.stride);
 
 		m_ParallelData.commandBuffers.resize(swapChainDesc.imageCount);
 
@@ -975,38 +950,47 @@ protected:
 	static void __stdcall ParallelUpdate(uint32_t thread, uint32_t first, uint32_t count, void* pData)
 	{
 		MultiThreadWindow::ParallelData* pParallel = static_cast<MultiThreadWindow::ParallelData*>(pData);
-		MultiThreadWindow::Mesh* pMesh = &pParallel->pMeshes[first];
-		MultiThreadWindow::Mesh* pMeshEnd = pMesh + count;
 
-		while (pMesh != pMeshEnd)
+		uint64_t memoryOffset = pParallel->uniformStride * first;
+		uint64_t memorySize = pParallel->uniformStride * count;
+		uint8_t* pMemory;
+
+		V3D_RESULT result = pParallel->uniformBuffers[pParallel->frame]->Map(memoryOffset, memorySize, reinterpret_cast<void**>(&pMemory));
+		if (result == V3D_OK)
 		{
-			void* pMemory;
+			MultiThreadWindow::Mesh* pMesh = &pParallel->pMeshes[first];
+			MultiThreadWindow::Mesh* pMeshEnd = pMesh + count;
 
-			const V3DBufferSubresourceLayout& layout = pMesh->pUniformBuffer->GetSubresourceLayout(pParallel->frame);
+			uint32_t uniformStride = pParallel->uniformStride;
+			uint32_t dynamicOffset = 0;
 
-			V3D_RESULT result = pMesh->pUniformBuffer->Map(layout.offset, sizeof(MultiThreadWindow::MeshUniform), &pMemory);
-			if (result == V3D_OK)
+			while (pMesh != pMeshEnd)
 			{
 				pMesh->uniform.worldViewProjectionMatrix = pParallel->viewProjMatrix * pMesh->uniform.worldMatrix;
 
 				memcpy_s(pMemory, sizeof(MultiThreadWindow::MeshUniform), &pMesh->uniform, sizeof(MultiThreadWindow::MeshUniform));
 
-				result = pMesh->pUniformBuffer->Unmap();
+				pMemory += uniformStride;
+				pMesh++;
 			}
 
-			pMesh++;
+			result = pParallel->uniformBuffers[pParallel->frame]->Unmap();
 		}
 	}
 
 	static void __stdcall ParallelDraw(uint32_t thread, uint32_t first, uint32_t count, void* pData)
 	{
 		MultiThreadWindow::ParallelData* pParallel = static_cast<MultiThreadWindow::ParallelData*>(pData);
-		const DrawIndexedDesc& drawIndexedDesc = pParallel->drawIndexedDesc;
+		const DrawDesc& meshDrawDesc = pParallel->meshDrawDesc;
+		IV3DDescriptorSet* pDescriptorSet = pParallel->descriptorSets[pParallel->frame];
 
 		IV3DCommandBuffer* pCommandBuffer = pParallel->commandBuffers[pParallel->frame][thread];
 
 		MultiThreadWindow::Mesh* pMesh = &pParallel->pMeshes[first];
 		MultiThreadWindow::Mesh* pMeshEnd = pMesh + count;
+
+		uint32_t uniformStride = pParallel->uniformStride;
+		uint32_t dynamicOffset = uniformStride * first;
 
 		pCommandBuffer->Begin(V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE, pParallel->pRenderPass, 0, pParallel->pFrameBuffer);
 
@@ -1017,14 +1001,15 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, &pParallel->viewport);
 		pCommandBuffer->SetScissor(0, 1, &pParallel->scissor);
 
-		pCommandBuffer->BindVertexBufferViews(0, 1, &pParallel->pVertexBufferView);
-		pCommandBuffer->BindIndexBufferView(pParallel->pIndexBufferView, V3D_INDEX_TYPE_UINT16);
+		pCommandBuffer->BindVertexBuffers(0, 1, &pParallel->pMeshBuffer, &meshDrawDesc.vertexOffset);
+		pCommandBuffer->BindIndexBuffer(pParallel->pMeshBuffer, meshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
 
 		while (pMesh != pMeshEnd)
 		{
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, pParallel->pPipelineLayout, 0, 1, &pMesh->descriptorSets[pParallel->frame]);
-			pCommandBuffer->DrawIndexed(drawIndexedDesc.indexCount, drawIndexedDesc.instanceCount, 0, 0, 0);
+			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, pParallel->pPipelineLayout, 0, 1, &pDescriptorSet, 1, &dynamicOffset);
+			pCommandBuffer->DrawIndexed(meshDrawDesc.indexCount, meshDrawDesc.instanceCount, 0, 0, 0);
 
+			dynamicOffset += uniformStride;
 			pMesh++;
 		}
 
@@ -1047,10 +1032,6 @@ private:
 	struct Mesh
 	{
 		MeshUniform uniform;
-
-		IV3DBuffer* pUniformBuffer;
-		std::vector<IV3DBufferView*> uniformBufferViews;
-		std::vector<IV3DDescriptorSet*> descriptorSets;
 	};
 
 	struct ParallelData
@@ -1071,9 +1052,13 @@ private:
 		V3DViewport viewport;
 		V3DRectangle2D scissor;
 
-		IV3DBufferView* pVertexBufferView;
-		IV3DBufferView* pIndexBufferView;
-		DrawIndexedDesc drawIndexedDesc;
+		uint32_t uniformStride;
+		std::vector<IV3DResourceMemory*> uniformMemories;
+		std::vector<IV3DBuffer*> uniformBuffers;
+		std::vector<IV3DDescriptorSet*> descriptorSets;
+
+		IV3DBuffer* pMeshBuffer;
+		DrawDesc meshDrawDesc;
 
 		MultiThreadWindow::Mesh* pMeshes;
 	};
@@ -1090,7 +1075,6 @@ private:
 	IV3DImageView* m_pImageView;
 	IV3DSampler* m_pSampler;
 
-	ResourceHeap m_ResourceHeap;
 	std::vector<MultiThreadWindow::Mesh> m_Meshes;
 
 	IV3DRenderPass* m_pRenderPass;
@@ -1119,7 +1103,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, 1, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"multithread", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"multithread", 1024, 768, WINDOW_BUFFERING_TYPE_REAL, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

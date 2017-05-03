@@ -270,13 +270,23 @@ V3D_RESULT CreateImageFromMemory(
 	// バッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	V3DBufferSubresourceDesc bufferSubresources;
-	bufferSubresources.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;
-	bufferSubresources.size = bufferSize;
+	BufferSubresourceDesc bufferSubresourceDesc{};
+	bufferSubresourceDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;
+	bufferSubresourceDesc.size = bufferSize;
+	bufferSubresourceDesc.count = 1;
+
+	BufferMemoryLayout bufferMemoryLayout{};
+	uint64_t bufferMemorySize;
+
+	CalcBufferMemoryLayout(pDevice, V3D_MEMORY_PROPERTY_HOST_VISIBLE, 1, &bufferSubresourceDesc, &bufferMemoryLayout, &bufferMemorySize);
+
+	V3DBufferDesc bufferDesc{};
+	bufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;
+	bufferDesc.size = bufferMemorySize;
 
 	IV3DBuffer* pHostBuffer = nullptr;
 
-	V3D_RESULT result = pDevice->CreateBuffer(1, &bufferSubresources, &pHostBuffer);
+	V3D_RESULT result = pDevice->CreateBuffer(bufferDesc, &pHostBuffer);
 	if (result != V3D_OK)
 	{
 		pHostBuffer->Release();
@@ -627,7 +637,7 @@ V3D_RESULT CreateImageFromFile(
 // メッシュ
 // ----------------------------------------------------------------------------------------------------
 
-void CreatePrefabCube(std::vector<PrefabVertex>& vertices, std::vector<uint16_t>& indices, DrawIndexedDesc* pDrawIndexedDesc)
+void CreatePrefabCube(std::vector<PrefabVertex>& vertices, std::vector<uint16_t>& indices, DrawDesc* pDrawDesc)
 {
 	static const PrefabVertex cubeVertices[] =
 	{
@@ -705,15 +715,15 @@ void CreatePrefabCube(std::vector<PrefabVertex>& vertices, std::vector<uint16_t>
 	indices.resize(cubeIndexCount);
 	memcpy_s(indices.data(), sizeof(uint16_t) * cubeIndexCount, cubeIndices, sizeof(cubeIndices));
 
-	pDrawIndexedDesc->indexCount = 36;
-	pDrawIndexedDesc->instanceCount = 1;
+	pDrawDesc->indexCount = 36;
+	pDrawDesc->instanceCount = 1;
 }
 
 V3D_RESULT CreatePrefab(
 	IV3DDevice* pDevice,
 	IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence,
 	PREFAB_TYPE type,
-	IV3DBufferView** ppVertexBufferView, IV3DBufferView** ppIndexBufferView, DrawIndexedDesc* pDrawIndexedDesc)
+	IV3DBuffer** ppBuffer, DrawDesc* pDrawDesc)
 {
 	V3D_RESULT result = V3D_ERROR_FAIL;
 
@@ -723,7 +733,7 @@ V3D_RESULT CreatePrefab(
 	switch (type)
 	{
 	case PREFAB_TYPE_CUBE:
-		CreatePrefabCube(vertices, indices, pDrawIndexedDesc);
+		CreatePrefabCube(vertices, indices, pDrawDesc);
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -733,18 +743,32 @@ V3D_RESULT CreatePrefab(
 	size_t verticesSize = sizeof(PrefabVertex) * vertices.size();
 	size_t indicesSize = sizeof(uint16_t) * indices.size();
 
-	// ホスト
-	Array1<V3DBufferSubresourceDesc, 2> hostBufferSubresources =
-	{
-		{
-			{ V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_TRANSFER_SRC, verticesSize },
-			{ V3D_BUFFER_USAGE_INDEX | V3D_BUFFER_USAGE_TRANSFER_SRC, indicesSize },
-		}
-	};
+	Array1<BufferSubresourceDesc, 2> hostBufferSubresources;
+	hostBufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX;
+	hostBufferSubresources[0].size = verticesSize;
+	hostBufferSubresources[0].count = 1;
+	hostBufferSubresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_INDEX;
+	hostBufferSubresources[1].size = indicesSize;
+	hostBufferSubresources[1].count = 1;
+
+	Array1<BufferMemoryLayout, 2> hostBufferMemoryLayouts;
+	uint64_t hostBufferMemorySize;
+
+	CalcBufferMemoryLayout(
+		pDevice,
+		V3D_MEMORY_PROPERTY_HOST_VISIBLE,
+		TO_UI32(hostBufferSubresources.size()),
+		hostBufferSubresources.data(),
+		hostBufferMemoryLayouts.data(),
+		&hostBufferMemorySize);
+
+	V3DBufferDesc hostBufferDesc{};
+	hostBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+	hostBufferDesc.size = hostBufferMemorySize;
 
 	IV3DBuffer* pHostBuffer;
 
-	result = pDevice->CreateBuffer(TO_UI32(hostBufferSubresources.size()), hostBufferSubresources.data(), &pHostBuffer);
+	result = pDevice->CreateBuffer(hostBufferDesc, &pHostBuffer);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -758,18 +782,14 @@ V3D_RESULT CreatePrefab(
 	}
 
 	uint8_t* pMemory;
-	result = pHostBuffer->Map(0, pHostBuffer->GetResourceDesc().memorySize, reinterpret_cast<void**>(&pMemory));
+	result = pHostBuffer->Map(0, V3D_WHOLE_SIZE, reinterpret_cast<void**>(&pMemory));
 	if (result == V3D_OK)
 	{
-		V3DBufferSubresourceLayout layout;
-
 		// バーテックスを書き込む
-		layout = pHostBuffer->GetSubresourceLayout(0);
-		memcpy_s(pMemory + layout.offset, layout.size, vertices.data(), verticesSize);
+		MemCopy(pMemory + hostBufferMemoryLayouts[0].offset, hostBufferMemoryLayouts[0].stride, vertices.data(), verticesSize);
 
 		// インデックスを書き込む
-		layout = pHostBuffer->GetSubresourceLayout(1);
-		memcpy_s(pMemory + layout.offset, layout.size, indices.data(), indicesSize);
+		MemCopy(pMemory + hostBufferMemoryLayouts[1].offset, hostBufferMemoryLayouts[1].stride, indices.data(), indicesSize);
 
 		result = pHostBuffer->Unmap();
 	}
@@ -781,17 +801,31 @@ V3D_RESULT CreatePrefab(
 	}
 
 	// デバイス
-	Array1<V3DBufferSubresourceDesc, 2> deviceBufferSubresources =
-	{
-		{
-			{ V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_TRANSFER_DST, verticesSize },
-			{ V3D_BUFFER_USAGE_INDEX | V3D_BUFFER_USAGE_TRANSFER_DST, indicesSize },
-		}
-	};
+	Array1<BufferSubresourceDesc, 2> deviceBufferSubresources;
+	deviceBufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_VERTEX;
+	deviceBufferSubresources[0].size = verticesSize;
+	deviceBufferSubresources[0].count = 1;
+	deviceBufferSubresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_INDEX;
+	deviceBufferSubresources[1].size = indicesSize;
+	deviceBufferSubresources[1].count = 1;
+
+	Array1<BufferMemoryLayout, 2> deviceBufferMemoryLayouts;
+	uint64_t deviceBufferMemorySize;
+
+	CalcBufferMemoryLayout(
+		pDevice,
+		V3D_MEMORY_PROPERTY_DEVICE_LOCAL,
+		TO_UI32(deviceBufferSubresources.size()),
+		deviceBufferSubresources.data(),
+		deviceBufferMemoryLayouts.data(), &deviceBufferMemorySize);
+
+	V3DBufferDesc deviceBufferDesc{};
+	deviceBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+	deviceBufferDesc.size = deviceBufferMemorySize;
 
 	IV3DBuffer* pBuffer;
 
-	result = pDevice->CreateBuffer(TO_UI32(deviceBufferSubresources.size()), deviceBufferSubresources.data(), &pBuffer);
+	result = pDevice->CreateBuffer(deviceBufferDesc, &pBuffer);
 	if (result != V3D_OK)
 	{
 		pHostBuffer->Release();
@@ -811,7 +845,15 @@ V3D_RESULT CreatePrefab(
 
 	if (commandHelper.Begin() != nullptr)
 	{
-		pCommandBuffer->CopyBuffer(pBuffer, 0, pHostBuffer, 0, pHostBuffer->GetResourceDesc().memorySize);
+		Array1<V3DCopyBufferRange, 2> copyRanges;
+		copyRanges[0].dstOffset = deviceBufferMemoryLayouts[0].offset;
+		copyRanges[0].srcOffset = hostBufferMemoryLayouts[0].offset;
+		copyRanges[0].size = verticesSize;
+		copyRanges[1].dstOffset = deviceBufferMemoryLayouts[1].offset;
+		copyRanges[1].srcOffset = hostBufferMemoryLayouts[1].offset;
+		copyRanges[1].size = indicesSize;
+
+		pCommandBuffer->CopyBuffer(pBuffer, pHostBuffer, TO_UI32(copyRanges.size()), copyRanges.data());
 
 		if (commandHelper.End() == false)
 		{
@@ -829,35 +871,9 @@ V3D_RESULT CreatePrefab(
 
 	pHostBuffer->Release();
 
-	// ----------------------------------------------------------------------------------------------------
-	// バッファービューを作成
-	// ----------------------------------------------------------------------------------------------------
-
-	// バーテックス
-	IV3DBufferView* pVertexBufferView;
-	result = pDevice->CreateBufferView(pBuffer, 0, V3D_FORMAT_UNDEFINED, &pVertexBufferView);
-	if (result != V3D_OK)
-	{
-		pBuffer->Release();
-		return result;
-	}
-
-	// インデックス
-	IV3DBufferView* pIndexBufferView;
-	result = pDevice->CreateBufferView(pBuffer, 1, V3D_FORMAT_UNDEFINED, &pIndexBufferView);
-	if (result != V3D_OK)
-	{
-		pVertexBufferView->Release();
-		pBuffer->Release();
-		return result;
-	}
-
-	pBuffer->Release();
-
-	// ----------------------------------------------------------------------------------------------------
-
-	*ppVertexBufferView = pVertexBufferView;
-	*ppIndexBufferView = pIndexBufferView;
+	*ppBuffer = pBuffer;
+	pDrawDesc->vertexOffset = deviceBufferMemoryLayouts[0].offset;
+	pDrawDesc->indexOffset = deviceBufferMemoryLayouts[1].offset;
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -881,6 +897,57 @@ V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode)
 	};
 
 	return table[mode];
+}
+
+void CalcBufferMemoryLayout(IV3DDevice* pDevice, V3DFlags memoryPropertyFlags, uint32_t subresourceCount, const BufferSubresourceDesc* pSubresources, BufferMemoryLayout* pMemoryLayouts, uint64_t* pMemorySize)
+{
+	const V3DDeviceCaps& deviceCaps = pDevice->GetCaps();
+	uint64_t minAlignment = (memoryPropertyFlags & V3D_MEMORY_PROPERTY_HOST_VISIBLE)? deviceCaps.minMemoryMapAlignment : 1;
+	uint64_t size = 0;
+
+	for (uint32_t i = 0; i < subresourceCount; i++)
+	{
+		uint64_t alignment = minAlignment;
+
+		if (pSubresources[i].usageFlags & (V3D_BUFFER_USAGE_UNIFORM_TEXEL | V3D_BUFFER_USAGE_STORAGE_TEXEL))
+		{
+			alignment = MAXIMUM(alignment, deviceCaps.minTexelBufferOffsetAlignment);
+		}
+
+		if (pSubresources[i].usageFlags & V3D_BUFFER_USAGE_UNIFORM)
+		{
+			alignment = MAXIMUM(alignment, deviceCaps.minUniformBufferOffsetAlignment);
+		}
+
+		if (pSubresources[i].usageFlags & V3D_BUFFER_USAGE_STORAGE)
+		{
+			alignment = MAXIMUM(alignment, deviceCaps.minStorageBufferOffsetAlignment);
+		}
+
+		pMemoryLayouts[i].offset = size;
+
+		if (pSubresources[i].size % alignment)
+		{
+			pMemoryLayouts[i].stride = ((pSubresources[i].size / alignment) + 1) * alignment;
+		}
+		else
+		{
+			pMemoryLayouts[i].stride = pSubresources[i].size;
+		}
+
+		size += pMemoryLayouts[i].stride * pSubresources[i].count;
+	}
+
+	*pMemorySize = size;
+}
+
+void MemCopy(void* pDst, uint64_t dstSize, const void* pSrc, uint64_t srcSize)
+{
+#ifdef _WIN64
+	memcpy_s(pDst, dstSize, pSrc, srcSize);
+#else //_WIN64
+	memcpy_s(pDst, TO_UI32(dstSize), pSrc, TO_UI32(srcSize));
+#endif //_WIN64
 }
 
 void MbToWc(const char* pSrc, std::wstring& dst)

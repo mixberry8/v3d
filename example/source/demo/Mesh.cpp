@@ -13,12 +13,11 @@ Mesh::Mesh() :
 	m_Key(0),
 	m_pPipelineLayout(nullptr),
 	m_pBuffer(nullptr),
-	m_pVertexBufferView(nullptr),
-	m_pIndexBufferView(nullptr),
+	m_VertexOffset(0),
+	m_IndexOffset(0),
 	m_IndexType(V3D_INDEX_TYPE_UINT16),
 	m_pUniformBuffer(nullptr),
-	m_pUniformBufferView(nullptr),
-	m_UniformBufferHandle(nullptr),
+	m_UniformDynamicOffset(~0U),
 	m_pDescriptorSet(nullptr)
 {
 }
@@ -42,10 +41,8 @@ std::shared_ptr<Mesh> Mesh::Clone()
 
 	SAFE_ADD_REF(m_pBuffer);
 	mesh->m_pBuffer = m_pBuffer;
-	SAFE_ADD_REF(m_pVertexBufferView);
-	mesh->m_pVertexBufferView = m_pVertexBufferView;
-	SAFE_ADD_REF(m_pIndexBufferView);
-	mesh->m_pIndexBufferView = m_pIndexBufferView;
+	mesh->m_VertexOffset = m_VertexOffset;
+	mesh->m_IndexOffset = m_IndexOffset;
 	mesh->m_IndexType = m_IndexType;
 
 	mesh->m_Subsets.assign(m_Subsets.begin(), m_Subsets.end());
@@ -97,7 +94,7 @@ V3D_RESULT Mesh::Update(const Matrix4x4& viewProjMat)
 
 	void* pMemory;
 
-	V3D_RESULT result = m_pUniformBuffer->Map(0, sizeof(Mesh::Uniform), &pMemory);
+	V3D_RESULT result = m_pUniformBuffer->Map(m_UniformDynamicOffset, sizeof(Mesh::Uniform), &pMemory);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -116,20 +113,20 @@ V3D_RESULT Mesh::Update(const Matrix4x4& viewProjMat)
 
 void Mesh::BindVertexIndexBuffer(IV3DCommandBuffer* pCommandBuffer)
 {
-	pCommandBuffer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
-	pCommandBuffer->BindIndexBufferView(m_pIndexBufferView, m_IndexType);
+	pCommandBuffer->BindVertexBuffers(0, 1, &m_pBuffer, &m_VertexOffset);
+	pCommandBuffer->BindIndexBuffer(m_pBuffer, m_IndexOffset, m_IndexType);
 }
 
 void Mesh::BindDescriptorSet(IV3DCommandBuffer* pCommandBuffer)
 {
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
+	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 1, &m_UniformDynamicOffset);
 }
 
 void Mesh::Draw(IV3DCommandBuffer* pCommandBuffer)
 {
-	pCommandBuffer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
-	pCommandBuffer->BindIndexBufferView(m_pIndexBufferView, m_IndexType);
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
+	pCommandBuffer->BindVertexBuffers(0, 1, &m_pBuffer, &m_VertexOffset);
+	pCommandBuffer->BindIndexBuffer(m_pBuffer, m_IndexOffset, m_IndexType);
+	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 1, &m_UniformDynamicOffset);
 
 	const Mesh::Subset* pSubset = m_Subsets.data();
 	const Mesh::Subset* pSubsetEnd = pSubset + m_Subsets.size();
@@ -168,16 +165,13 @@ void Mesh::Dispose()
 	}
 
 	SAFE_RELEASE(m_pDescriptorSet);
-	SAFE_RELEASE(m_pUniformBufferView);
 	SAFE_RELEASE(m_pUniformBuffer);
 
-	if ((m_pMeshManager != nullptr) && (m_UniformBufferHandle != nullptr))
+	if ((m_pMeshManager != nullptr) && (m_UniformDynamicOffset != ~0U))
 	{
-		m_pMeshManager->ReleaseUniformBuffer(m_UniformBufferHandle);
+		m_pMeshManager->ReleaseUniformDynamicOffset(m_UniformDynamicOffset);
 	}
 
-	SAFE_RELEASE(m_pIndexBufferView);
-	SAFE_RELEASE(m_pVertexBufferView);
 	SAFE_RELEASE(m_pBuffer);
 
 	SAFE_RELEASE(m_pPipelineLayout);
@@ -202,32 +196,18 @@ V3D_RESULT Mesh::Initialize(GraphicsManager* pGraphicsManager, TextureManager* p
 	pGraphicsManager->GetPipelineLayout(GRAPHICS_RENDERPASS_TYPE_DFFERED_GEOMETRY, GRAPHICS_PIPELINE_TYPE_GEOMETRY, &m_pPipelineLayout);
 
 	// ----------------------------------------------------------------------------------------------------
-	// ユニフォームバッファを作成
+	// デスクリプタセットを取得
 	// ----------------------------------------------------------------------------------------------------
 
-	V3D_RESULT result = pMeshManager->CreateUniformBuffer(&m_pUniformBuffer, &m_pUniformBufferView, &m_UniformBufferHandle);
+	pMeshManager->GetDescriptorSet(&m_pDescriptorSet);
+
+	V3D_RESULT result = m_pDescriptorSet->GetBuffer(0, &m_pUniformBuffer);
 	if (result != V3D_OK)
 	{
 		return result;
 	}
 
-	// ----------------------------------------------------------------------------------------------------
-	// デスクリプタセットを作成
-	// ----------------------------------------------------------------------------------------------------
-
-	result = pGraphicsManager->CreateDescriptorSet(GRAPHICS_RENDERPASS_TYPE_DFFERED_GEOMETRY, GRAPHICS_PIPELINE_TYPE_GEOMETRY, GRAPHICS_DESCRIPTOR_SET_TYPE_MESH, &m_pDescriptorSet);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	result = m_pDescriptorSet->SetBufferView(0, m_pUniformBufferView);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	m_pDescriptorSet->Update();
+	pMeshManager->RetainUniformDynamicOffset(&m_UniformDynamicOffset);
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -497,16 +477,33 @@ V3D_RESULT Mesh::LoadFromFile(const wchar_t* pFilePath, const Mesh::LoadDesc& lo
 	// バーテックス、インデックスバッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
+	Array1<BufferSubresourceDesc, 2> tempBufferSubresources;
+	tempBufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX;
+	tempBufferSubresources[0].size = sizeof(Mesh::Vertex) * vertices.size();
+	tempBufferSubresources[0].count = 1;
+	tempBufferSubresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_INDEX;
+	tempBufferSubresources[1].size = sizeof(uint16_t) * indices_u16.size();
+	tempBufferSubresources[1].count = 1;
+
+	Array1<BufferMemoryLayout, 2> tempBufferMemoryLayouts;
+	uint64_t tempBufferMemorySize;
+
+	CalcBufferMemoryLayout(
+		m_pGraphicsManager->GetDevicePtr(),
+		V3D_MEMORY_PROPERTY_HOST_VISIBLE,
+		TO_UI32(tempBufferSubresources.size()),
+		tempBufferSubresources.data(),
+		tempBufferMemoryLayouts.data(),
+		&tempBufferMemorySize);
+
 	// テンポラリバッファ
+	V3DBufferDesc tempBufferDesc{};
+	tempBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+	tempBufferDesc.size = tempBufferMemorySize;
+
 	IV3DBuffer* pTempBuffer;
 
-	V3DBufferSubresourceDesc subresources[2];
-	subresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX;
-	subresources[0].size = sizeof(Mesh::Vertex) * vertices.size();
-	subresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_INDEX;
-	subresources[1].size = sizeof(uint16_t) * indices_u16.size();
-
-	result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(_countof(subresources), subresources, &pTempBuffer);
+	result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(tempBufferDesc, &pTempBuffer);
 	if (result != V3D_OK)
 	{
 		SAFE_RELEASE(pTempBuffer);
@@ -529,15 +526,12 @@ V3D_RESULT Mesh::LoadFromFile(const wchar_t* pFilePath, const Mesh::LoadDesc& lo
 	}
 
 	uint8_t* pAddr = static_cast<uint8_t*>(pMemory);
-	V3DBufferSubresourceLayout subresourceLayout;
 
 	// バーテックスをコピー
-	subresourceLayout = pTempBuffer->GetSubresourceLayout(0);
-	::memcpy_s(pAddr + subresourceLayout.offset, subresourceLayout.size, vertices.data(), subresources[0].size);
+	MemCopy(pAddr + tempBufferMemoryLayouts[0].offset, tempBufferMemoryLayouts[0].stride, vertices.data(), tempBufferSubresources[0].size);
 
 	// インデックスをコピー
-	subresourceLayout = pTempBuffer->GetSubresourceLayout(1);
-	::memcpy_s(pAddr + subresourceLayout.offset, subresourceLayout.size, indices_u16.data(), subresources[1].size);
+	MemCopy(pAddr + tempBufferMemoryLayouts[1].offset, tempBufferMemoryLayouts[1].stride, indices_u16.data(), tempBufferSubresources[1].size);
 
 	result = pTempBuffer->Unmap();
 	if (result != V3D_OK)
@@ -547,9 +541,30 @@ V3D_RESULT Mesh::LoadFromFile(const wchar_t* pFilePath, const Mesh::LoadDesc& lo
 	}
 
 	// 描画用バッファを作成
-	subresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_VERTEX;
-	subresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_INDEX;
-	result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(_countof(subresources), subresources, &m_pBuffer);
+	Array1<BufferSubresourceDesc, 2> bufferSubresources;
+	bufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_VERTEX;
+	bufferSubresources[0].size = sizeof(Mesh::Vertex) * vertices.size();
+	bufferSubresources[0].count = 1;
+	bufferSubresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_INDEX;
+	bufferSubresources[1].size = sizeof(uint16_t) * indices_u16.size();
+	bufferSubresources[1].count = 1;
+
+	Array1<BufferMemoryLayout, 2> bufferMemoryLayouts;
+	uint64_t bufferMemorySize;
+
+	CalcBufferMemoryLayout(
+		m_pGraphicsManager->GetDevicePtr(),
+		V3D_MEMORY_PROPERTY_DEVICE_LOCAL,
+		TO_UI32(bufferSubresources.size()),
+		bufferSubresources.data(),
+		bufferMemoryLayouts.data(),
+		&bufferMemorySize);
+
+	V3DBufferDesc bufferDesc{};
+	bufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+	bufferDesc.size = bufferMemorySize;
+
+	result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(bufferDesc, &m_pBuffer);
 	if (result != V3D_OK)
 	{
 		SAFE_RELEASE(pTempBuffer);
@@ -573,7 +588,15 @@ V3D_RESULT Mesh::LoadFromFile(const wchar_t* pFilePath, const Mesh::LoadDesc& lo
 		return V3D_ERROR_FAIL;
 	}
 
-	pCommandBuffer->CopyBuffer(m_pBuffer, 0, pTempBuffer, 0, pTempBuffer->GetResourceDesc().memorySize);
+	Array1<V3DCopyBufferRange, 2> copyBufferRanges;
+	copyBufferRanges[0].dstOffset = bufferMemoryLayouts[0].offset;
+	copyBufferRanges[0].srcOffset = tempBufferMemoryLayouts[0].offset;
+	copyBufferRanges[0].size = tempBufferSubresources[0].size;
+	copyBufferRanges[1].dstOffset = bufferMemoryLayouts[1].offset;
+	copyBufferRanges[1].srcOffset = tempBufferMemoryLayouts[1].offset;
+	copyBufferRanges[1].size = tempBufferSubresources[1].size;
+
+	pCommandBuffer->CopyBuffer(m_pBuffer, pTempBuffer, TO_UI32(copyBufferRanges.size()), copyBufferRanges.data());
 
 	if (m_pGraphicsManager->FlushCommandBuffer() == false)
 	{
@@ -584,20 +607,8 @@ V3D_RESULT Mesh::LoadFromFile(const wchar_t* pFilePath, const Mesh::LoadDesc& lo
 
 	SAFE_RELEASE(pTempBuffer);
 
-	// バッファービューを作成
-	result = m_pGraphicsManager->GetDevicePtr()->CreateBufferView(m_pBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pVertexBufferView);
-	if (result != V3D_OK)
-	{
-		SAFE_RELEASE(m_pBuffer);
-		return result;
-	}
-
-	result = m_pGraphicsManager->GetDevicePtr()->CreateBufferView(m_pBuffer, 1, V3D_FORMAT_UNDEFINED, &m_pIndexBufferView);
-	if (result != V3D_OK)
-	{
-		SAFE_RELEASE(m_pBuffer);
-		return result;
-	}
+	m_VertexOffset = bufferMemoryLayouts[0].offset;
+	m_IndexOffset = bufferMemoryLayouts[1].offset;
 
 	// ----------------------------------------------------------------------------------------------------
 	// マテリアルを作成
@@ -979,7 +990,11 @@ V3D_RESULT Mesh::LoadObj(
 	// ----------------------------------------------------------------------------------------------------
 
 	{
+#ifdef _WIN64
 		ObjParser parser(bufferSize, pBuffer);
+#else //_WIN64
+		ObjParser parser(TO_UI32(bufferSize), pBuffer);
+#endif //_WIN64
 
 		std::vector<Mesh::Vertex> tempVertices;
 		tempVertices.reserve(4);
@@ -1171,9 +1186,9 @@ V3D_RESULT Mesh::LoadObj(
 
 					Mesh::Vertex vertex;
 
-					if (indices[0] != -1) { vertex.pos = positions[indices[0] - 1]; }
-					if (indices[1] != -1) { vertex.uv = textures[indices[1] - 1]; }
-					if (indices[2] != -1) { vertex.normal = normals[indices[2] - 1]; }
+					if (indices[0] > 0) { vertex.pos = positions[static_cast<uint32_t>(indices[0] - 1)]; }
+					if (indices[1] > 0) { vertex.uv = textures[static_cast<uint32_t>(indices[1] - 1)]; }
+					if (indices[2] > 0) { vertex.normal = normals[static_cast<uint32_t>(indices[2] - 1)]; }
 
 					tempVertices.push_back(vertex);
 				}
@@ -1264,7 +1279,12 @@ V3D_RESULT Mesh::LoadObjMaterial(
 	uint64_t bufferSize, void* pBuffer,
 	std::vector<Mesh::MaterialOpt>& materials)
 {
+#ifdef _WIN64
 	ObjParser parser(bufferSize, pBuffer);
+#else //_WIN64
+	ObjParser parser(TO_UI32(bufferSize), pBuffer);
+#endif //_WIN64
+
 	Mesh::MaterialOpt* pMaterial = nullptr;
 
 	for (;;)

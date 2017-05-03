@@ -191,8 +191,10 @@ struct PrefabVertex
 	Vector2 uv;
 };
 
-struct DrawIndexedDesc
+struct DrawDesc
 {
+	uint64_t vertexOffset;
+	uint64_t indexOffset;
 	uint32_t indexCount;
 	uint32_t instanceCount;
 };
@@ -202,7 +204,7 @@ V3D_RESULT CreatePrefab(
 	IV3DDevice* pDevice,
 	IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence,
 	PREFAB_TYPE type,
-	IV3DBufferView** ppVertexBufferView, IV3DBufferView** ppIndexBufferView, DrawIndexedDesc* pDrawIndexedDesc);
+	IV3DBuffer** ppBuffer, DrawDesc* pDrawDesc);
 
 // ----------------------------------------------------------------------------------------------------
 // その他
@@ -222,6 +224,24 @@ enum BLEND_MODE
 // ブレンドの初期化
 V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode);
 
+struct BufferSubresourceDesc
+{
+	V3DFlags usageFlags; // バッファーの使用法 V3D_BUFFER_USAGE
+	uint64_t size; // 必要とするメモリのサイズ
+	uint32_t count; // 個数
+};
+
+struct BufferMemoryLayout
+{
+	uint64_t offset; // メモリのオフセット
+	uint64_t stride; // 個々のメモリのストライド ( メモリのサイズは BufferMemoryLayout::stride * BufferSubresourceDesc::count になります )
+};
+
+// 指定したバッファーのサブリソースからメモリのレイアウトとサイズを求めます
+void CalcBufferMemoryLayout(IV3DDevice* pDevice, V3DFlags memoryPropertyFlags, uint32_t subresourceCount, const BufferSubresourceDesc* pSubresources, BufferMemoryLayout* pMemoryLayouts, uint64_t* pMemorySize);
+
+// メモリのコピー
+void MemCopy(void* pDst, uint64_t dstSize, const void* pSrc, uint64_t srcSize);
 // マルチバイト文字列をワイド文字列に変換
 void MbToWc(const char* pSrc, std::wstring& dst);
 // ファイルパスの作成

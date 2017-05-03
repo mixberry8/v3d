@@ -89,7 +89,6 @@ private:
 	GraphicsPipelineHandle m_PipelineHandle;
 
 	IV3DBuffer* m_pUniformBuffer;
-	IV3DBufferView* m_pUniformBufferView;
 	ResourceHeap::Handle m_UniformBufferHandle;
 	IV3DDescriptorSet* m_pDescriptorSet;
 

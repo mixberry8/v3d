@@ -53,8 +53,8 @@ private:
 		IV3DImageView* pDeviceImageView;
 		IV3DDescriptorSet* pDescriptorSet;
 
+		uint64_t vertexBufferOffset;
 		IV3DBuffer* pVertexBuffer;
-		IV3DBufferView* pVertexBufferView;
 
 		std::vector<Character> characters;
 

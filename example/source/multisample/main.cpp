@@ -16,8 +16,7 @@ public:
 		m_pDescriptorSetLayout(nullptr),
 		m_pPipelineLayout(nullptr),
 		m_pMeshBuffer(nullptr),
-		m_pVertexBufferView(nullptr),
-		m_pIndexBufferView(nullptr),
+		m_MeshDrawDesc({}),
 		m_pImageView(nullptr),
 		m_pSampler(nullptr),
 		m_pDescriptorSet(nullptr),
@@ -170,139 +169,10 @@ protected:
 		}
 
 		// ----------------------------------------------------------------------------------------------------
-		// バーテックスバッファーを作成
+		// メッシュを作成
 		// ----------------------------------------------------------------------------------------------------
 
-		const MultiSampleWindow::Vertex vertices[] =
-		{
-			// top
-			{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f, 0.0f) },
-			{ Vector3(-1.0f, -1.0f, +1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) },
-			{ Vector3(+1.0f, -1.0f, +1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f, 1.0f) },
-			{ Vector3(+1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f, 0.0f) },
-
-			// bottom
-			{ Vector3(-1.0f, +1.0f, +1.0f), Vector3(0.0f, +1.0f, 0.0f), Vector2(0.0f, 0.0f) },
-			{ Vector3(-1.0f, +1.0f, -1.0f), Vector3(0.0f, +1.0f, 0.0f), Vector2(0.0f, 1.0f) },
-			{ Vector3(+1.0f, +1.0f, -1.0f), Vector3(0.0f, +1.0f, 0.0f), Vector2(1.0f, 1.0f) },
-			{ Vector3(+1.0f, +1.0f, +1.0f), Vector3(0.0f, +1.0f, 0.0f), Vector2(1.0f, 0.0f) },
-
-			// front
-			{ Vector3(-1.0f, -1.0f, +1.0f), Vector3(0.0f, 0.0f, +1.0f), Vector2(0.0f, 0.0f) },
-			{ Vector3(-1.0f, +1.0f, +1.0f), Vector3(0.0f, 0.0f, +1.0f), Vector2(0.0f, 1.0f) },
-			{ Vector3(+1.0f, +1.0f, +1.0f), Vector3(0.0f, 0.0f, +1.0f), Vector2(1.0f, 1.0f) },
-			{ Vector3(+1.0f, -1.0f, +1.0f), Vector3(0.0f, 0.0f, +1.0f), Vector2(1.0f, 0.0f) },
-
-			// back
-			{ Vector3(+1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f, 0.0f) },
-			{ Vector3(+1.0f, +1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f, 1.0f) },
-			{ Vector3(-1.0f, +1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f, 1.0f) },
-			{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f, 0.0f) },
-
-			// left
-			{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f, 0.0f) },
-			{ Vector3(-1.0f, +1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f, 1.0f) },
-			{ Vector3(-1.0f, +1.0f, +1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f, 1.0f) },
-			{ Vector3(-1.0f, -1.0f, +1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f, 0.0f) },
-
-			// right
-			{ Vector3(+1.0f, -1.0f, +1.0f), Vector3(+1.0f, 0.0f, 0.0f), Vector2(0.0f, 0.0f) },
-			{ Vector3(+1.0f, +1.0f, +1.0f), Vector3(+1.0f, 0.0f, 0.0f), Vector2(0.0f, 1.0f) },
-			{ Vector3(+1.0f, +1.0f, -1.0f), Vector3(+1.0f, 0.0f, 0.0f), Vector2(1.0f, 1.0f) },
-			{ Vector3(+1.0f, -1.0f, -1.0f), Vector3(+1.0f, 0.0f, 0.0f), Vector2(1.0f, 0.0f) },
-		};
-
-		uint16_t indices[] =
-		{
-			// top
-			0, 1, 2,
-			2, 3, 0,
-
-			// bottom
-			4, 5, 6,
-			6, 7, 4,
-
-			// front
-			8, 9, 10,
-			10, 11, 8,
-
-			// back
-			12, 13, 14,
-			14, 15, 12,
-
-			// left
-			16, 17, 18,
-			18, 19, 16,
-
-			// right
-			20, 21, 22,
-			22, 23, 20,
-		};
-
-		Array1<V3DBufferSubresourceDesc, 2> bufferSubresources =
-		{
-			{
-				{ V3D_BUFFER_USAGE_VERTEX, sizeof(vertices) },
-				{ V3D_BUFFER_USAGE_INDEX, sizeof(indices) },
-			}
-		};
-
-		V3D_RESULT result = Application::GetDevice()->CreateBuffer(static_cast<uint32_t>(bufferSubresources.size()), bufferSubresources.data(), &m_pMeshBuffer);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		Array1<IV3DResource*, 1> resources = { m_pMeshBuffer };
-
-		V3DFlags memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE | V3D_MEMORY_PROPERTY_HOST_COHERENT;
-		if (Application::GetDevice()->CheckResourceMemoryProperty(memoryPropertyFlags, TO_UI32(resources.size()), resources.data()) != V3D_OK)
-		{
-			memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE;
-		}
-
-		result = Application::GetDevice()->AllocateResourceMemoryAndBind(memoryPropertyFlags, TO_UI32(resources.size()), resources.data());
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		uint8_t* pMemory;
-		result = m_pMeshBuffer->Map(0, sizeof(vertices), reinterpret_cast<void**>(&pMemory));
-		if (result == V3D_OK)
-		{
-			V3DBufferSubresourceLayout layout;
-
-			// バーテックスを書き込む
-			layout = m_pMeshBuffer->GetSubresourceLayout(0);
-			memcpy_s(pMemory + layout.offset, layout.size, vertices, sizeof(vertices));
-
-			// インデックスを書き込む
-			layout = m_pMeshBuffer->GetSubresourceLayout(1);
-			memcpy_s(pMemory + layout.offset, layout.size, indices, sizeof(indices));
-
-			result = m_pMeshBuffer->Unmap();
-			if (result != V3D_OK)
-			{
-				return false;
-			}
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// バーテックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pMeshBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pVertexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// インデックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pMeshBuffer, 1, V3D_FORMAT_UNDEFINED, &m_pIndexBufferView);
+		V3D_RESULT result = CreatePrefab(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), PREFAB_TYPE_CUBE, &m_pMeshBuffer, &m_MeshDrawDesc);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -387,7 +257,7 @@ protected:
 		// ----------------------------------------------------------------------------------------------------
 
 		SetCameraRotation(Vector3(1.0f, -1.0f, 0.0f).ToNormalize(), DEG_TO_RAD(35.0f));
-		SetCameraDistance(3.0f);
+		SetCameraDistance(2.0f);
 
 		return true;
 	}
@@ -399,8 +269,6 @@ protected:
 		SAFE_RELEASE(m_pDescriptorSet);
 		SAFE_RELEASE(m_pSampler);
 		SAFE_RELEASE(m_pImageView);
-		SAFE_RELEASE(m_pIndexBufferView);
-		SAFE_RELEASE(m_pVertexBufferView);
 		SAFE_RELEASE(m_pMeshBuffer);
 		SAFE_RELEASE(m_pPipelineLayout);
 		SAFE_RELEASE(m_pDescriptorSetLayout);
@@ -533,9 +401,9 @@ protected:
 		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &scene);
 
 		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
-		pCommandBufer->BindIndexBufferView(m_pIndexBufferView, V3D_INDEX_TYPE_UINT16);
+		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
+		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_MeshDrawDesc.vertexOffset);
+		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_MeshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
 		pCommandBufer->DrawIndexed(36, 1, 0, 0, 0);
 
 		pCommandBufer->EndRenderPass();
@@ -709,13 +577,6 @@ protected:
 	}
 
 private:
-	struct Vertex
-	{
-		Vector3 pos;
-		Vector3 normal;
-		Vector2 uv;
-	};
-
 	struct Scene
 	{
 		Vector3 lightDirection;
@@ -731,8 +592,7 @@ private:
 	IV3DDescriptorSetLayout* m_pDescriptorSetLayout;
 	IV3DPipelineLayout* m_pPipelineLayout;
 	IV3DBuffer* m_pMeshBuffer;
-	IV3DBufferView* m_pVertexBufferView;
-	IV3DBufferView* m_pIndexBufferView;
+	DrawDesc m_MeshDrawDesc;
 	IV3DImageView* m_pImageView;
 	IV3DSampler* m_pSampler;
 	IV3DDescriptorSet* m_pDescriptorSet;
@@ -1174,7 +1034,7 @@ private:
 
 		Array1<V3DPipelineVertexLayout, 1> vertexLayouts =
 		{
-			{ 0, sizeof(MultiSampleWindow::Vertex), 0, TO_UI32(vertexElements.size()) },
+			{ 0, sizeof(PrefabVertex), 0, TO_UI32(vertexElements.size()) },
 		};
 
 		Array1<V3DPipelineColorBlendAttachment, 1> colorBlendAttachments =
@@ -1246,7 +1106,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"multisample", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"multisample", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

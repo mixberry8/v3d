@@ -56,7 +56,7 @@ public:
 					size_t tokenSize = nextPos - m_Pos;
 
 					m_Temp.resize(tokenSize + 1);
-					memcpy_s(m_Temp.data(), m_Temp.size(), &m_pMemory[m_Pos], tokenSize);
+					MemCopy(m_Temp.data(), m_Temp.size(), &m_pMemory[m_Pos], tokenSize);
 					m_Temp[tokenSize] = '\0';
 
 					result.pToken = m_Temp.data();

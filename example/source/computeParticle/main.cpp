@@ -31,11 +31,6 @@ public:
 		{
 			m_pParticleBuffer[i] = nullptr;
 		}
-
-		for (auto i = 0; i < _countof(m_pParticleBufferView); i++)
-		{
-			m_pParticleBufferView[i] = nullptr;
-		}
 	}
 
 	virtual ~ComputeParticleWindow() {}
@@ -86,7 +81,7 @@ public:
 		// ウィンドウを初期化
 		// ----------------------------------------------------------------------------------------------------
 
-		if (Window::Initialize(L"computeParticle", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (Window::Initialize(L"computeParticle", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);
@@ -288,16 +283,13 @@ protected:
 
 		uint64_t vertexSize = sizeof(Vertex) * PARTICLE_MAX;
 
-		Array1<V3DBufferSubresourceDesc, 2> bufferSubresources =
-		{
-			{
-				{ V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_STORAGE, vertexSize },
-			}
-		};
-
 		for (auto i = 0; i < _countof(m_pParticleBuffer); i++)
 		{
-			V3D_RESULT result = Application::GetDevice()->CreateBuffer(static_cast<uint32_t>(bufferSubresources.size()), bufferSubresources.data(), &m_pParticleBuffer[i]);
+			V3DBufferDesc bufferDesc{};
+			bufferDesc.usageFlags = V3D_BUFFER_USAGE_STORAGE | V3D_BUFFER_USAGE_VERTEX;
+			bufferDesc.size = vertexSize;
+
+			V3D_RESULT result = Application::GetDevice()->CreateBuffer(bufferDesc, &m_pParticleBuffer[i]);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -349,15 +341,6 @@ protected:
 		// パーティクルバッファービューを作成
 		// ----------------------------------------------------------------------------------------------------
 
-		for (auto i = 0; i < _countof(m_pParticleBufferView); i++)
-		{
-			V3D_RESULT result = Application::GetDevice()->CreateBufferView(m_pParticleBuffer[i], 0, V3D_FORMAT_UNDEFINED, &m_pParticleBufferView[i]);
-			if (result != V3D_OK)
-			{
-				return false;
-			}
-		}
-
 		IV3DCommandBuffer* pCommandBuffer = BeginWork();
 		if (pCommandBuffer == nullptr)
 		{
@@ -373,7 +356,9 @@ protected:
 		barrierBuffer.dstAccessMask = V3D_ACCESS_SHADER_READ;
 		barrierBuffer.srcQueueFamily = m_GraphicsQueueFamily;
 		barrierBuffer.dstQueueFamily = m_ComputeQueueFamily;
-		m_pComputeCommandBuffer->BarrierBufferView(m_pParticleBufferView[1], barrierBuffer);
+		barrierBuffer.offset = 0;
+		barrierBuffer.size = vertexSize;
+		pCommandBuffer->BarrierBuffer(m_pParticleBuffer[1], barrierBuffer);
 
 		if (EndWork() == false)
 		{
@@ -391,8 +376,8 @@ protected:
 			return false;
 		}
 
-		m_pComputeDedscriptorSet->SetBufferView(0, m_pParticleBufferView[0]);
-		m_pComputeDedscriptorSet->SetBufferView(1, m_pParticleBufferView[1]);
+		m_pComputeDedscriptorSet->SetBuffer(0, m_pParticleBuffer[0], 0, vertexSize);
+		m_pComputeDedscriptorSet->SetBuffer(1, m_pParticleBuffer[1], 0, vertexSize);
 		m_pComputeDedscriptorSet->Update();
 
 		// ----------------------------------------------------------------------------------------------------
@@ -416,11 +401,6 @@ protected:
 		for (auto i = 0; i < _countof(m_pParticleBuffer); i++)
 		{
 			SAFE_RELEASE(m_pParticleBuffer[i]);
-		}
-
-		for (auto i = 0; i < _countof(m_pParticleBufferView); i++)
-		{
-			SAFE_RELEASE(m_pParticleBufferView[i]);
 		}
 
 		SAFE_RELEASE(m_pGraphicsPipelineLayout);
@@ -485,6 +465,8 @@ protected:
 		}
 
 		V3DBarrierBufferDesc barrierBuffer{};
+		barrierBuffer.offset = 0;
+		barrierBuffer.size = V3D_WHOLE_SIZE;
 
 		barrierBuffer.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
 		barrierBuffer.dstStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
@@ -493,11 +475,11 @@ protected:
 		barrierBuffer.dstAccessMask = V3D_ACCESS_SHADER_READ | V3D_ACCESS_SHADER_WRITE;
 		barrierBuffer.srcQueueFamily = m_GraphicsQueueFamily;
 		barrierBuffer.dstQueueFamily = m_ComputeQueueFamily;
-		m_pComputeCommandBuffer->BarrierBufferView(m_pParticleBufferView[0], barrierBuffer);
+		m_pComputeCommandBuffer->BarrierBuffer(m_pParticleBuffer[0], barrierBuffer);
 
 		m_pComputeCommandBuffer->PushConstant(m_pCompPipelineLayout, 0, &compConstant);
 		m_pComputeCommandBuffer->BindPipeline(m_pComputePipeline);
-		m_pComputeCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_COMPUTE, m_pCompPipelineLayout, 0, 1, &m_pComputeDedscriptorSet);
+		m_pComputeCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_COMPUTE, m_pCompPipelineLayout, 0, 1, &m_pComputeDedscriptorSet, 0, nullptr);
 		m_pComputeCommandBuffer->Dispatch(PARTICLE_MAX / 256, 1, 1);
 
 		barrierBuffer.srcStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
@@ -507,7 +489,7 @@ protected:
 		barrierBuffer.dstAccessMask = V3D_ACCESS_VERTEX_READ;
 		barrierBuffer.srcQueueFamily = m_ComputeQueueFamily;
 		barrierBuffer.dstQueueFamily = m_GraphicsQueueFamily;
-		m_pComputeCommandBuffer->BarrierBufferView(m_pParticleBufferView[0], barrierBuffer);
+		m_pComputeCommandBuffer->BarrierBuffer(m_pParticleBuffer[0], barrierBuffer);
 
 		if (compCommandHelper.End() == false)
 		{
@@ -562,7 +544,10 @@ protected:
 
 		pCommandBufer->PushConstant(m_pGraphicsPipelineLayout, 0, &vertConstant);
 		pCommandBufer->BindPipeline(m_pGraphicsPipeline);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_pParticleBufferView[0]);
+
+		uint64_t vertexOffset = 0;
+		pCommandBufer->BindVertexBuffers(0, 1, &m_pParticleBuffer[0], &vertexOffset);
+
 		pCommandBufer->Draw(PARTICLE_MAX, 1, 0, 0);
 
 		// サブパス 1 - テキストの描画
@@ -921,7 +906,6 @@ private:
 	IV3DPipelineLayout* m_pGraphicsPipelineLayout;
 
 	IV3DBuffer* m_pParticleBuffer[2];
-	IV3DBufferView* m_pParticleBufferView[2];
 
 	IV3DPipeline* m_pComputePipeline;
 	IV3DDescriptorSet* m_pComputeDedscriptorSet;

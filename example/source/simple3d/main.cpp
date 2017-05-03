@@ -12,8 +12,8 @@ public:
 		m_pFragmentShaderModule(nullptr),
 		m_pPipelineLayout(nullptr),
 		m_pMeshBuffer(nullptr),
-		m_pVertexBufferView(nullptr),
-		m_pIndexBufferView(nullptr),
+		m_VertexOffset(0),
+		m_IndexOffset(0),
 		m_pDepthStencilImage(nullptr),
 		m_pDepthStencilImageView(nullptr),
 		m_pRenderPass(nullptr),
@@ -150,15 +150,24 @@ protected:
 			22, 23, 20,
 		};
 
-		Array1<V3DBufferSubresourceDesc, 2> bufferSubresources =
-		{
-			{
-				{ V3D_BUFFER_USAGE_VERTEX, sizeof(vertices) },
-				{ V3D_BUFFER_USAGE_INDEX, sizeof(indices) },
-			}
-		};
+		Array1<BufferSubresourceDesc, 2> meshSubresources;
+		meshSubresources[0].usageFlags = V3D_BUFFER_USAGE_VERTEX;
+		meshSubresources[0].size = sizeof(vertices);
+		meshSubresources[0].count = 1;
+		meshSubresources[1].usageFlags = V3D_BUFFER_USAGE_INDEX;
+		meshSubresources[1].size = sizeof(indices);
+		meshSubresources[1].count = 1;
 
-		V3D_RESULT result = Application::GetDevice()->CreateBuffer(static_cast<uint32_t>(bufferSubresources.size()), bufferSubresources.data(), &m_pMeshBuffer);
+		Array1<BufferMemoryLayout, 2> meshMemoryLayouts;
+		uint64_t meshMemorySize;
+
+		CalcBufferMemoryLayout(Application::GetDevice(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, TO_UI32(meshSubresources.size()), meshSubresources.data(), meshMemoryLayouts.data(), &meshMemorySize);
+
+		V3DBufferDesc meshBufferDesc{};
+		meshBufferDesc.usageFlags = V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+		meshBufferDesc.size = meshMemorySize;
+
+		V3D_RESULT result = Application::GetDevice()->CreateBuffer(meshBufferDesc, &m_pMeshBuffer);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -182,15 +191,11 @@ protected:
 		result = m_pMeshBuffer->Map(0, sizeof(vertices), reinterpret_cast<void**>(&pMemory));
 		if (result == V3D_OK)
 		{
-			V3DBufferSubresourceLayout layout;
-
 			// バーテックスを書き込む
-			layout = m_pMeshBuffer->GetSubresourceLayout(0);
-			memcpy_s(pMemory + layout.offset, layout.size, vertices, sizeof(vertices));
+			MemCopy(pMemory + meshMemoryLayouts[0].offset, meshMemoryLayouts[0].stride, vertices, sizeof(vertices));
 
 			// インデックスを書き込む
-			layout = m_pMeshBuffer->GetSubresourceLayout(1);
-			memcpy_s(pMemory + layout.offset, layout.size, indices, sizeof(indices));
+			MemCopy(pMemory + meshMemoryLayouts[1].offset, meshMemoryLayouts[1].stride, indices, sizeof(indices));
 
 			result = m_pMeshBuffer->Unmap();
 			if (result != V3D_OK)
@@ -199,25 +204,8 @@ protected:
 			}
 		}
 
-		// ----------------------------------------------------------------------------------------------------
-		// バーテックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pMeshBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pVertexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// インデックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pMeshBuffer, 1, V3D_FORMAT_UNDEFINED, &m_pIndexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
+		m_VertexOffset = meshMemoryLayouts[0].offset;
+		m_IndexOffset = meshMemoryLayouts[1].offset;
 
 		// ----------------------------------------------------------------------------------------------------
 		// スワップチェインに関係するインターフェースを作成
@@ -239,8 +227,6 @@ protected:
 	{
 		OnLostSwapChain();
 
-		SAFE_RELEASE(m_pIndexBufferView);
-		SAFE_RELEASE(m_pVertexBufferView);
 		SAFE_RELEASE(m_pMeshBuffer);
 		SAFE_RELEASE(m_pPipelineLayout);
 		SAFE_RELEASE(m_pFragmentShaderModule);
@@ -310,8 +296,8 @@ protected:
 		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &scene);
 
 		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
-		pCommandBufer->BindIndexBufferView(m_pIndexBufferView, V3D_INDEX_TYPE_UINT16);
+		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_VertexOffset);
+		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_IndexOffset, V3D_INDEX_TYPE_UINT16);
 		pCommandBufer->DrawIndexed(36, 1, 0, 0, 0);
 
 		pCommandBufer->EndRenderPass();
@@ -610,8 +596,8 @@ private:
 	IV3DShaderModule* m_pFragmentShaderModule;
 	IV3DPipelineLayout* m_pPipelineLayout;
 	IV3DBuffer* m_pMeshBuffer;
-	IV3DBufferView* m_pVertexBufferView;
-	IV3DBufferView* m_pIndexBufferView;
+	uint64_t m_VertexOffset;
+	uint64_t m_IndexOffset;
 
 	IV3DRenderPass* m_pRenderPass;
 	IV3DImage* m_pDepthStencilImage;
@@ -639,7 +625,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"simple3d", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"simple3d", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

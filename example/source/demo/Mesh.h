@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Material.h"
-#include "ResourceHeap.h"
 
 class GraphicsManager;
 class TextureManager;
@@ -121,13 +120,12 @@ private:
 
 	Mesh::Uniform m_Uniform;
 	IV3DBuffer* m_pUniformBuffer;
-	IV3DBufferView* m_pUniformBufferView;
-	ResourceHeap::Handle m_UniformBufferHandle;
+	uint32_t m_UniformDynamicOffset;
 	IV3DDescriptorSet* m_pDescriptorSet;
 
 	IV3DBuffer* m_pBuffer;
-	IV3DBufferView* m_pVertexBufferView;
-	IV3DBufferView* m_pIndexBufferView;
+	uint64_t m_VertexOffset;
+	uint64_t m_IndexOffset;
 	V3D_INDEX_TYPE m_IndexType;
 
 	std::vector<Mesh::Subset> m_Subsets;

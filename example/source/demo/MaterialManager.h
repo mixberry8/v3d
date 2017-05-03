@@ -44,7 +44,7 @@ private:
 
 	// ----------------------------------------------------------------------------------------------------
 
-	V3D_RESULT CreateUniformBuffer(IV3DBuffer** ppBuffer, IV3DBufferView** ppBufferView, ResourceHeap::Handle* pHandle);
+	V3D_RESULT CreateUniformBuffer(IV3DBuffer** ppBuffer, ResourceHeap::Handle* pHandle);
 	void ReleaseUniformBuffer(ResourceHeap::Handle handle);
 
 	friend class Material;

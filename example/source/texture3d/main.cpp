@@ -13,7 +13,6 @@ public:
 		m_pDescriptorSetLayout(nullptr),
 		m_pPipelineLayout(nullptr),
 		m_pVertexBuffer(nullptr),
-		m_pVertexBufferView(nullptr),
 		m_pImageView(nullptr),
 		m_pSampler(nullptr),
 		m_pDescriptorSet(nullptr),
@@ -117,11 +116,11 @@ protected:
 			{ Vector4(-256.0f, -256.0f, 0.0f, 1.0f), Vector2(0.0f, 0.0f), },
 		};
 
-		Array1<V3DBufferSubresourceDesc, 1> bufferSubresources;
-		bufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_VERTEX;
-		bufferSubresources[0].size = sizeof(vertices);
+		V3DBufferDesc vertexBufferDesc{};
+		vertexBufferDesc.usageFlags = V3D_BUFFER_USAGE_VERTEX;
+		vertexBufferDesc.size = sizeof(vertices);
 
-		V3D_RESULT result = Application::GetDevice()->CreateBuffer(static_cast<uint32_t>(bufferSubresources.size()), bufferSubresources.data(), &m_pVertexBuffer);
+		V3D_RESULT result = Application::GetDevice()->CreateBuffer(vertexBufferDesc, &m_pVertexBuffer);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -153,16 +152,6 @@ protected:
 			{
 				return false;
 			}
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// バーテックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pVertexBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pVertexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
 		}
 
 		// ----------------------------------------------------------------------------------------------------
@@ -244,7 +233,6 @@ protected:
 		SAFE_RELEASE(m_pDescriptorSet);
 		SAFE_RELEASE(m_pSampler);
 		SAFE_RELEASE(m_pImageView);
-		SAFE_RELEASE(m_pVertexBufferView);
 		SAFE_RELEASE(m_pVertexBuffer);
 		SAFE_RELEASE(m_pPipelineLayout);
 		SAFE_RELEASE(m_pDescriptorSetLayout);
@@ -315,8 +303,11 @@ protected:
 		pCommandBufer->PushConstant(m_pPipelineLayout, 1, &m_Depth);
 
 		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
+		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
+
+		uint64_t vertexOffset = 0;
+		pCommandBufer->BindVertexBuffers(0, 1, &m_pVertexBuffer, &vertexOffset);
+
 		pCommandBufer->Draw(6, 1, 0, 0);
 
 		pCommandBufer->EndRenderPass();
@@ -490,7 +481,6 @@ private:
 	IV3DDescriptorSetLayout* m_pDescriptorSetLayout;
 	IV3DPipelineLayout* m_pPipelineLayout;
 	IV3DBuffer* m_pVertexBuffer;
-	IV3DBufferView* m_pVertexBufferView;
 	IV3DImageView* m_pImageView;
 	IV3DSampler* m_pSampler;
 	IV3DDescriptorSet* m_pDescriptorSet;
@@ -521,7 +511,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"texture3d", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"texture3d", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

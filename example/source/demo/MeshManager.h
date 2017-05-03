@@ -33,12 +33,18 @@ private:
 
 public:
 	NamingService m_NamingService;
-	ResourceHeap m_UniformBufferHeap;
-
-	V3D_RESULT CreateUniformBuffer(IV3DBuffer** ppBuffer, IV3DBufferView** ppBufferView, ResourceHeap::Handle* pHandle);
-	void ReleaseUniformBuffer(ResourceHeap::Handle handle);
+	IV3DResourceMemory* m_pMemory;
+	IV3DBuffer* m_pUniformBuffer;
+	IV3DDescriptorSet* m_pDescriptorSet;
+	uint32_t m_UniformStride;
+	std::vector<uint32_t> m_UnuseUniformDynamicOffsets;
+	uint32_t m_InuseDynamicOffsetCount;
 
 	// ----------------------------------------------------------------------------------------------------
+
+	void GetDescriptorSet(IV3DDescriptorSet** ppDescriptorSet);
+	void RetainUniformDynamicOffset(uint32_t* pDynamicOffset);
+	void ReleaseUniformDynamicOffset(uint32_t dynamicOffset);
 
 	void Add(const wchar_t* pName, MeshPtr mesh);
 

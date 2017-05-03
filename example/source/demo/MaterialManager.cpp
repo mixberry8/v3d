@@ -284,13 +284,13 @@ IV3DSampler* MaterialManager::GetSamplerPtr(V3D_FILTER filter, V3D_ADDRESS_MODE 
 	return m_pSamplers[filter][addressMode];
 }
 
-V3D_RESULT MaterialManager::CreateUniformBuffer(IV3DBuffer** ppBuffer, IV3DBufferView** ppBufferView, ResourceHeap::Handle* pHandle)
+V3D_RESULT MaterialManager::CreateUniformBuffer(IV3DBuffer** ppBuffer, ResourceHeap::Handle* pHandle)
 {
-	V3DBufferSubresourceDesc subresources[1];
-	subresources[0].usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-	subresources[0].size = sizeof(Material::Uniform);
+	V3DBufferDesc bufferDesc{};
+	bufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	bufferDesc.size = sizeof(Material::Uniform);
 
-	V3D_RESULT result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(_countof(subresources), subresources, ppBuffer);
+	V3D_RESULT result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(bufferDesc, ppBuffer);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -312,12 +312,6 @@ V3D_RESULT MaterialManager::CreateUniformBuffer(IV3DBuffer** ppBuffer, IV3DBuffe
 	}
 
 	result = m_UniformBufferHeap.Bind((*ppBuffer), pHandle);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	result = m_pGraphicsManager->GetDevicePtr()->CreateBufferView((*ppBuffer), 0, V3D_FORMAT_UNDEFINED, ppBufferView);
 	if (result != V3D_OK)
 	{
 		return result;

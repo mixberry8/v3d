@@ -12,7 +12,6 @@ public:
 		m_pFragmentShaderModule(nullptr),
 		m_pPipelineLayout(nullptr),
 		m_pVertexBuffer(nullptr),
-		m_pVertexBufferView(nullptr),
 		m_pRenderPass(nullptr),
 		m_pPipeline(nullptr)
 	{
@@ -79,11 +78,11 @@ protected:
 			{ Vector4(+0.5f, +0.5f, 0.0f, 1.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f), },
 		};
 
-		Array1<V3DBufferSubresourceDesc, 1> bufferSubresources;
-		bufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_VERTEX;
-		bufferSubresources[0].size = sizeof(vertices);
+		V3DBufferDesc vertexBufferDesc{};
+		vertexBufferDesc.usageFlags = V3D_BUFFER_USAGE_VERTEX;
+		vertexBufferDesc.size = sizeof(vertices);
 
-		result = Application::GetDevice()->CreateBuffer(static_cast<uint32_t>(bufferSubresources.size()), bufferSubresources.data(), &m_pVertexBuffer);
+		result = Application::GetDevice()->CreateBuffer(vertexBufferDesc, &m_pVertexBuffer);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -122,16 +121,6 @@ protected:
 		}
 
 		// ----------------------------------------------------------------------------------------------------
-		// バーテックスバッファービューを作成
-		// ----------------------------------------------------------------------------------------------------
-
-		result = Application::GetDevice()->CreateBufferView(m_pVertexBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pVertexBufferView);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-
-		// ----------------------------------------------------------------------------------------------------
 		// スワップチェインに関係するインターフェースを作成
 		// ----------------------------------------------------------------------------------------------------
 
@@ -149,7 +138,6 @@ protected:
 	{
 		OnLostSwapChain();
 
-		SAFE_RELEASE(m_pVertexBufferView);
 		SAFE_RELEASE(m_pVertexBuffer);
 		SAFE_RELEASE(m_pPipelineLayout);
 		SAFE_RELEASE(m_pFragmentShaderModule);
@@ -205,7 +193,10 @@ protected:
 		pCommandBufer->SetScissor(0, 1, &scissor);
 
 		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindVertexBufferViews(0, 1, &m_pVertexBufferView);
+
+		uint64_t vertexOffset = 0;
+		pCommandBufer->BindVertexBuffers(0, 1, &m_pVertexBuffer, &vertexOffset);
+
 		pCommandBufer->Draw(3, 1, 0, 0);
 
 		pCommandBufer->EndRenderPass();
@@ -373,7 +364,6 @@ private:
 	IV3DShaderModule* m_pFragmentShaderModule;
 	IV3DPipelineLayout* m_pPipelineLayout;
 	IV3DBuffer* m_pVertexBuffer;
-	IV3DBufferView* m_pVertexBufferView;
 
 	IV3DRenderPass* m_pRenderPass;
 	std::vector<IV3DFrameBuffer*> m_FrameBuffers;
@@ -399,7 +389,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"simple2d", 1024, 768, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"simple2d", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

@@ -142,7 +142,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 	{
 		V3DDescriptorDesc descriptors[] =
 		{
-			{ 0, V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER, V3D_SHADER_STAGE_VERTEX }
+			{ 0, V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, V3D_SHADER_STAGE_VERTEX }
 		};
 
 		result = pDevice->CreateDescriptorSetLayout(

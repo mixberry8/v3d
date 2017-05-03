@@ -9,7 +9,6 @@ Material::Material() :
 	m_PipelineDesc({}),
 	m_PipelineHandle(nullptr),
 	m_pUniformBuffer(nullptr),
-	m_pUniformBufferView(nullptr),
 	m_UniformBufferHandle(nullptr),
 	m_pDescriptorSet(nullptr),
 	m_Filter(V3D_FILTER_LINEAR),
@@ -56,7 +55,7 @@ V3D_RESULT Material::Initialize(GraphicsManager* pGraphicsManager, MaterialManag
 	// ユニフォームバッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	result = m_pMaterialManager->CreateUniformBuffer(&m_pUniformBuffer, &m_pUniformBufferView, &m_UniformBufferHandle);
+	result = m_pMaterialManager->CreateUniformBuffer(&m_pUniformBuffer, &m_UniformBufferHandle);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -72,7 +71,7 @@ V3D_RESULT Material::Initialize(GraphicsManager* pGraphicsManager, MaterialManag
 		return result;
 	}
 
-	result = m_pDescriptorSet->SetBufferView(Material::BINDING_UNIFORM, m_pUniformBufferView);
+	result = m_pDescriptorSet->SetBuffer(Material::BINDING_UNIFORM, m_pUniformBuffer, 0, sizeof(Material::Uniform));
 	if (result != V3D_OK)
 	{
 		return result;
@@ -111,7 +110,6 @@ void Material::Dispose()
 	m_NormalTexture = nullptr;
 
 	SAFE_RELEASE(m_pDescriptorSet);
-	SAFE_RELEASE(m_pUniformBufferView);
 	SAFE_RELEASE(m_pUniformBuffer);
 
 	if ((m_pMaterialManager != nullptr) && (m_UniformBufferHandle != nullptr))
@@ -298,16 +296,15 @@ V3D_RESULT Material::Update()
 		return result;
 	}
 
-	const V3DBufferSubresourceLayout& subresourceLayout = m_pUniformBuffer->GetSubresourceLayout(0);
 	void* pMemory;
 
-	result = m_pUniformBuffer->Map(subresourceLayout.offset, subresourceLayout.size, &pMemory);
+	result = m_pUniformBuffer->Map(0, sizeof(Material::Uniform), &pMemory);
 	if (result != V3D_OK)
 	{
 		return result;
 	}
 
-	memcpy_s(pMemory, subresourceLayout.size, &m_Uniform, sizeof(Material::Uniform));
+	MemCopy(pMemory, sizeof(Material::Uniform), &m_Uniform, sizeof(Material::Uniform));
 
 	result = m_pUniformBuffer->Unmap();
 	if (result != V3D_OK)
@@ -323,5 +320,5 @@ V3D_RESULT Material::Update()
 void Material::Bind(IV3DCommandBuffer* pCommandBuffer)
 {
 	pCommandBuffer->BindPipeline(m_PipelineHandle->GetPtr());
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 1, 1, &m_pDescriptorSet);
+	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 1, 1, &m_pDescriptorSet, 0, nullptr);
 }

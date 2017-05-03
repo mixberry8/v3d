@@ -63,7 +63,7 @@ public:
 			readSize -= (nextPosition - m_MemorySize);
 		}
 
-		memcpy_s(pReadMemory, readSize, &m_pMemory[m_Position], readSize);
+		MemCopy(pReadMemory, readSize, &m_pMemory[m_Position], readSize);
 		m_Position += readSize;
 
 		return readSize;

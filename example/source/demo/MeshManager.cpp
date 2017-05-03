@@ -3,7 +3,11 @@
 MeshManager::MeshManager() :
 	m_pGraphicsManager(nullptr),
 	m_pTextureManager(nullptr),
-	m_pMaterialManager(nullptr)
+	m_pMaterialManager(nullptr),
+	m_pMemory(nullptr),
+	m_pUniformBuffer(nullptr),
+	m_pDescriptorSet(nullptr),
+	m_InuseDynamicOffsetCount(0)
 {
 }
 
@@ -17,6 +21,59 @@ V3D_RESULT MeshManager::Initialize(GraphicsManager* pGraphicsManager, TextureMan
 	m_pTextureManager = pTextureManager;
 	m_pMaterialManager = pMaterialManager;
 	m_MaxMesh = maxMesh;
+	m_UnuseUniformDynamicOffsets.reserve(maxMesh);
+
+	// ----------------------------------------------------------------------------------------------------
+	// ユニフォームバッファを作成
+	// ----------------------------------------------------------------------------------------------------
+
+	BufferSubresourceDesc uniformBufferSubresource;
+	uniformBufferSubresource.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	uniformBufferSubresource.size = sizeof(Mesh::Uniform);
+	uniformBufferSubresource.count = maxMesh;
+
+	BufferMemoryLayout uniformBufferMemoryLayout;
+	uint64_t uniformBufferMemorySize;
+
+	CalcBufferMemoryLayout(pGraphicsManager->GetDevicePtr(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, 1, &uniformBufferSubresource, &uniformBufferMemoryLayout, &uniformBufferMemorySize);
+
+	V3DBufferDesc uniformBufferDesc{};
+	uniformBufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	uniformBufferDesc.size = uniformBufferMemorySize;
+
+	V3D_RESULT result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(uniformBufferDesc, &m_pUniformBuffer);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	result = m_pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, m_pUniformBuffer);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	m_pUniformBuffer->GetResourceMemory(&m_pMemory);
+
+	m_UniformStride = TO_UI32(uniformBufferMemoryLayout.stride);
+
+	// ----------------------------------------------------------------------------------------------------
+	// デスクリプタセットを作成
+	// ----------------------------------------------------------------------------------------------------
+
+	result = pGraphicsManager->CreateDescriptorSet(GRAPHICS_RENDERPASS_TYPE_DFFERED_GEOMETRY, GRAPHICS_PIPELINE_TYPE_GEOMETRY, GRAPHICS_DESCRIPTOR_SET_TYPE_MESH, &m_pDescriptorSet);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	result = m_pDescriptorSet->SetBuffer(0, m_pUniformBuffer, 0, sizeof(Mesh::Uniform));
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	m_pDescriptorSet->Update();
 
 	return V3D_OK;
 }
@@ -37,7 +94,9 @@ void MeshManager::Finalize()
 		m_MeshMap.clear();
 	}
 
-	m_UniformBufferHeap.Dispose();
+	SAFE_RELEASE(m_pDescriptorSet);
+	SAFE_RELEASE(m_pUniformBuffer);
+	SAFE_RELEASE(m_pMemory);
 
 	m_pGraphicsManager = nullptr;
 	m_pTextureManager = nullptr;
@@ -46,12 +105,12 @@ void MeshManager::Finalize()
 
 V3D_RESULT MeshManager::BeginUpdate()
 {
-	return m_UniformBufferHeap.GetMemory()->BeginMap();
+	return m_pMemory->BeginMap();
 }
 
 V3D_RESULT MeshManager::EndUpdate()
 {
-	return m_UniformBufferHeap.GetMemory()->EndMap();
+	return m_pMemory->EndMap();
 }
 
 MeshPtr MeshManager::Load(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDesc)
@@ -82,51 +141,32 @@ MeshPtr MeshManager::Load(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDe
 	return std::move(mesh);
 }
 
-V3D_RESULT MeshManager::CreateUniformBuffer(IV3DBuffer** ppBuffer, IV3DBufferView** ppBufferView, ResourceHeap::Handle* pHandle)
+void MeshManager::GetDescriptorSet(IV3DDescriptorSet** ppDescriptorSet)
 {
-	V3DBufferSubresourceDesc uniformSubresources[1];
-	uniformSubresources[0].usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-	uniformSubresources[0].size = sizeof(Mesh::Uniform);
-
-	V3D_RESULT result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(_countof(uniformSubresources), uniformSubresources, ppBuffer);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	if (m_UniformBufferHeap.IsInitialized() == false)
-	{
-		V3DFlags memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE | V3D_MEMORY_PROPERTY_HOST_COHERENT;
-		if (m_pGraphicsManager->GetDevicePtr()->CheckResourceMemoryProperty(memoryPropertyFlags, 1, reinterpret_cast<IV3DResource**>(ppBuffer)) != V3D_OK)
-		{
-			memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE;
-		}
-
-		result = m_UniformBufferHeap.Initialize(m_pGraphicsManager->GetDevicePtr(), memoryPropertyFlags, (*ppBuffer)->GetResourceDesc().memorySize * m_MaxMesh);
-		if (result != V3D_OK)
-		{
-			return result;
-		}
-	}
-
-	result = m_UniformBufferHeap.Bind((*ppBuffer), pHandle);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	result = m_pGraphicsManager->GetDevicePtr()->CreateBufferView((*ppBuffer), 0, V3D_FORMAT_UNDEFINED, ppBufferView);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	return V3D_OK;
+	SAFE_ADD_REF(m_pDescriptorSet);
+	*ppDescriptorSet = m_pDescriptorSet;
 }
 
-void MeshManager::ReleaseUniformBuffer(ResourceHeap::Handle handle)
+void MeshManager::RetainUniformDynamicOffset(uint32_t* pDynamicOffset)
 {
-	m_UniformBufferHeap.Unbind(handle);
+	if (m_UnuseUniformDynamicOffsets.empty() == false)
+	{
+		*pDynamicOffset = m_UnuseUniformDynamicOffsets.back();
+		m_UnuseUniformDynamicOffsets.pop_back();
+	}
+	else
+	{
+		*pDynamicOffset = m_InuseDynamicOffsetCount * m_UniformStride;
+		m_InuseDynamicOffsetCount++;
+	}
+}
+
+void MeshManager::ReleaseUniformDynamicOffset(uint32_t dynamicOffset)
+{
+	ASSERT(m_InuseDynamicOffsetCount > 0);
+
+	m_UnuseUniformDynamicOffsets.push_back(dynamicOffset);
+	m_InuseDynamicOffsetCount--;
 }
 
 void MeshManager::Add(const wchar_t* pName, MeshPtr mesh)

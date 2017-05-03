@@ -184,7 +184,6 @@ void Font::Dispose()
 	{
 		Font::Block& block = m_Blocks[i];
 
-		SAFE_RELEASE(block.pVertexBufferView);
 		SAFE_RELEASE(block.pVertexBuffer);
 		SAFE_RELEASE(block.pDescriptorSet);
 		SAFE_RELEASE(block.pDeviceImageView);
@@ -586,8 +585,8 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t hei
 		pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
 
 		// 描画
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pBlock->pDescriptorSet);
-		pCommandBuffer->BindVertexBufferViews(0, 1, &pBlock->pVertexBufferView);
+		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pBlock->pDescriptorSet, 0, nullptr);
+		pCommandBuffer->BindVertexBuffers(0, 1, &pBlock->pVertexBuffer, &pBlock->vertexBufferOffset);
 		pCommandBuffer->Draw(pBlock->vertexCount, 1, 0, 0);
 
 		pBlock++;
@@ -797,12 +796,11 @@ Font::Block* Font::AddBlock()
 	// バーテックスバッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	Array1<V3DBufferSubresourceDesc, 1> bufferSubresources = 
-	{
-		{ V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX, 6 * sizeof(Font::Vertex) * m_BlockCharacterMax }
-	};
+	V3DBufferDesc bufferDesc{};
+	bufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX;
+	bufferDesc.size = 6 * sizeof(Font::Vertex) * m_BlockCharacterMax;
 
-	result = m_pDevice->CreateBuffer(TO_UI32(bufferSubresources.size()), bufferSubresources.data(), &pBlock->pVertexBuffer);
+	result = m_pDevice->CreateBuffer(bufferDesc, &pBlock->pVertexBuffer);
 	if (result == V3D_OK)
 	{
 		result = m_pDevice->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, pBlock->pVertexBuffer);
@@ -812,12 +810,6 @@ Font::Block* Font::AddBlock()
 		}
 	}
 	else
-	{
-		return false;
-	}
-
-	result = m_pDevice->CreateBufferView(pBlock->pVertexBuffer, 0, V3D_FORMAT_UNDEFINED, &pBlock->pVertexBufferView);
-	if (result != V3D_OK)
 	{
 		return false;
 	}
