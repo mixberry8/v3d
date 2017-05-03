@@ -908,9 +908,9 @@ V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, uint
 	return result;
 }
 
-V3D_RESULT V3DDevice::CreateBuffer(uint32_t subresourceCount, const V3DBufferSubresourceDesc* pSubresources, IV3DBuffer** ppBuffer)
+V3D_RESULT V3DDevice::CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer)
 {
-	if ((subresourceCount == 0) || (pSubresources == nullptr))
+	if ((desc.usageFlags == 0) || (desc.size == 0))
 	{
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
@@ -921,7 +921,7 @@ V3D_RESULT V3DDevice::CreateBuffer(uint32_t subresourceCount, const V3DBufferSub
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pBuffer->Initialize(this, subresourceCount, pSubresources);
+	V3D_RESULT result = pBuffer->Initialize(this, desc);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -957,9 +957,17 @@ V3D_RESULT V3DDevice::CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOU
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, uint32_t bufferSubresource, V3D_FORMAT format, IV3DBufferView** ppBufferView)
+V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView)
 {
-	if ((pBuffer == nullptr) || (pBuffer->GetSubresourceCount() <= bufferSubresource))
+	if ((pBuffer == nullptr) ||	(desc.format == V3D_FORMAT_UNDEFINED))
+	{
+		return V3D_ERROR_INVALID_ARGUMENT;
+	}
+
+	const V3DBufferDesc& bufferDesc = pBuffer->GetDesc();
+
+	if (((bufferDesc.usageFlags & (V3D_BUFFER_USAGE_UNIFORM_TEXEL | V3D_BUFFER_USAGE_STORAGE_TEXEL)) == 0) ||
+		(bufferDesc.size < (desc.offset + desc.size)))
 	{
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
@@ -970,7 +978,7 @@ V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, uint32_t bufferSubre
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pBufferView->Initialize(this, pBuffer, bufferSubresource, format);
+	V3D_RESULT result = pBufferView->Initialize(this, pBuffer, desc);
 	if (result != V3D_OK)
 	{
 		return result;

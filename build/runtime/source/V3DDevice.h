@@ -50,9 +50,9 @@ public:
 	virtual V3D_RESULT BindResourceMemory(IV3DResourceMemory* pResourceMemory, IV3DResource* pResource, uint64_t memoryOffset) override;
 	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags propertyFlags, IV3DResource* pResource) override;
 	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources) override;
-	virtual V3D_RESULT CreateBuffer(uint32_t subresourceCount, const V3DBufferSubresourceDesc* pSubresources, IV3DBuffer** ppBuffer) override;
+	virtual V3D_RESULT CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer) override;
 	virtual V3D_RESULT CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, IV3DImage** ppImage) override;
-	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, uint32_t bufferSubresource, V3D_FORMAT format, IV3DBufferView** ppBufferView) override;
+	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView) override;
 	virtual V3D_RESULT CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView) override;
 	virtual V3D_RESULT CreateRenderPass(uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, IV3DRenderPass** ppRenderPass) override;
 	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass,	uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer) override;
