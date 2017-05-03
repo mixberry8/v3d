@@ -823,18 +823,18 @@ protected:
 class V3D_DLL_API IV3DFence : public IV3DDeviceChild
 {
 public:
-	//! @brief シグナル状態かどうかを確認します
-	//! @return シグナル状態の場合は true を返します
+	//! @brief シグナル状態かどうかを確認します。
+	//! @return シグナル状態の場合は true を返します。
 	virtual bool IsSignaled() const = 0;
 
-	//! @brief フェンスを非シグナル状態にします
+	//! @brief フェンスを非シグナル状態にします。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	virtual V3D_RESULT Reset() = 0;
-	//! @brief フェンスがシグナル状態になるまで待機します
-	//! @param[in] timeOut タイムアウト時間 ( ナノ秒単位 )
+	//! @brief フェンスがシグナル状態になるまで待機します。
+	//! @param[in] timeOut タイムアウト時間をナノ秒単位で指定します。
 	//! @retval V3D_OK
 	//! @retval V3D_TIMEOUT
 	//! @retval V3D_ERROR_FAIL
@@ -902,8 +902,8 @@ enum V3D_QUERY_PIPELINE_STATISTIC_TYPE
 //! @brief クエリの記述
 struct V3DQueryPoolDesc
 {
-	V3D_QUERY_TYPE queryType; //!< クエリのタイプ
-	uint32_t queryCount; //!< プールによって管理されるクエリの数です
+	V3D_QUERY_TYPE queryType; //!< クエリのタイプです。
+	uint32_t queryCount; //!< プールによって管理されるクエリの数です。
 };
 
 //! @}
@@ -1156,25 +1156,12 @@ enum V3D_BUFFER_USAGE : V3DFlags
 //! @addtogroup v3d_struct_group
 //! @{
 
-//! @struct V3DBufferSubresourceDesc
-//! @brief バッファーのサブリソースの記述
-struct V3DBufferSubresourceDesc
+//! @struct V3DBufferDesc
+//! @brief バッファーの記述
+struct V3DBufferDesc
 {
-	//! @brief サブリソースの使用法を表す \link V3D_BUFFER_USAGE \endlink 列挙定数の組み合わせです。
-	V3DFlags usageFlags;
-	//! @brief サブリソースのサイズをバイト単位で指定します。<br>
-	//! また usageFlags に \link V3D_BUFFER_USAGE_UNIFORM_TEXEL \endlink または \link V3D_BUFFER_USAGE_STORAGE_TEXEL \endlink が指定されていた場合は、
-	//! サブリソースのサイズは IV3DDevice::CreateBufferView の format の要素のサイズで割った値は V3DDeviceCaps::maxTexelBufferElements 以下である必要があります。
-	uint64_t size;
-};
-
-//! @struct V3DBufferSubresourceLayout
-//! @brief バッファーのサブリソースのレイアウト
-struct V3DBufferSubresourceLayout
-{
-	V3DFlags usageFlags; //!< サブリソースの使用法を表す \link V3D_BUFFER_USAGE \endlink 列挙定数の組み合わせです。
-	uint64_t offset; //!< サブリソースのオフセットをバイト単位で指定します。
-	uint64_t size; //!< サブリソースのサイズをバイト単位で指定します。
+	V3DFlags usageFlags; //!< バッファーの使用法を表す \link V3D_BUFFER_USAGE \endlink 列挙定数の組み合わせです。
+	uint64_t size; //!< バッファーのサイズです。
 };
 
 //! @}
@@ -1188,17 +1175,9 @@ struct V3DBufferSubresourceLayout
 class V3D_DLL_API IV3DBuffer : public IV3DResource
 {
 public:
-	//! @brief バッファの使用方法を取得します。
-	//! @return バッファの使用方法を表す \link V3D_BUFFER_USAGE \endlink 列挙定数の組み合わせを返します。
-	virtual V3DFlags GetUsageFlags() const = 0;
-
-	//! @brief サブリソースの数を取得します。
-	//! @return サブリソースの数を返します。
-	//! @note 返される値は バッファ作成時に渡した V3DBufferSubresourceDesc 構造体の配列の要素の数になります。
-	virtual uint32_t GetSubresourceCount() const = 0;
-	//! @brief バッファーのサブリソースのレイアウトを取得します。
-	//! @param[in] subresource バッファ作成時に渡した V3DBufferSubresourceDesc 構造体の配列のインデックスです。
-	virtual const V3DBufferSubresourceLayout& GetSubresourceLayout(uint32_t subresource) const = 0;
+	//! @brief バッファーの記述を取得します。
+	//! @return バッファーの記述を返します。
+	virtual const V3DBufferDesc& GetDesc() const = 0;
 
 protected:
 	//! @cond MISC
@@ -1348,10 +1327,9 @@ protected:
 //! @brief バッファービューの記述
 struct V3DBufferViewDesc
 {
-	V3DFlags usageFlags; //!< バッファービューの使用方法を表す \link V3D_BUFFER_USAGE \endlink 列挙定数の組み合わせです。
-	uint64_t offset; //!< アクセスするバッファのメモリオフセットです。 ( バイト単位 )
-	uint64_t size; //!< アクセスするバッファのメモリサイズです。 ( バイト単位 )
 	V3D_FORMAT format; //!< フォーマットです。
+	uint64_t offset; //!< アクセスするバッファのメモリのオフセットをバイト単位で指定します。
+	uint64_t size; //!< アクセスするバッファのメモリのオフセットからのサイズをバイト単位で指定します。
 };
 
 //! @}
@@ -1849,8 +1827,52 @@ class V3D_DLL_API IV3DDescriptorSet : public IV3DDeviceChild
 {
 public:
 	//! @brief デスクリプタセットのレイアウトを取得します。
-	//! @param[out] ppLayout 取得したデスクリプタセットのレイアウトを渡す IV3DDescriptorSetLayout インタフェースのポインタのアドレス。
+	//! @param[out] ppLayout 取得したデスクリプタセットのレイアウトを渡す IV3DDescriptorSetLayout インタフェースのポインタのアドレスです。
 	virtual void GetLayout(IV3DDescriptorSetLayout** ppLayout) = 0;
+
+	//! @brief バッファーを取得します。
+	//! @param[in] binding 取得するバッファーのバインディングです。
+	//! @param[out] ppBuffer 取得したバッファーを渡す IV3DBuffer インターフェースのポインタのアドレスです。
+	//! @retval V3D_OK
+	//! @retval V3D_ERROR_FAIL
+	//! @retval V3D_ERROR_INVALID_ARGUMENT
+	virtual V3D_RESULT GetBuffer(uint32_t binding, IV3DBuffer** ppBuffer) = 0;
+	//! @brief バッファーを設定します。
+	//! @param[in] binding バッファーを設定するバインディングです。
+	//! @param[in] pBuffer 設定するバッファーです。
+	//! @param[in] offset 設定するバッファーのオフセットをバイト単位で指定します。
+	//! @param[in] size 設定するバッファーのオフセットからのサイズをバイト単位で指定します。
+	//! @retval V3D_OK
+	//! @retval V3D_ERROR_FAIL
+	//! @retval V3D_ERROR_INVALID_ARGUMENT
+	//! @note
+	//! デスクリプタの種類によってアライメントが異なるため、offset には適切な値を指定してください。<br>
+	//! 各デスクリプタのアライメントは V3DDeviceCaps に記述されており、以下のようになります。<br>
+	//! <br>
+	//! <table>
+	//! <tr><td>\link V3D_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER \endlink <br> \link V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER \endlink</td><td>minTexelBufferOffsetAlignment</td></tr>
+	//! <tr><td>\link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER \endlink <br> \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC \endlink</td><td>minUniformBufferOffsetAlignment</td></tr>
+	//! <tr><td>\link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER \endlink <br> \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC \endlink</td><td>minStorageBufferOffsetAlignment</td></tr>
+	//! </table>
+	//! <br>
+	//! また、指定したバインディングのデスクリプタが \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC \endlink または \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC \endlink の場合、<br>
+	//! size に指定する値は、バッファー自体のサイズではなく、シェーダーが読み書きする範囲のサイズを指定します。
+	virtual V3D_RESULT SetBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset, uint64_t size) = 0;
+
+	//! @brief バッファービューを取得します。
+	//! @param[in] binding 取得するバッファービューのバインディングです。
+	//! @param[out] ppBufferView 取得したバッファービューを渡す IV3DBufferView インターフェースのポインタのアドレスです。
+	//! @retval V3D_OK
+	//! @retval V3D_ERROR_FAIL
+	//! @retval V3D_ERROR_INVALID_ARGUMENT
+	virtual V3D_RESULT GetBufferView(uint32_t binding, IV3DBufferView** ppBufferView) = 0;
+	//! @brief バッファービューを設定します。
+	//! @param[in] binding バッファービューを設定するバインディングです。
+	//! @param[in] pBufferView 設定するバッファービューのポインタです。
+	//! @retval V3D_OK
+	//! @retval V3D_ERROR_FAIL
+	//! @retval V3D_ERROR_INVALID_ARGUMENT
+	virtual V3D_RESULT SetBufferView(uint32_t binding, IV3DBufferView* pBufferView) = 0;
 
 	//! @brief イメージビューを取得します。
 	//! @param[in] binding 取得するイメージのバインディングです。
@@ -1927,21 +1949,6 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @sa V3DDescriptorDesc
 	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler) = 0;
-
-	//! @brief バッファービューを取得します
-	//! @param[in] binding 取得するバッファービューのバインディング
-	//! @param[out] ppBufferView 取得したバッファービューを渡す IV3DBufferView インターフェースのポインタのアドレス
-	//! @retval V3D_OK
-	//! @retval V3D_ERROR_FAIL
-	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	virtual V3D_RESULT GetBufferView(uint32_t binding, IV3DBufferView** ppBufferView) = 0;
-	//! @brief バッファービューを設定します
-	//! @param[in] binding バッファービューを設定するバインディング
-	//! @param[in] pBufferView 設定するバッファービューのポインタ
-	//! @retval V3D_OK
-	//! @retval V3D_ERROR_FAIL
-	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	virtual V3D_RESULT SetBufferView(uint32_t binding, IV3DBufferView* pBufferView) = 0;
 
 	//! @brief デスクリプタセットを更新します
 	//! @note デスクリプタセットに各種リソースを設定した際に実行してください。
@@ -2783,6 +2790,7 @@ enum V3D_COMMAND_BUFFER_USAGE
 	V3D_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT = 0x00000001,
 	//! @brief プライマリコマンドバッファーで開始されたレンダーパス内で実行されるセカンダリコマンドバッファーがレンダーパス、サブパス、フレームバッファを引き継ぐことを表します。
 	V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE = 0x00000002,
+	//! @brief セカンダリコマンドバッファーが複数のプライマリコマンドバッファーに記録 ( IV3DCommandBuffer::ExecuteCommandBuffers ) できることを表します。
 	V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE = 0x00000004,
 };
 
@@ -2825,6 +2833,9 @@ struct V3DBarrierBufferDesc
 
 	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
 	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
+
+	uint64_t offset; //!< バッファーのメモリのオフセットをバイト単位で指定します。
+	uint64_t size; //!< バッファーのメモリのオフセットからのサイズをバイト単位で指定します。
 };
 
 //! @struct V3DBarrierImageDesc
@@ -3763,6 +3774,10 @@ public:
 	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。
 	//! @param[in] descriptorSetCount バインドするデスクリプタセットの数です。
 	//! @param[in] ppDescriptorSets descriptorSetCount の値の数の要素を持つ IV3DDescriptorSet インターフェースのポインタの配列です。
+	//! @param[in] dynamicOffsetCount ダイナミックオフセットの数です。<br>
+	//! この値はデスクリプタセットに格納されているダイナミックユニフォームバッファーの数と同じである必要があります。
+	//! @param[in] pDynamicOffsets ダイナミックオフセットの配列です。<br>
+	//! この配列は dynamicOffsetCount の値の数の要素を持っている必要があり、各要素の値はバイト単位で指定します。
 	//! @note
 	//! <table>
 	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
@@ -3784,12 +3799,16 @@ public:
 	//! </table>
 	virtual void BindDescriptorSets(
 		V3D_PIPELINE_TYPE pipelineType,	IV3DPipelineLayout* pPipelineLayout,
-		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets) = 0;
+		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
+		uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) = 0;
 
-	//! @brief バーテックスバッファビューをバインドします。
+	//! @brief バーテックスバッファーをバインドします。
 	//! @param[in] firstBinding 最初のバインディングです。
 	//! @param[in] bindingCount バインディング数です。
-	//! @param[in] pBufferViews bindingCount の値の数の要素を持つ IV3DBufferView インターフェースのポインタの配列です。
+	//! @param[in] ppBuffers バッファーのポインタの配列です。<br>
+	//! この配列は bindingCount の値の数の要素が必要です。
+	//! @param[in] pOffsets バッファーのメモリオフセットの配列です。<br>
+	//! この配列は bindingCount の値の数の要素が必要であり、各要素の値はバイト単位で指定します。
 	//! @note
 	//! <table>
 	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
@@ -3808,10 +3827,11 @@ public:
 	//!     </td>
 	//!   </tr>
 	//! </table>
-	virtual void BindVertexBufferViews(uint32_t firstBinding, uint32_t bindingCount, IV3DBufferView** pBufferViews) = 0;
+	virtual void BindVertexBuffers(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets) = 0;
 
-	//! @brief インデックスバッファビューをバインドします。
-	//! @param[in] pBufferView バインドするインデックスバッファのビューを表す IV3DBufferView インターフェースのポインタです。
+	//! @brief インデックスバッファーをバインドします。
+	//! @param[in] pBuffer バインドするインデックスバッファーです。
+	//! @param[in] offset バインドするインデックスバッファーのメモリオフセットをバイト単位で指定します。
 	//! @param[in] indexType インデックスタイプを表す \link V3D_INDEX_TYPE \endlink 列挙定数のいずれかを指定します。
 	//! @note
 	//! <table>
@@ -3831,7 +3851,7 @@ public:
 	//!     </td>
 	//!   </tr>
 	//! </table>
-	virtual void BindIndexBufferView(IV3DBufferView* pBufferView, V3D_INDEX_TYPE indexType) = 0;
+	virtual void BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D_INDEX_TYPE indexType) = 0;
 
 	//! @brief 定数をプッシュします。
 	//! @param[in] pPipelineLayout パイプラインレイアウトです。
@@ -4633,7 +4653,7 @@ enum V3D_SHADER_CAP_FLAG : V3DFlags
 	V3D_SHADER_CAP_GEOMETRY = 0x00000001,
 	//! @brief テッセレーションシェーダーを使用することができます。
 	V3D_SHADER_CAP_TESSELLATION = 0x00000002,
-	//! @brief バッファへのアクセスが、V3DBufferSubresourceDesc::size に対して境界がチェックされます。<br>
+	//! @brief バッファへのアクセスに対して境界がチェックされます。<br>
 	//! 範囲外のアクセスではアプリケーションの終了が発生してはならず、シェーダのロード、ストア、およびアトミックの影響は、後述する実装依存の動作に準拠している必要があります。<br>
 	//! <ul>
 	//!   <li>次のいずれかが当てはまる場合、バッファアクセスは境界外であるとみなされます。</li>
@@ -5390,8 +5410,7 @@ public:
 	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags memoryPropertyFlags, uint32_t resourceCount, IV3DResource** ppResources) = 0;
 
 	//! @brief バッファーを作成します。
-	//! @param[in] subresourceCount バッファーのサブリソースの数です。
-	//! @param[in] pSubresources subresourceCount の値の数の要素を持つ V3DBufferSubresourceDesc 構造体の配列です。
+	//! @param[in] desc バッファーの記述です。
 	//! @param[in] ppBuffer 作成したバッファーを渡す IV3DBuffer インターフェースのポインタのアドレスです。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
@@ -5399,13 +5418,17 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @note
-	//! 各サブリソースの使用方法 ( V3DBufferSubresourceDesc::usageFlags ) により IV3DResource::Map のオフセットのアライメントの影響を受けるため、
-	//! 作成したバッファのサイズが指定したサブリソースのサイズの合計よりも大きくなる場合があります。
-	//! @sa V3DDeviceCaps::minMemoryMapAlignment
-	//! @sa V3DDeviceCaps::minTexelBufferOffsetAlignment
-	//! @sa V3DDeviceCaps::minUniformBufferOffsetAlignment
-	//! @sa V3DDeviceCaps::minStorageBufferOffsetAlignment
-	virtual V3D_RESULT CreateBuffer(uint32_t subresourceCount, const V3DBufferSubresourceDesc* pSubresources, IV3DBuffer** ppBuffer) = 0;
+	//! バッファーに複数のサブリソースを含める場合は、サブリソースが配置されるメモリオフセットのアライメントに注意してバッファーのサイズを決定する必要があります。<br>
+	//! サブリソースのアライメントは V3DDeviceCaps に記述されており、以下のようになります。<br>
+	//! <br>
+	//! <table>
+	//! <tr><td>\link V3D_BUFFER_USAGE_UNIFORM_TEXEL \endlink <br> \link V3D_BUFFER_USAGE_STORAGE_TEXEL \endlink</td><td>minTexelBufferOffsetAlignment</td></tr>
+	//! <tr><td>\link V3D_BUFFER_USAGE_UNIFORM \endlink</td><td>minUniformBufferOffsetAlignment</td></tr>
+	//! <tr><td>\link V3D_BUFFER_USAGE_STORAGE \endlink</td><td>minStorageBufferOffsetAlignment</td></tr>
+	//! </table>
+	//! <br>
+	//! また、ホストからのアクセス ( IV3DResource::Map ) がある場合は minMemoryMapAlignment も考慮する必要があります。
+	virtual V3D_RESULT CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer) = 0;
 	//! @brief イメージを作成します。
 	//! @param[in] imageDesc イメージの記述です。
 	//! @param[in] initialLayout イメージの初期レイアウトです。
@@ -5420,8 +5443,7 @@ public:
 
 	//! @brief バッファービューを作成します。
 	//! @param[in] pBuffer アクセス先のバッファーです。
-	//! @param[in] subresource アクセス先バッファーのサブリソースのインデックスです。
-	//! @param[in] format バッファービューのフォーマットです。
+	//! @param[in] desc バッファービューの記述です。
 	//! @param[out] ppBufferView 作成したバッファービューを表す IV3DBufferView インターフェースのポインタのアドレスです。
 	//! @retval D3D_OK
 	//! @retval V3D_ERROR_FAIL
@@ -5429,15 +5451,14 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @note
-	//! 事前にバッファーのメモリを確保しておく必要があります。<br>
-	//! format は指定した subresource の使用方法に \link V3D_BUFFER_USAGE_UNIFORM_TEXEL \endlink もしくわ \link V3D_BUFFER_USAGE_STORAGE_TEXEL \endlink が指定されている場合にのみ有効です。<br>
-	//! それ以外の場合は \link V3D_FORMAT_UNDEFINED \endlink を指定してください。
+	//! アクセス先になるバッファーは使用法に \link V3D_BUFFER_USAGE_UNIFORM_TEXEL \endlink または \link V3D_BUFFER_USAGE_STORAGE_TEXEL \endlink のいずれかが指定されている必要があります。<br>
+	//! また、アクセス先になるバッファーは事前にメモリを確保しておく必要があります。<br>
 	//! @sa IV3DDevice::CreateBuffer
 	//! @sa IV3DDevice::AllocateResourceMemory
 	//! @sa IV3DDevice::BindResourceMemory
-	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, uint32_t subresource, V3D_FORMAT format, IV3DBufferView** ppBufferView) = 0;
+	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView) = 0;
 	//! @brief イメージビューを作成します。
-	//! @param[in] pImage アクセスするイメージです。
+	//! @param[in] pImage アクセス先のイメージです。
 	//! @param[in] desc イメージビューの記述です。
 	//! @param[out] ppImageView 作成したイメージビューを渡す IV3DImageView インターフェースのポインタのアドレスです。
 	//! @retval D3D_OK
@@ -5446,7 +5467,7 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @note
-	//! 事前にイメージのメモリを確保しておく必要があります。
+	//! アクセス先のイメージは事前にメモリを確保しておく必要があります。
 	//! @sa IV3DDevice::CreateImage
 	//! @sa IV3DDevice::AllocateResourceMemory
 	//! @sa IV3DDevice::BindResourceMemory
@@ -5573,7 +5594,8 @@ enum V3D_LAYER_TYPE : uint8_t
 	//! @brief VK_LAYER_LUNARG_standard_validation を使用します。<br>
 	//! デバッグ時は通常これを使用してください。
 	V3D_LAYER_STANDARD_VALIDATION = 0,
-	//! @brief 最適なレイヤーを使用します。
+	//! @brief 最適なレイヤーを使用します。<br>
+	//! また NVIDIA の Nsight を使用したい場合はこのレイヤーを使用してください。
 	V3D_LAYER_OPTIMUS = 1,
 };
 
