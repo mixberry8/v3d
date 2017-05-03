@@ -15,7 +15,7 @@ static auto constexpr SCREEN_WIDTH = 1024;
 static auto constexpr SCREEN_HEIGHT = 768;
 static auto constexpr BUFFER_COUNT = 2;
 
-static auto constexpr MESH_SIDE_COUNT = 10;
+static auto constexpr MESH_SIDE_COUNT = 20;
 static auto constexpr POINT_LIGHT_SIDE_COUNT = 3;
 
 static auto constexpr MATERIAL_MAX = 100;
@@ -42,7 +42,6 @@ public:
 	TestWindow() :
 		m_RenderPassHandle(nullptr),
 		m_pSimpleVertexBuffer(nullptr),
-		m_pSimpleVertexBufferView(nullptr),
 		m_pSimpleSampler(nullptr),
 		m_ParallelData({}),
 		m_DirectionalLightingStage({}),
@@ -178,11 +177,11 @@ protected:
 				{ Vector4(-1.0f, +1.0f, 0.0f, 1.0f), Vector2(0.0f, 1.0f) },
 			};
 
-			V3DBufferSubresourceDesc subresources[1];
-			subresources[0].usageFlags = V3D_BUFFER_USAGE_VERTEX;
-			subresources[0].size = sizeof(simpleVertices);
+			V3DBufferDesc bufferDesc{};
+			bufferDesc.usageFlags = V3D_BUFFER_USAGE_VERTEX;
+			bufferDesc.size = sizeof(simpleVertices);
 
-			if (Application::GetDevice()->CreateBuffer(_countof(subresources), subresources, &m_pSimpleVertexBuffer) != V3D_OK)
+			if (Application::GetDevice()->CreateBuffer(bufferDesc, &m_pSimpleVertexBuffer) != V3D_OK)
 			{
 				return false;
 			}
@@ -195,15 +194,10 @@ protected:
 			void* pMemory;
 			if (m_pSimpleVertexBuffer->Map(0, V3D_WHOLE_SIZE, &pMemory) == V3D_OK)
 			{
-				memcpy_s(pMemory, m_pSimpleVertexBuffer->GetResourceDesc().memorySize, simpleVertices, sizeof(simpleVertices));
+				MemCopy(pMemory, m_pSimpleVertexBuffer->GetResourceDesc().memorySize, simpleVertices, sizeof(simpleVertices));
 				m_pSimpleVertexBuffer->Unmap();
 			}
 			else
-			{
-				return false;
-			}
-
-			if (Application::GetDevice()->CreateBufferView(m_pSimpleVertexBuffer, 0, V3D_FORMAT_UNDEFINED, &m_pSimpleVertexBufferView) != V3D_OK)
 			{
 				return false;
 			}
@@ -337,11 +331,11 @@ protected:
 
 		// ディレクショナルライティング
 		{
-			V3DBufferSubresourceDesc subresources[1];
-			subresources[0].usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-			subresources[0].size = sizeof(DirectionalLightingUniform);
+			V3DBufferDesc bufferDesc;
+			bufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+			bufferDesc.size = sizeof(DirectionalLightingUniform);
 
-			if (Application::GetDevice()->CreateBuffer(_countof(subresources), subresources, &m_DirectionalLightingStage.pUniformBuffer) != V3D_OK)
+			if (Application::GetDevice()->CreateBuffer(bufferDesc, &m_DirectionalLightingStage.pUniformBuffer) != V3D_OK)
 			{
 				return false;
 			}
@@ -384,11 +378,11 @@ protected:
 				}
 			}
 
-			V3DBufferSubresourceDesc subresources[1];
-			subresources[0].usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-			subresources[0].size = sizeof(PointLightingUniform);
+			V3DBufferDesc bufferDesc;
+			bufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+			bufferDesc.size = sizeof(PointLightingUniform);
 
-			if (Application::GetDevice()->CreateBuffer(_countof(subresources), subresources, &m_PointLightingStage.pUniformBuffer) != V3D_OK)
+			if (Application::GetDevice()->CreateBuffer(bufferDesc, &m_PointLightingStage.pUniformBuffer) != V3D_OK)
 			{
 				return false;
 			}
@@ -415,13 +409,8 @@ protected:
 		// パイプラインレイアウトを取得
 		m_GraphicsManager.GetPipelineLayout(GRAPHICS_RENDERPASS_TYPE_DFFERED_GEOMETRY, GRAPHICS_PIPELINE_TYPE_DIRECTIONAL_LIGHTING, &m_DirectionalLightingStage.pPipelineLayout);
 
-		// ユニフォームバッファービューを作成
+		// ユニフォームバッファーを更新
 		{
-			if (Application::GetDevice()->CreateBufferView(m_DirectionalLightingStage.pUniformBuffer, 0, V3D_FORMAT_UNDEFINED, &m_DirectionalLightingStage.pUniformBufferView) != V3D_OK)
-			{
-				return false;
-			}
-
 			void* pMemory;
 			if (m_DirectionalLightingStage.pUniformBuffer->Map(0, sizeof(DirectionalLightingUniform), &pMemory) == V3D_OK)
 			{
@@ -448,7 +437,7 @@ protected:
 		}
 
 		// イメージの設定、更新は OnRestoreSwapChain で行う
-		m_DirectionalLightingStage.pDescriptorSet->SetBufferView(0, m_DirectionalLightingStage.pUniformBufferView);
+		m_DirectionalLightingStage.pDescriptorSet->SetBuffer(0, m_DirectionalLightingStage.pUniformBuffer, 0, sizeof(DirectionalLightingUniform));
 
 		// ----------------------------------------------------------------------------------------------------
 		// ポイントライティング
@@ -457,13 +446,8 @@ protected:
 		// パイプラインレイアウトを取得
 		m_GraphicsManager.GetPipelineLayout(GRAPHICS_RENDERPASS_TYPE_DFFERED_GEOMETRY, GRAPHICS_PIPELINE_TYPE_POINT_LIGHTING, &m_PointLightingStage.pPipelineLayout);
 
-		// ユニフォームバッファを作成
+		// ユニフォームバッファを更新
 		{
-			if (Application::GetDevice()->CreateBufferView(m_PointLightingStage.pUniformBuffer, 0, V3D_FORMAT_UNDEFINED, &m_PointLightingStage.pUniformBufferView) != V3D_OK)
-			{
-				return false;
-			}
-
 			void* pMemory;
 			if (m_PointLightingStage.pUniformBuffer->Map(0, sizeof(PointLightingUniform), &pMemory) == V3D_OK)
 			{
@@ -506,7 +490,7 @@ protected:
 		}
 
 		// イメージの設定、更新は OnRestoreSwapChain で行う
-		m_PointLightingStage.pDescriptorSet->SetBufferView(0, m_PointLightingStage.pUniformBufferView);
+		m_PointLightingStage.pDescriptorSet->SetBuffer(0, m_PointLightingStage.pUniformBuffer, 0, sizeof(PointLightingUniform));
 
 		// ----------------------------------------------------------------------------------------------------
 		// フィニッシュライティング
@@ -554,17 +538,14 @@ protected:
 		SAFE_RELEASE(m_FinishLightingStage.pPipelineLayout);
 
 		SAFE_RELEASE(m_PointLightingStage.pDescriptorSet);
-		SAFE_RELEASE(m_PointLightingStage.pUniformBufferView);
 		SAFE_RELEASE(m_PointLightingStage.pUniformBuffer);
 		SAFE_RELEASE(m_PointLightingStage.pPipelineLayout);
 
 		SAFE_RELEASE(m_DirectionalLightingStage.pDescriptorSet);
-		SAFE_RELEASE(m_DirectionalLightingStage.pUniformBufferView);
 		SAFE_RELEASE(m_DirectionalLightingStage.pUniformBuffer);
 		SAFE_RELEASE(m_DirectionalLightingStage.pPipelineLayout);
 
 		SAFE_RELEASE(m_pSimpleSampler);
-		SAFE_RELEASE(m_pSimpleVertexBufferView);
 		SAFE_RELEASE(m_pSimpleVertexBuffer);
 
 		m_Meshes.clear();
@@ -592,7 +573,7 @@ protected:
 
 		m_Font.Reset();
 
-		text << L"Fps " << Application::GetFps() << L"\n" << L"Dt " << Application::GetDeltaTime();
+		text << L"Fps " << Application::GetFps();
 		m_Font.AddText(16, 16, text.str().c_str());
 
 //		const V3DDeviceStatistics& devStatistics = Application::GetDevice()->GetStatistics();
@@ -754,25 +735,27 @@ protected:
 		}
 #endif //ENABLE_MULTITHREAD
 
+		uint64_t simpleVertexOffset = 0;
+
 		// サブパス 1 : ディレクショナルライティング
 		pGraphicsCommandBuffer->NextSubpass();
 		pGraphicsCommandBuffer->BindPipeline(m_DirectionalLightingStage.pipelineHandle->GetPtr());
-		pGraphicsCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_DirectionalLightingStage.pPipelineLayout, 0, 1, &m_DirectionalLightingStage.pDescriptorSet);
-		pGraphicsCommandBuffer->BindVertexBufferViews(0, 1, &m_pSimpleVertexBufferView);
+		pGraphicsCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_DirectionalLightingStage.pPipelineLayout, 0, 1, &m_DirectionalLightingStage.pDescriptorSet, 0, nullptr);
+		pGraphicsCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
 		pGraphicsCommandBuffer->Draw(4, 1, 0, 0);
 
 		// サブパス 2 : ポイントライティング
 		pGraphicsCommandBuffer->NextSubpass();
 		pGraphicsCommandBuffer->BindPipeline(m_PointLightingStage.pipelineHandle->GetPtr());
-		pGraphicsCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_PointLightingStage.pPipelineLayout, 0, 1, &m_PointLightingStage.pDescriptorSet);
-		pGraphicsCommandBuffer->BindVertexBufferViews(0, 1, &m_pSimpleVertexBufferView);
+		pGraphicsCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_PointLightingStage.pPipelineLayout, 0, 1, &m_PointLightingStage.pDescriptorSet, 0, nullptr);
+		pGraphicsCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
 		pGraphicsCommandBuffer->Draw(4, 1, 0, 0);
 
 		// サブパス 2 : フィニッシュライティング
 		pGraphicsCommandBuffer->NextSubpass();
 		pGraphicsCommandBuffer->BindPipeline(m_FinishLightingStage.pipelineHandle->GetPtr());
-		pGraphicsCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_FinishLightingStage.pPipelineLayout, 0, 1, &m_FinishLightingStage.pDescriptorSet);
-		pGraphicsCommandBuffer->BindVertexBufferViews(0, 1, &m_pSimpleVertexBufferView);
+		pGraphicsCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_FinishLightingStage.pPipelineLayout, 0, 1, &m_FinishLightingStage.pDescriptorSet, 0, nullptr);
+		pGraphicsCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
 		pGraphicsCommandBuffer->Draw(4, 1, 0, 0);
 
 		// サブパス 3 : テキスト
@@ -1101,7 +1084,6 @@ private:
 		IV3DPipelineLayout* pPipelineLayout;
 		GraphicsPipelineHandle pipelineHandle;
 		IV3DBuffer* pUniformBuffer;
-		IV3DBufferView* pUniformBufferView;
 		IV3DDescriptorSet* pDescriptorSet;
 	};
 
@@ -1120,7 +1102,6 @@ private:
 	std::vector<IV3DFrameBuffer*> m_pFrameBuffer;
 
 	IV3DBuffer* m_pSimpleVertexBuffer;
-	IV3DBufferView* m_pSimpleVertexBufferView;
 	IV3DSampler* m_pSimpleSampler;
 
 	std::vector<MeshPtr> m_Meshes;
@@ -1160,7 +1141,7 @@ public:
 		Application::GetDevice()->GetQueue(queueFamily, 0, &pWorkQueue);
 		Application::GetDevice()->GetQueue(queueFamily, 1, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"test", SCREEN_WIDTH, SCREEN_HEIGHT, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"test", SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);
