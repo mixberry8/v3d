@@ -21,6 +21,10 @@ public:
 	V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory);
 	V3D_RESULT Unmap();
 
+#ifdef _DEBUG
+	bool Debug_CheckMemory(uint64_t offset, uint64_t size);
+#endif //_DEBUG
+
 	/**********************/
 	/* IV3DResourceMemory */
 	/**********************/

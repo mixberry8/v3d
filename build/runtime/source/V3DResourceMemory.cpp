@@ -140,6 +140,13 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 	m_Source.memoryMappedRange.memory = m_Source.deviceMemory;
 
 	// ----------------------------------------------------------------------------------------------------
+	// 記述を設定
+	// ----------------------------------------------------------------------------------------------------
+
+	m_Desc.propertyFlags = propertyFlags;
+	m_Desc.size = vkAllocSize;
+
+	// ----------------------------------------------------------------------------------------------------
 	// リソースをバインド
 	// ----------------------------------------------------------------------------------------------------
 
@@ -181,6 +188,11 @@ const V3DResourceMemory::Source& V3DResourceMemory::GetSource() const
 
 V3D_RESULT V3DResourceMemory::Map(uint64_t offset, uint64_t size, void** ppMemory)
 {
+	if (m_Desc.size < (offset + size))
+	{
+		return V3D_ERROR_FAIL;
+	}
+
 	if (m_pMemory != nullptr)
 	{
 		*ppMemory = m_pMemory + offset;
@@ -243,6 +255,15 @@ V3D_RESULT V3DResourceMemory::Unmap()
 
 	return result;
 }
+
+#ifdef _DEBUG
+
+bool V3DResourceMemory::Debug_CheckMemory(uint64_t offset, uint64_t size)
+{
+	return (m_Desc.size >= (offset + size));
+}
+
+#endif //_DEBUG
 
 /****************************************/
 /* public override - IV3DResourceMemory */
