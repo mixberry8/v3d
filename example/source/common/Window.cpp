@@ -4,6 +4,7 @@
 
 Window::Window() :
 	m_WindowHandle(nullptr),
+	m_BufferingType(WINDOW_BUFFERING_TYPE_FAKE),
 	m_pSwapChain(nullptr),
 	m_pWorkQueue(nullptr),
 	m_pWorkCommandPool(nullptr),
@@ -21,8 +22,10 @@ Window::~Window()
 	Dispose();
 }
 
-bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue)
+bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, WINDOW_BUFFERING_TYPE bufferingType, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue)
 {
+	m_BufferingType = bufferingType;
+
 	SAFE_ADD_REF(pGraphicsQueue);
 	m_pGraphicsQueue = pGraphicsQueue;
 
@@ -383,95 +386,9 @@ IV3DCommandBuffer* Window::BeginGraphics()
 
 bool Window::EndGraphics()
 {
-	uint32_t imageIndex = m_pSwapChain->GetCurrentImageIndex();
-	IV3DCommandBuffer* pGraphicsCommandBuffer = m_Frames[imageIndex].pGraphicsCommandBuffer;
-	IV3DFence* pGraphicsFence = m_Frames[imageIndex].pGraphicsFence;
-
-	V3D_RESULT result = pGraphicsCommandBuffer->End();
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	result = pGraphicsFence->Reset();
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	result = m_pGraphicsQueue->Submit(m_pSwapChain, 1, &pGraphicsCommandBuffer, pGraphicsFence);
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	m_Frames[imageIndex].initFence = true;
-
-	result = pGraphicsFence->Wait();
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	result = m_pGraphicsQueue->Present(m_pSwapChain);
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-IV3DCommandBuffer* Window::BeginGraphicsEx()
-{
 	IV3DCommandBuffer* pGraphicsCommandBuffer = m_Frames[m_pSwapChain->GetCurrentImageIndex()].pGraphicsCommandBuffer;
 
-	V3D_RESULT result = pGraphicsCommandBuffer->Begin();
-	if (result != V3D_OK)
-	{
-		return nullptr;
-	}
-
-	return pGraphicsCommandBuffer;
-}
-
-bool Window::EndGraphicsEx()
-{
-	uint32_t imageIndex = m_pSwapChain->GetCurrentImageIndex();
-	IV3DCommandBuffer* pGraphicsCommandBuffer = m_Frames[imageIndex].pGraphicsCommandBuffer;
-	IV3DFence* pCurrentGraphicsFence = m_Frames[imageIndex].pGraphicsFence;
-
 	V3D_RESULT result = pGraphicsCommandBuffer->End();
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	result = pCurrentGraphicsFence->Reset();
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	result = m_pGraphicsQueue->Submit(m_pSwapChain, 1, &pGraphicsCommandBuffer, pCurrentGraphicsFence);
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	m_Frames[imageIndex].initFence = true;
-
-	uint32_t nextImageIndex = (imageIndex + 1) % m_pSwapChain->GetDesc().imageCount;
-	if (m_Frames[nextImageIndex].initFence == true)
-	{
-		result = m_Frames[nextImageIndex].pGraphicsFence->Wait();
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-	}
-
-	result = m_pGraphicsQueue->Present(m_pSwapChain);
 	if (result != V3D_OK)
 	{
 		return false;
@@ -862,20 +779,92 @@ void Window::SaveScreenshot()
 
 void Window::Process()
 {
+	// ----------------------------------------------------------------------------------------------------
+	// スクリーンショット
+	// ----------------------------------------------------------------------------------------------------
+
 	if (m_ScreenshotRequest == true)
 	{
 		SaveScreenshot();
 		m_ScreenshotRequest = false;
 	}
 
+	// ----------------------------------------------------------------------------------------------------
+	// 次のイメージを取得
+	// ----------------------------------------------------------------------------------------------------
+
 	V3D_RESULT result = m_pSwapChain->AcquireNextImage();
 	if (result != V3D_OK)
 	{
 		Halt();
+		return;
 	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// アイドリング
+	// ----------------------------------------------------------------------------------------------------
 
 	if (OnIdle() == false)
 	{
 		Halt();
+		return;
+	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// キューに送信
+	// ----------------------------------------------------------------------------------------------------
+
+	uint32_t imageIndex = m_pSwapChain->GetCurrentImageIndex();
+	IV3DCommandBuffer* pGraphicsCommandBuffer = m_Frames[imageIndex].pGraphicsCommandBuffer;
+	IV3DFence* pGraphicsFence = m_Frames[imageIndex].pGraphicsFence;
+
+	result = pGraphicsFence->Reset();
+	if (result != V3D_OK)
+	{
+		Halt();
+		return;
+	}
+
+	result = m_pGraphicsQueue->Submit(m_pSwapChain, 1, &pGraphicsCommandBuffer, pGraphicsFence);
+	if (result != V3D_OK)
+	{
+		Halt();
+		return;
+	}
+
+	m_Frames[imageIndex].initFence = true;
+
+	if (m_BufferingType == WINDOW_BUFFERING_TYPE_FAKE)
+	{
+		result = pGraphicsFence->Wait();
+		if (result != V3D_OK)
+		{
+			Halt();
+			return;
+		}
+	}
+	else if (m_BufferingType == WINDOW_BUFFERING_TYPE_REAL)
+	{
+		uint32_t nextImageIndex = (imageIndex + 1) % m_pSwapChain->GetDesc().imageCount;
+		if (m_Frames[nextImageIndex].initFence == true)
+		{
+			result = m_Frames[nextImageIndex].pGraphicsFence->Wait();
+			if (result != V3D_OK)
+			{
+				Halt();
+				return;
+			}
+		}
+	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// イメージを表示
+	// ----------------------------------------------------------------------------------------------------
+
+	result = m_pGraphicsQueue->Present(m_pSwapChain);
+	if (result != V3D_OK)
+	{
+		Halt();
+		return;
 	}
 }

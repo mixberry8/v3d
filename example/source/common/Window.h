@@ -1,12 +1,18 @@
 #pragma once
 
+enum WINDOW_BUFFERING_TYPE
+{
+	WINDOW_BUFFERING_TYPE_FAKE = 0, // 現在のフレームを待機
+	WINDOW_BUFFERING_TYPE_REAL = 1, // 次のフレームを待機
+};
+
 class Window
 {
 public:
 	Window();
 	virtual ~Window();
 
-	virtual bool Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue);
+	virtual bool Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, WINDOW_BUFFERING_TYPE bufferingType, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue);
 
 	bool Restart();
 	void Resize(uint32_t width, uint32_t height);
@@ -41,9 +47,6 @@ public:
 
 	IV3DCommandBuffer* BeginGraphics();
 	bool EndGraphics();
-
-	IV3DCommandBuffer* BeginGraphicsEx();
-	bool EndGraphicsEx();
 
 protected:
 	virtual bool OnInitialize() { return true; }
@@ -80,6 +83,7 @@ private:
 	};
 
 	HWND m_WindowHandle;
+	WINDOW_BUFFERING_TYPE m_BufferingType;
 	IV3DSwapChain* m_pSwapChain;
 
 	IV3DQueue* m_pWorkQueue;
