@@ -45,7 +45,7 @@ public:
 
 	virtual void BarrierMemory(const V3DBarrierMemoryDesc& barrier) override;
 	virtual void BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBufferDesc& barrier) override;
-	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferDesc& barrier) override;
+	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) override;
 	virtual void BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc& barrier) override;
 	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageDesc& barrier) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size) override;

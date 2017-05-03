@@ -138,13 +138,9 @@ V3D_RESULT V3DCommandBuffer::Reset(V3DFlags resetFlags)
 
 V3D_RESULT V3DCommandBuffer::Begin()
 {
-	VkCommandBufferInheritanceInfo& commandBufferInheritanceInfo = m_Source.commandBufferInheritanceInfo;
-	commandBufferInheritanceInfo.renderPass = VK_NULL_HANDLE;
-	commandBufferInheritanceInfo.subpass = 0;
-	commandBufferInheritanceInfo.framebuffer = VK_NULL_HANDLE;
-
 	VkCommandBufferBeginInfo& commandBufferBeginInfo = m_Source.commandBufferBeginInfo;
 	commandBufferBeginInfo.flags = 0;
+	commandBufferBeginInfo.pInheritanceInfo = nullptr;
 
 	VkResult vkResult = vkBeginCommandBuffer(m_Source.commandBuffer, &m_Source.commandBufferBeginInfo);
 	if (vkResult != VK_SUCCESS)
@@ -190,6 +186,7 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 
 	VkCommandBufferBeginInfo& commandBufferBeginInfo = m_Source.commandBufferBeginInfo;
 	commandBufferBeginInfo.flags = ToVkCommandBufferUsageFlags(usageFlags);
+	commandBufferBeginInfo.pInheritanceInfo = &m_Source.commandBufferInheritanceInfo;
 
 	VkResult vkResult = vkBeginCommandBuffer(m_Source.commandBuffer, &m_Source.commandBufferBeginInfo);
 	if (vkResult != VK_SUCCESS)
@@ -308,7 +305,7 @@ void V3DCommandBuffer::BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBuffer
 		0, nullptr);
 }
 
-void V3DCommandBuffer::BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferDesc& barrier)
+void V3DCommandBuffer::BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier)
 {
 #ifdef _DEBUG
 	if (Debug_Command_FirstCheck() == false)
