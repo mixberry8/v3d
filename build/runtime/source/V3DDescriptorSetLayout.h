@@ -15,7 +15,7 @@ public:
 		RESOURCE_IMAGE = 0x00000001,
 		RESOURCE_SAMPLER = 0x00000002,
 		RESOURCE_BUFFER = 0x00000004,
-		RESOURCE_TEXEL_BUFFER_VIEW = 0x00000008,
+		RESOURCE_BUFFER_VIEW = 0x00000008,
 
 		RESOURCE_IMAGE_SAMPLER = RESOURCE_IMAGE | RESOURCE_SAMPLER,
 	};
@@ -26,7 +26,6 @@ public:
 		VkDescriptorType type;
 		V3DFlags resourceFlags;
 		uint32_t resource;
-		uint32_t info;
 		uint32_t write;
 	};
 
@@ -37,12 +36,9 @@ public:
 		STLVector<uint32_t> references;
 		STLVector<V3DDescriptorSetLayout::Descriptor> descriptors;
 
-		uint32_t imageInfoCount;
-		uint32_t bufferInfoCount;
-		uint32_t texelBufferViewInfoCount;
-
-		uint32_t imageViewCount;
+		uint32_t bufferCount;
 		uint32_t bufferViewCount;
+		uint32_t imageViewCount;
 
 		STLVector<VkDescriptorPoolSize> poolSizes;
 		VkDescriptorPoolCreateInfo poolCreateInfo;
@@ -79,7 +75,7 @@ public:
 	virtual void Release() override;
 
 private:
-	static constexpr V3DDescriptorSetLayout::Descriptor DescriptorInit = { ~0U, VK_DESCRIPTOR_TYPE_SAMPLER, 0, ~0U, ~0U, ~0U };
+	static constexpr V3DDescriptorSetLayout::Descriptor DescriptorInit = { ~0U, VK_DESCRIPTOR_TYPE_SAMPLER, 0, ~0U, ~0U };
 	static constexpr VkDescriptorPoolSize DescriptorPoolSizeInitList[VK_DESCRIPTOR_TYPE_RANGE_SIZE] =
 	{
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 0 },

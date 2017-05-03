@@ -100,48 +100,38 @@ V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descr
 
 		switch (dst1.descriptorType)
 		{
-		case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:          // image -------
-		case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:          // image -------
-		case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:       // image -------
-			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_IMAGE;
-			dst2.resource = m_Source.imageViewCount;
-			dst2.info = m_Source.imageInfoCount;
-			m_Source.imageInfoCount++;
-			m_Source.imageViewCount++;
-			break;
-		case VK_DESCRIPTOR_TYPE_SAMPLER:                // ----  sampler
-			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_SAMPLER;
-			dst2.resource = m_Source.imageViewCount;
-			dst2.info = m_Source.imageInfoCount;
-			m_Source.imageInfoCount++;
-			m_Source.imageViewCount++;
-			break;
-		case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: // image sampler
-			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_IMAGE | V3DDescriptorSetLayout::RESOURCE_SAMPLER;
-			dst2.resource = m_Source.imageViewCount;
-			dst2.info = m_Source.imageInfoCount;
-			m_Source.imageInfoCount++;
-			m_Source.imageViewCount++;
-			break;
-
 		case V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
 		case V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER:
 		case V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
 		case V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
 			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_BUFFER;
-			dst2.resource = m_Source.bufferViewCount;
-			dst2.info = m_Source.bufferInfoCount;
-			m_Source.bufferInfoCount++;
-			m_Source.bufferViewCount++;
+			dst2.resource = m_Source.bufferCount;
+			m_Source.bufferCount++;
 			break;
 
 		case V3D_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
 		case V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_TEXEL_BUFFER_VIEW;
+			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_BUFFER_VIEW;
 			dst2.resource = m_Source.bufferViewCount;
-			dst2.info = m_Source.texelBufferViewInfoCount;
-			m_Source.texelBufferViewInfoCount++;
 			m_Source.bufferViewCount++;
+			break;
+
+		case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:          // image -------
+		case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:          // image -------
+		case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:       // image -------
+			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_IMAGE;
+			dst2.resource = m_Source.imageViewCount;
+			m_Source.imageViewCount++;
+			break;
+		case VK_DESCRIPTOR_TYPE_SAMPLER:                // ----  sampler
+			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_SAMPLER;
+			dst2.resource = m_Source.imageViewCount;
+			m_Source.imageViewCount++;
+			break;
+		case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: // image sampler
+			dst2.resourceFlags = V3DDescriptorSetLayout::RESOURCE_IMAGE | V3DDescriptorSetLayout::RESOURCE_SAMPLER;
+			dst2.resource = m_Source.imageViewCount;
+			m_Source.imageViewCount++;
 			break;
 		}
 
@@ -211,7 +201,6 @@ const V3DDescriptorSetLayout::Descriptor* V3DDescriptorSetLayout::GetDescriptor(
 
 	V3D_ASSERT(descriptor.binding != ~0U);
 	V3D_ASSERT(descriptor.resource != ~0U);
-	V3D_ASSERT(descriptor.info != ~0U);
 
 	return &descriptor;
 }
