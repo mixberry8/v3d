@@ -139,6 +139,13 @@ V3D_RESULT V3DImage::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffse
 	m_pMemory = V3D_TO_ADD_REF(pMemory);
 	m_Source.memoryOffset = memoryOffset;
 
+#ifdef _DEBUG
+	if (m_pMemory->Debug_CheckMemory(memoryOffset, m_ResourceDesc.memorySize) == false)
+	{
+		return V3D_ERROR_FAIL;
+	}
+#endif //_DEBUG
+
 	VkResult vkResult = vkBindImageMemory(m_pDevice->GetSource().device, m_Source.image, m_pMemory->GetSource().deviceMemory, memoryOffset);
 	if (vkResult != VK_SUCCESS)
 	{
