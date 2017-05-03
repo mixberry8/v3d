@@ -182,6 +182,7 @@ V3D_RESULT CreateImageFromFile(
 enum PREFAB_TYPE
 {
 	PREFAB_TYPE_CUBE = 0,
+	PREFAB_TYPE_SPHERE = 1,
 };
 
 struct PrefabVertex

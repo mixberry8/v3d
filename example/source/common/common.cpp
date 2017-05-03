@@ -719,6 +719,106 @@ void CreatePrefabCube(std::vector<PrefabVertex>& vertices, std::vector<uint16_t>
 	pDrawDesc->instanceCount = 1;
 }
 
+void CreatePrefabSphere(std::vector<PrefabVertex>& vertices, std::vector<uint16_t>& indices, DrawDesc* pDrawDesc)
+{
+	static constexpr uint16_t vertDiv = 18;
+	static constexpr uint16_t horizDiv = vertDiv * 2;
+	static constexpr float rad = DEG_TO_RAD(180.0f / static_cast<float>(vertDiv));
+
+	// ----------------------------------------------------------------------------------------------------
+	// バーテックス
+	// ----------------------------------------------------------------------------------------------------
+
+	vertices.resize(2 + (vertDiv - 1) * horizDiv);
+
+	PrefabVertex* pVertex = vertices.data();
+	pVertex->pos.Set(0.0f, -0.5f, 0.0f);
+	pVertex->normal.Set(0.0f, -1.0f, 0.0f);
+	pVertex->uv.Set(0.5f, 0.0f);
+	pVertex++;
+
+	Vector3 pos;
+	Quaternion rot;
+	Matrix4x4 rotMat;
+
+	for (uint32_t v = 1; v < vertDiv; v++)
+	{
+		pos.Set(0.0f, -0.5f, 0.0f);
+		rot.SetRotationAxis(Vector3::XAxis(), rad * static_cast<float>(v));
+
+		for (uint32_t h = 0; h < horizDiv; h++)
+		{
+			rot.RotationAxis(Vector3::YAxis(), rad);
+			rot.Normalize();
+
+			rotMat.SetRotation(rot);
+
+			pVertex->pos = rotMat * pos;
+			pVertex->normal = pVertex->pos.ToNormalize();
+			pVertex->uv.Set(pVertex->pos.x * 2.0f * 0.5f + 0.5f, pVertex->pos.y * 2.0f * 0.5f + 0.5f);
+			pVertex++;
+		}
+	}
+
+	pVertex->pos.Set(0.0f, 0.5f, 0.0f);
+	pVertex->normal.Set(0.0f, 1.0f, 0.0f);
+	pVertex->uv.Set(0.5f, 1.0f);
+
+	// ----------------------------------------------------------------------------------------------------
+	// インデックス
+	// ----------------------------------------------------------------------------------------------------
+
+	uint16_t horizLast = horizDiv - 1;
+
+	indices.resize(horizDiv * 3 + horizDiv * 3 + (vertDiv - 2) * horizDiv * 6);
+
+	uint16_t* pIndex = indices.data();
+	for (uint32_t h = 0; h < horizDiv; h++)
+	{
+		*pIndex++ = 0;
+		*pIndex++ = h + 1;
+		*pIndex++ = (h < horizLast) ? (h + 2) : 1;
+	}
+
+	for (uint32_t v = 1; v < (vertDiv - 1); v++)
+	{
+		uint32_t startVertex = (v - 1) * horizDiv + 1;
+
+		for (uint32_t h = 0; h < horizDiv; h++)
+		{
+			*pIndex++ = startVertex + h;
+			*pIndex++ = startVertex + horizDiv + h;
+			*pIndex++ = startVertex + horizDiv + (h + 1) % horizDiv;
+
+			if (h != horizLast)
+			{
+				*pIndex++ = startVertex + horizDiv + h + 1;
+				*pIndex++ = startVertex + h + 1;
+				*pIndex++ = startVertex + h;
+			}
+			else
+			{
+				*pIndex++ = startVertex + horizDiv;
+				*pIndex++ = startVertex;
+				*pIndex++ = startVertex + h;
+			}
+		}
+	}
+
+	uint16_t lastVertex = static_cast<uint16_t>(vertices.size() - 1);
+	uint16_t startVertex = lastVertex - horizDiv;
+
+	for (uint32_t h = 0; h < horizDiv; h++)
+	{
+		*pIndex++ = startVertex + h;
+		*pIndex++ = lastVertex;
+		*pIndex++ = startVertex + (h + 1) % horizDiv;
+	}
+
+	pDrawDesc->indexCount = TO_UI32(indices.size());
+	pDrawDesc->instanceCount = 1;
+}
+
 V3D_RESULT CreatePrefab(
 	IV3DDevice* pDevice,
 	IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence,
@@ -734,6 +834,10 @@ V3D_RESULT CreatePrefab(
 	{
 	case PREFAB_TYPE_CUBE:
 		CreatePrefabCube(vertices, indices, pDrawDesc);
+		break;
+	case PREFAB_TYPE_SPHERE:
+		CreatePrefabSphere(vertices, indices, pDrawDesc);
+		break;
 	}
 
 	// ----------------------------------------------------------------------------------------------------
