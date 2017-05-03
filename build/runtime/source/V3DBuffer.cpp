@@ -11,84 +11,13 @@ V3DBuffer* V3DBuffer::Create()
 	return V3D_NEW_T(V3DBuffer);
 }
 
-V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, uint32_t subresourceCount, const V3DBufferSubresourceDesc* pSubresources)
+V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc)
 {
 	V3D_ASSERT(pDevice != nullptr);
-	V3D_ASSERT(subresourceCount > 0);
-	V3D_ASSERT(pSubresources != nullptr);
+	V3D_ASSERT(desc.usageFlags != 0);
+	V3D_ASSERT(desc.size != 0);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
-
-	// ----------------------------------------------------------------------------------------------------
-	// サブリソースのレイアウトを決める
-	// ----------------------------------------------------------------------------------------------------
-
-	VkDeviceSize vkSize = 0;
-	V3DFlags usageFlags = 0;
-
-	const VkPhysicalDeviceLimits& vkPhysicalDeviceLimits = m_pDevice->GetSource().deviceProps.limits;
-
-	const V3DBufferSubresourceDesc* pSrcSubresource = &pSubresources[0];
-	const V3DBufferSubresourceDesc* pSrcSubresourceEnd = pSrcSubresource + subresourceCount;
-
-	m_Subresources.resize(subresourceCount);
-	V3DBuffer::Subresource* pDstSubresource = m_Subresources.data();
-	uint32_t subresourceIndex = 0;
-
-	while (pSrcSubresource != pSrcSubresourceEnd)
-	{
-		uint64_t memoryAlignment = 0;
-
-		if (pSrcSubresource->usageFlags & V3DBuffer::StandardBufferUsageMask) { memoryAlignment = V3D_MAX(memoryAlignment, vkPhysicalDeviceLimits.minMemoryMapAlignment); }
-		if (pSrcSubresource->usageFlags & V3DBuffer::TexelBufferUsageMask) { memoryAlignment = V3D_MAX(memoryAlignment, vkPhysicalDeviceLimits.minTexelBufferOffsetAlignment); }
-		if (pSrcSubresource->usageFlags & V3DBuffer::UniformBufferUsageMask) { memoryAlignment = V3D_MAX(memoryAlignment, vkPhysicalDeviceLimits.minUniformBufferOffsetAlignment); }
-		if (pSrcSubresource->usageFlags & V3DBuffer::StorageBufferUsageMask) { memoryAlignment = V3D_MAX(memoryAlignment, vkPhysicalDeviceLimits.minStorageBufferOffsetAlignment); }
-
-		memoryAlignment = V3D_MAX(vkPhysicalDeviceLimits.minMemoryMapAlignment, memoryAlignment);
-
-		V3DFlags subresourceUsageFlags = pSrcSubresource->usageFlags;
-		usageFlags |= subresourceUsageFlags & ~usageFlags; // 必要なフラグだけ立てる
-
-		pDstSubresource->index = subresourceIndex++;
-		pDstSubresource->memoryAlignment = memoryAlignment;
-		pDstSubresource->layout.usageFlags = subresourceUsageFlags;
-		pDstSubresource->layout.offset = 0; // ソート後に求める
-		pDstSubresource->layout.size = pSrcSubresource->size;
-
-		pDstSubresource++;
-		pSrcSubresource++;
-	}
-
-	// サブリソースをアラインメントの大きい順にソート
-	std::sort(m_Subresources.begin(), m_Subresources.end(), [](const V3DBuffer::Subresource& lh, const V3DBuffer::Subresource& rh) { return lh.memoryAlignment > rh.memoryAlignment; });
-
-	// サブリソースのレイアウトの参照配列を作成
-	V3DBuffer::Subresource* pSrcSubresourceIndex = m_Subresources.data();
-	V3DBuffer::Subresource* pSrcSubresourceIndexEnd = pSrcSubresourceIndex + m_Subresources.size();
-
-	m_SubresourcesIndices.resize(subresourceCount);
-	uint32_t* pDstSubresourceIndex = m_SubresourcesIndices.data();
-
-	while (pSrcSubresourceIndex != pSrcSubresourceIndexEnd)
-	{
-		*pDstSubresourceIndex++ = (*pSrcSubresourceIndex++).index;
-	}
-
-	// サブリソースのメモリオフセットを求める
-	V3DBuffer::Subresource* pSubresource = m_Subresources.data();
-	V3DBuffer::Subresource* pSubresourceEnd = pSubresource + m_Subresources.size();
-
-	while (pSubresource != pSubresourceEnd)
-	{
-		uint64_t memoryAlignment = pSubresource->memoryAlignment;
-
-		// メモリのオフセット
-		pSubresource->layout.offset = ((vkSize / memoryAlignment) * memoryAlignment) + (((vkSize % memoryAlignment) != 0)? memoryAlignment : 0);
-		// 確保するメモリのサイズ
-		vkSize = pSubresource->layout.offset + pSubresource->layout.size;
-
-		pSubresource++;
-	}
 
 	// ----------------------------------------------------------------------------------------------------
 	// バッファを作成
@@ -100,8 +29,8 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, uint32_t subresourceCount,
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferCreateInfo.pNext = nullptr;
 	bufferCreateInfo.flags = 0;
-	bufferCreateInfo.size = vkSize;
-	bufferCreateInfo.usage = ToVkBufferUsageFlags(usageFlags);
+	bufferCreateInfo.size = desc.size;
+	bufferCreateInfo.usage = ToVkBufferUsageFlags(desc.usageFlags);
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	bufferCreateInfo.queueFamilyIndexCount = 0;
 	bufferCreateInfo.pQueueFamilyIndices = nullptr;
@@ -123,18 +52,13 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, uint32_t subresourceCount,
 	m_ResourceDesc.memorySize = memReqs.size;
 	m_ResourceDesc.memoryAlignment = memReqs.alignment;
 
-	m_UsageFlags = usageFlags;
+	m_Desc = desc;
 
-	m_Source.memorySize = vkSize;
+	m_Source.memorySize = desc.size;
 
 	// ----------------------------------------------------------------------------------------------------
 
 	return V3D_OK;
-}
-
-const V3DBuffer::Subresource* V3DBuffer::GetSubresourcesPtr() const
-{
-	return m_Subresources.data();
 }
 
 const V3DBuffer::Source& V3DBuffer::GetSource() const
@@ -154,6 +78,13 @@ V3D_RESULT V3DBuffer::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffs
 	m_pMemory = V3D_TO_ADD_REF(pMemory);
 	m_Source.memoryOffset = memoryOffset;
 
+#ifdef _DEBUG
+	if (m_pMemory->Debug_CheckMemory(memoryOffset, m_ResourceDesc.memorySize) == false)
+	{
+		return V3D_ERROR_FAIL;
+	}
+#endif //_DEBUG
+
 	VkResult vkResult = vkBindBufferMemory(m_pDevice->GetSource().device, m_Source.buffer, m_pMemory->GetSource().deviceMemory, memoryOffset);
 	if (vkResult != VK_SUCCESS)
 	{
@@ -167,19 +98,9 @@ V3D_RESULT V3DBuffer::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffs
 /* public override - IV3DBuffer */
 /********************************/
 
-V3DFlags V3DBuffer::GetUsageFlags() const
+const V3DBufferDesc& V3DBuffer::GetDesc() const
 {
-	return m_UsageFlags;
-}
-
-uint32_t V3DBuffer::GetSubresourceCount() const
-{
-	return static_cast<uint32_t>(m_Subresources.size());
-}
-
-const V3DBufferSubresourceLayout& V3DBuffer::GetSubresourceLayout(uint32_t layer) const
-{
-	return m_Subresources[m_SubresourcesIndices[layer]].layout;
+	return m_Desc;
 }
 
 /**********************************/
@@ -258,7 +179,7 @@ V3DBuffer::V3DBuffer() :
 	m_pDevice(nullptr),
 	m_pMemory(nullptr),
 	m_ResourceDesc({}),
-	m_UsageFlags(0),
+	m_Desc({}),
 	m_Source({})
 {
 	m_ResourceDesc.type = V3D_RESOURCE_TYPE_BUFFER;

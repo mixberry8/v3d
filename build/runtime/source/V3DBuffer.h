@@ -13,18 +13,8 @@ public:
 		VkDeviceSize memorySize;
 	};
 
-	struct Subresource
-	{
-		uint32_t index;
-		uint64_t memoryAlignment;
-		V3DBufferSubresourceLayout layout;
-	};
-
 	static V3DBuffer* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t subresourceCount, const V3DBufferSubresourceDesc* pSubresources);
-
-	const Subresource* GetSubresourcesPtr() const;
-
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc);
 	const V3DBuffer::Source& GetSource() const;
 
 	bool CheckBindMemory() const;
@@ -33,9 +23,7 @@ public:
 	/**************/
 	/* IV3DBuffer */
 	/**************/
-	virtual V3DFlags GetUsageFlags() const override;
-	virtual uint32_t GetSubresourceCount() const override;
-	virtual const V3DBufferSubresourceLayout& GetSubresourceLayout(uint32_t layer) const override;
+	virtual const V3DBufferDesc& GetDesc() const override;
 
 	/****************/
 	/* IV3DResource */
@@ -67,10 +55,8 @@ private:
 	V3DDevice* m_pDevice;
 	V3DResourceMemory* m_pMemory;
 	V3DResourceDesc m_ResourceDesc;
-	V3DFlags m_UsageFlags;
+	V3DBufferDesc m_Desc;
 	V3DBuffer::Source m_Source;
-	STLVector<V3DBuffer::Subresource> m_Subresources;
-	STLVector<uint32_t> m_SubresourcesIndices;
 
 	V3DBuffer();
 	virtual ~V3DBuffer();
