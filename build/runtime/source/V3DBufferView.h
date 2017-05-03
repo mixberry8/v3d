@@ -15,7 +15,7 @@ public:
 	};
 
 	static V3DBufferView* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, uint32_t bufferSubresource, V3D_FORMAT format);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc);
 	const V3DBufferView::Source& GetSource() const;
 
 	/*****************/

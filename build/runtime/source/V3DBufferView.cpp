@@ -11,7 +11,7 @@ V3DBufferView* V3DBufferView::Create()
 	return V3D_NEW_T(V3DBufferView);
 }
 
-V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, uint32_t bufferSubresource, V3D_FORMAT format)
+V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(pBuffer != nullptr);
@@ -19,44 +19,28 @@ V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, u
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 	m_pBuffer = V3D_TO_ADD_REF(static_cast<V3DBuffer*>(pBuffer));
 
-	const V3DBufferSubresourceLayout& subresourceLayout = m_pBuffer->GetSubresourceLayout(bufferSubresource);
 	const V3DBuffer::Source& bufferSource = m_pBuffer->GetSource();
 
 	// ----------------------------------------------------------------------------------------------------
 
-	if (subresourceLayout.usageFlags & (V3D_BUFFER_USAGE_UNIFORM_TEXEL | V3D_BUFFER_USAGE_STORAGE_TEXEL))
-	{
-		if (format == V3D_FORMAT_UNDEFINED)
-		{
-			return V3D_ERROR_FAIL;
-		}
+	VkBufferViewCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
+	createInfo.pNext = nullptr;
+	createInfo.flags = 0;
+	createInfo.buffer = bufferSource.buffer;
+	createInfo.format = ToVkFormat(desc.format);
+	createInfo.offset = desc.offset;
+	createInfo.range = desc.size;
 
-		VkBufferViewCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
-		createInfo.pNext = nullptr;
-		createInfo.flags = 0;
-		createInfo.buffer = bufferSource.buffer;
-		createInfo.format = ToVkFormat(format);
-		createInfo.offset = subresourceLayout.offset;
-		createInfo.range = subresourceLayout.size;
-
-		VkResult vkResult = vkCreateBufferView(m_pDevice->GetSource().device, &createInfo, nullptr, &m_Source.bufferView);
-		if(vkResult != VK_SUCCESS)
-		{
-			return ToV3DResult(vkResult);
-		}
-	}
-	else if(format != V3D_FORMAT_UNDEFINED)
+	VkResult vkResult = vkCreateBufferView(m_pDevice->GetSource().device, &createInfo, nullptr, &m_Source.bufferView);
+	if (vkResult != VK_SUCCESS)
 	{
-		return V3D_ERROR_FAIL;
+		return ToV3DResult(vkResult);
 	}
 
 	// ----------------------------------------------------------------------------------------------------
 
-	m_Desc.usageFlags = subresourceLayout.usageFlags;
-	m_Desc.format = format;
-	m_Desc.offset = subresourceLayout.offset;
-	m_Desc.size = subresourceLayout.size;
+	m_Desc = desc;
 
 	m_Source.buffer = bufferSource.buffer;
 	m_Source.offset = m_Desc.offset;
