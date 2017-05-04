@@ -1279,11 +1279,11 @@ struct V3DImageDesc
 //! @brief イメージのサブリソースレイアウト
 struct V3DImageSubresourceLayout
 {
-	uint64_t offset; //!< メモリのオフセットです。 ( バイト単位 )
-	uint64_t size; //!< メモリのサイズです。 ( バイト単位 )
-	uint64_t rowPitch; //!< 行のピッチです。 ( バイト単位 )
-	uint64_t layerPitch; //!< レイヤーのピッチです。 ( バイト単位 )
-	uint64_t depthPitch; //!< 深さのピッチです。 ( バイト単位 )
+	uint64_t offset; //!< メモリのオフセットをバイト単位で指定します。
+	uint64_t size; //!< メモリのサイズをバイト単位で指定します。
+	uint64_t rowPitch; //!< 行のピッチをバイト単位で指定します。
+	uint64_t layerPitch; //!< レイヤーのピッチをバイト単位で指定します。
+	uint64_t depthPitch; //!< 深さのピッチですをバイト単位で指定します。
 };
 
 //! @}
@@ -1518,8 +1518,8 @@ struct V3DSamplerDesc
 	float maxAnisotropy; //!< 異方性値クランプ値です。
 	bool compareEnable; //!< 比較オペーレーションである compareOp を有効にするかどうかを指定します。
 	V3D_COMPARE_OP compareOp; //!< 比較オペレーターです。
-	float minLod; //!< 計算されたミップレベルをクランプする最小値です。
-	float maxLod; //!< 計算されたミップレベルをクランプする最大値です。
+	float minLod; //!< 計算されたミップレベルをクランプする最小値です。<br>通常この値は最初のミップマップを指定します。
+	float maxLod; //!< 計算されたミップレベルをクランプする最大値です。<br>通常この値はミップマップの数を指定します。
 	V3D_BORDER_COLOR borderColor; //!< 境界線の色です。
 };
 
@@ -1993,10 +1993,10 @@ public:
 	//! @brief 定数の数を取得します。
 	//! @return 定数の数を返します。
 	virtual uint32_t GetConstantCount() const = 0;
-	//! @brief 定数の範囲を取得します。
-	//! @param[in] constantIndex 定数のインデックスです。
-	//! @return 定数の範囲を表す V3DConstantDesc 構造体のアドレスを返します。
-	virtual const V3DConstantDesc& GetConstantDesc(uint32_t constantIndex) const = 0;
+	//! @brief 定数の記述を取得します。
+	//! @param[in] constant 定数のインデックスです。
+	//! @return 定数の記述を表す V3DConstantDesc 構造体のアドレスを返します。
+	virtual const V3DConstantDesc& GetConstantDesc(uint32_t constant) const = 0;
 
 	//! @brief デスクリプタセットの数を取得します。
 	//! @return デスクリプタセットの数を返します。
@@ -2646,7 +2646,7 @@ public:
 	//! @return スワップチェインの記述を表す V3DSwapChainDesc 構造体のアドレスを返します。
 	virtual const V3DSwapChainDesc& GetDesc() const = 0;
 
-	//! @brief イメージをレンダリングするイメージを獲得します。
+	//! @brief レンダリングするイメージを獲得します。
 	//! @retval V3D_OK
 	//! @retval V3D_TIMEOUT
 	//! @retval V3D_NOT_READY
@@ -2836,6 +2836,21 @@ struct V3DBarrierBufferDesc
 
 	uint64_t offset; //!< バッファーのメモリのオフセットをバイト単位で指定します。
 	uint64_t size; //!< バッファーのメモリのオフセットからのサイズをバイト単位で指定します。
+};
+
+//! @struct V3DBarrierBufferViewDesc
+//! @brief バッファービューバリアの記述
+struct V3DBarrierBufferViewDesc
+{
+	V3DFlags srcStageMask; //!< 現在のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstStageMask; //!< 移行先のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dependencyFlags; //!< 依存性を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
+
+	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
+
+	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
+	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
 };
 
 //! @struct V3DBarrierImageDesc
@@ -3098,7 +3113,7 @@ public:
 	//!     </td>
 	//!   </tr>
 	//! </table>
-	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferDesc& barrier) = 0;
+	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) = 0;
 
 	//! @brief イメージにバリアを張ります。
 	//! @param[in] pImage バリアを張るイメージです。
