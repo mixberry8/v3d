@@ -100,7 +100,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	swapChainDesc.imageCount = Window::BufferCount;
 	swapChainDesc.imageUsageFlags = V3D_IMAGE_USAGE_TRANSFER_SRC | V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_COLOR_ATTACHMENT;
 	swapChainDesc.fullscreenAssistEnable = true;
-	swapChainDesc.vsyncEnable = true;
+	swapChainDesc.vsyncEnable = false;
 	swapChainDesc.windowed = true;
 	swapChainDesc.queueFamily = m_pGraphicsQueue->GetFamily();
 	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
@@ -321,9 +321,9 @@ IV3DFence* Window::GetWorkFence()
 	return m_pWorkFence;
 }
 
-IV3DCommandBuffer* Window::GetCurrentGraphicsCommandBuffer()
+uint32_t Window::GetGraphicsQueueFamily() const
 {
-	return m_Frames[m_pSwapChain->GetCurrentImageIndex()].pGraphicsCommandBuffer;
+	return m_pGraphicsQueue->GetFamily();
 }
 
 IV3DCommandBuffer* Window::BeginWork()

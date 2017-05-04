@@ -30,7 +30,7 @@ public:
 	IV3DCommandBuffer* GetWorkCommandBuffer();
 	IV3DFence* GetWorkFence();
 
-	IV3DCommandBuffer* GetCurrentGraphicsCommandBuffer();
+	uint32_t GetGraphicsQueueFamily() const;
 
 	// ----------------------------------------------------------------------------------------------------
 	// Work
