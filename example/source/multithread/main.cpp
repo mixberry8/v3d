@@ -408,15 +408,6 @@ protected:
 		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
 
 		// サブパス 0
-		pCommandBufer->SetViewport(0, 1, &m_ParallelData.viewport);
-		pCommandBufer->SetScissor(0, 1, &m_ParallelData.scissor);
-
-		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &m_ParallelData.sceneConstant);
-
-		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindVertexBuffers(0, 1, &m_ParallelData.pMeshBuffer, &m_ParallelData.meshDrawDesc.vertexOffset);
-		pCommandBufer->BindIndexBuffer(m_ParallelData.pMeshBuffer, m_ParallelData.meshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
-
 		const DrawDesc& drawDesc = m_ParallelData.meshDrawDesc;
 		IV3DDescriptorSet* pDescriptorSet = m_ParallelData.descriptorSets[m_ParallelData.frame];
 		uint32_t uniformDynamicOffset = 0;
@@ -425,6 +416,15 @@ protected:
 		{
 			MultiThreadWindow::Mesh& mesh = (*it_mesh);
 
+			pCommandBufer->PushConstant(m_pPipelineLayout, 0, &m_ParallelData.sceneConstant);
+
+			pCommandBufer->BindPipeline(m_pPipeline);
+
+			pCommandBufer->SetViewport(0, 1, &m_ParallelData.viewport);
+			pCommandBufer->SetScissor(0, 1, &m_ParallelData.scissor);
+
+			pCommandBufer->BindVertexBuffers(0, 1, &m_ParallelData.pMeshBuffer, &m_ParallelData.meshDrawDesc.vertexOffset);
+			pCommandBufer->BindIndexBuffer(m_ParallelData.pMeshBuffer, m_ParallelData.meshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
 
 			pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pDescriptorSet, 1, &uniformDynamicOffset);
 			pCommandBufer->DrawIndexed(drawDesc.indexCount, drawDesc.instanceCount, 0, 0, 0);
@@ -900,7 +900,7 @@ protected:
 		{
 			V3DCommandPoolDesc commandPoolDesc{};
 			commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
-			commandPoolDesc.queueFamily = 0;
+			commandPoolDesc.queueFamily = GetGraphicsQueueFamily();
 
 			m_ParallelData.commandBuffers[i].reserve(threadCount);
 
@@ -986,18 +986,18 @@ protected:
 
 		pCommandBuffer->Begin(V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE, pParallel->pRenderPass, 0, pParallel->pFrameBuffer);
 
-		pCommandBuffer->PushConstant(pParallel->pPipelineLayout, 0, &pParallel->sceneConstant);
-
-		pCommandBuffer->BindPipeline(pParallel->pPipeline);
-
-		pCommandBuffer->SetViewport(0, 1, &pParallel->viewport);
-		pCommandBuffer->SetScissor(0, 1, &pParallel->scissor);
-
-		pCommandBuffer->BindVertexBuffers(0, 1, &pParallel->pMeshBuffer, &meshDrawDesc.vertexOffset);
-		pCommandBuffer->BindIndexBuffer(pParallel->pMeshBuffer, meshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
-
 		while (pMesh != pMeshEnd)
 		{
+			pCommandBuffer->PushConstant(pParallel->pPipelineLayout, 0, &pParallel->sceneConstant);
+
+			pCommandBuffer->BindPipeline(pParallel->pPipeline);
+
+			pCommandBuffer->SetViewport(0, 1, &pParallel->viewport);
+			pCommandBuffer->SetScissor(0, 1, &pParallel->scissor);
+
+			pCommandBuffer->BindVertexBuffers(0, 1, &pParallel->pMeshBuffer, &meshDrawDesc.vertexOffset);
+			pCommandBuffer->BindIndexBuffer(pParallel->pMeshBuffer, meshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
+
 			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, pParallel->pPipelineLayout, 0, 1, &pDescriptorSet, 1, &dynamicOffset);
 			pCommandBuffer->DrawIndexed(meshDrawDesc.indexCount, meshDrawDesc.instanceCount, 0, 0, 0);
 
@@ -1080,6 +1080,11 @@ class MultiThreadApp : public Application
 {
 public:
 	virtual ~MultiThreadApp() {}
+
+	virtual void OnPreCreate(ApplicationDesc& desc)
+	{
+		desc.fps = 0;
+	}
 
 	virtual bool OnInitialize() override
 	{
