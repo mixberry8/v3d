@@ -1,7 +1,7 @@
 ### version 0.0.1
 * 最初のリリースです。  
   
-### version 0.0.2  
+### version 0.0.2
 
 * #### 変更
   * V3DGraphicsPipelineDesc 構造体のメンバであった
@@ -36,3 +36,7 @@
   * サンプルにマルチスレッドで描画する multithread を追加しました。  
   
   * シェーダーの特殊化定数に対応しました。 V3DPipelineShader 構造体を確認してください。  
+
+### version 0.0.3
+  
+  * リリース情報は GitHub の機能を使用するようにしましたので、そちらをご覧ください。
