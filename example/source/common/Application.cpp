@@ -45,11 +45,6 @@ int32_t Application::Execute()
 
 	OnPreCreate(desc);
 
-	if (desc.fps == 0)
-	{
-		return -1;
-	}
-
 	// ----------------------------------------------------------------------------------------------------
 	// インスタンスの作成
 	// ----------------------------------------------------------------------------------------------------
@@ -120,7 +115,7 @@ int32_t Application::Execute()
 		::QueryPerformanceCounter(&curPerfCount);
 
 		LARGE_INTEGER framePeriodCount;
-		framePeriodCount.QuadPart = perFreq.QuadPart / desc.fps;
+		framePeriodCount.QuadPart = (desc.fps > 0)? (perFreq.QuadPart / desc.fps) : 0;
 
 		// Fps : リセット処理
 		if (m_ReqResetFps == true)
@@ -129,27 +124,30 @@ int32_t Application::Execute()
 			m_ReqResetFps = false;
 		}
 
-		// FPS : スリープ処理
-		LONGLONG frameSleepCount = framePeriodCount.QuadPart - (curPerfCount.QuadPart - m_StartFrameCount.QuadPart) + m_SleepErrorCount;
-		if (frameSleepCount > 0)
+		if (desc.fps > 0)
 		{
-			uint32_t frameSleepTime = static_cast<uint32_t>(frameSleepCount * 1000 / perFreq.QuadPart);
+			// FPS : スリープ処理
+			LONGLONG frameSleepCount = framePeriodCount.QuadPart - (curPerfCount.QuadPart - m_StartFrameCount.QuadPart) + m_SleepErrorCount;
+			if (frameSleepCount > 0)
+			{
+				uint32_t frameSleepTime = static_cast<uint32_t>(frameSleepCount * 1000 / perFreq.QuadPart);
 
-			LARGE_INTEGER sleepStartCount;
-			LARGE_INTEGER sleepEndCount;
+				LARGE_INTEGER sleepStartCount;
+				LARGE_INTEGER sleepEndCount;
 
-			::QueryPerformanceCounter(&sleepStartCount);
-			::Sleep(frameSleepTime);
-			::QueryPerformanceCounter(&sleepEndCount);
+				::QueryPerformanceCounter(&sleepStartCount);
+				::Sleep(frameSleepTime);
+				::QueryPerformanceCounter(&sleepEndCount);
 
-			// スリープの誤差
-			// 指定したスリープ時間よりも長くスリープした場合、値はマイナスになる
-			m_SleepErrorCount = frameSleepCount - (sleepEndCount.QuadPart - sleepStartCount.QuadPart);
-		}
-		else
-		{
-			::Sleep(0);
-			m_SleepErrorCount = 0;
+				// スリープの誤差
+				// 指定したスリープ時間よりも長くスリープした場合、値はマイナスになる
+				m_SleepErrorCount = frameSleepCount - (sleepEndCount.QuadPart - sleepStartCount.QuadPart);
+			}
+			else
+			{
+				::Sleep(0);
+				m_SleepErrorCount = 0;
+			}
 		}
 
 		// Fps : 更新処理
