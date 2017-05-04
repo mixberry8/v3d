@@ -28,12 +28,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\..\..\source\common\Font.cpp" />
+    <ClCompile Include="..\..\..\..\source\common\Frustum.cpp" />
     <ClCompile Include="..\..\..\..\source\common\Matrix3x3.cpp" />
     <ClCompile Include="..\..\..\..\source\common\Matrix4x4.cpp" />
     <ClCompile Include="..\..\..\..\source\common\NamingService.cpp" />
     <ClCompile Include="..\..\..\..\source\common\ParallelManager.cpp" />
+    <ClCompile Include="..\..\..\..\source\common\Plane.cpp" />
     <ClCompile Include="..\..\..\..\source\common\Quaternion.cpp" />
     <ClCompile Include="..\..\..\..\source\common\ResourceHeap.cpp" />
+    <ClCompile Include="..\..\..\..\source\common\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\source\common\Vector2.cpp" />
     <ClCompile Include="..\..\..\..\source\common\Vector3.cpp" />
     <ClCompile Include="..\..\..\..\source\common\Vector4.cpp" />
@@ -47,14 +50,17 @@
     <ClInclude Include="..\..\..\..\source\common\common.h" />
     <ClInclude Include="..\..\..\..\source\common\DDSImage.h" />
     <ClInclude Include="..\..\..\..\source\common\Font.h" />
+    <ClInclude Include="..\..\..\..\source\common\Frustum.h" />
     <ClInclude Include="..\..\..\..\source\common\IInputStream.h" />
     <ClInclude Include="..\..\..\..\source\common\Matrix3x3.h" />
     <ClInclude Include="..\..\..\..\source\common\Matrix4x4.h" />
     <ClInclude Include="..\..\..\..\source\common\MemoryInputStream.h" />
     <ClInclude Include="..\..\..\..\source\common\NamingService.h" />
     <ClInclude Include="..\..\..\..\source\common\ParallelManager.h" />
+    <ClInclude Include="..\..\..\..\source\common\Plane.h" />
     <ClInclude Include="..\..\..\..\source\common\Quaternion.h" />
     <ClInclude Include="..\..\..\..\source\common\ResourceHeap.h" />
+    <ClInclude Include="..\..\..\..\source\common\Sphere.h" />
     <ClInclude Include="..\..\..\..\source\common\Vector2.h" />
     <ClInclude Include="..\..\..\..\source\common\Vector3.h" />
     <ClInclude Include="..\..\..\..\source\common\Vector4.h" />
