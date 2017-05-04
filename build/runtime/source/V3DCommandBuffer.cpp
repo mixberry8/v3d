@@ -1509,9 +1509,6 @@ void V3DCommandBuffer::BindVertexBuffers(uint32_t firstBinding, uint32_t binding
 	m_Temp.buffers.resize(bindingCount);
 	VkBuffer* pDstBuffer = m_Temp.buffers.data();
 
-	m_Temp.memoryOffsets.resize(bindingCount);
-	uint64_t* pDstOffset = m_Temp.memoryOffsets.data();
-
 	V3DBuffer** ppSrcBuffer = reinterpret_cast<V3DBuffer**>(ppBuffers);
 	V3DBuffer** ppSrcBufferEnd = ppSrcBuffer + bindingCount;
 
@@ -1520,10 +1517,9 @@ void V3DCommandBuffer::BindVertexBuffers(uint32_t firstBinding, uint32_t binding
 	while (ppSrcBuffer != ppSrcBufferEnd)
 	{
 		*pDstBuffer++ = (*ppSrcBuffer++)->GetSource().buffer;
-		*pDstOffset++ = *pSrcOffset++;
 	}
 
-	vkCmdBindVertexBuffers(m_Source.commandBuffer, firstBinding, bindingCount, m_Temp.buffers.data(), m_Temp.memoryOffsets.data());
+	vkCmdBindVertexBuffers(m_Source.commandBuffer, firstBinding, bindingCount, m_Temp.buffers.data(), pOffsets);
 }
 
 void V3DCommandBuffer::BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D_INDEX_TYPE indexType)
