@@ -516,6 +516,27 @@ protected:
 		// ï¿óÒÉfÅ[É^ÇÃèâä˙âª
 		// ----------------------------------------------------------------------------------------------------
 
+		uint32_t threadCount = m_ParallelManager.GetThreadCount();
+
+		m_ParallelData.commandPools.reserve(threadCount);
+
+		for (uint32_t i = 0; i < threadCount; i++)
+		{
+			V3DCommandPoolDesc commandPoolDesc{};
+			commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
+			commandPoolDesc.queueFamily = 0;
+
+			IV3DCommandPool* pCommandPool;
+
+			V3D_RESULT result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &pCommandPool);
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+
+			m_ParallelData.commandPools.push_back(pCommandPool);
+		}
+
 		m_ParallelData.pMeshes = &m_Meshes;
 
 		// ----------------------------------------------------------------------------------------------------
@@ -533,6 +554,15 @@ protected:
 	virtual void OnFinalize() override
 	{
 		OnLostSwapChain();
+
+		if (m_ParallelData.commandPools.empty() == false)
+		{
+			for (size_t i = 0; i < m_ParallelData.commandPools.size(); i++)
+			{
+				SAFE_RELEASE(m_ParallelData.commandPools[i]);
+			}
+			m_ParallelData.commandPools.clear();
+		}
 
 		SAFE_RELEASE(m_FinishLightingStage.pDescriptorSet);
 		SAFE_RELEASE(m_FinishLightingStage.pPipelineLayout);
@@ -644,10 +674,12 @@ protected:
 		std::vector<MeshPtr>::iterator it_mesh_end = m_Meshes.end();
 		std::vector<MeshPtr>::iterator it_mesh;
 
+		m_MeshManager.BeginUpdate();
 		for (it_mesh = it_mesh_begin; it_mesh != it_mesh_end; ++it_mesh)
 		{
 			(*it_mesh)->Update(viewProjMat);
 		}
+		m_MeshManager.EndUpdate();
 
 #endif //ENABLE_MULTITHREAD
 
@@ -890,16 +922,12 @@ protected:
 
 		for (uint32_t i = 0; i < swapChainDesc.imageCount; i++)
 		{
-			V3DCommandPoolDesc commandPoolDesc{};
-			commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
-			commandPoolDesc.queueFamily = 0;
-
 			m_ParallelData.commandBuffer[i].reserve(threadCount);
 
 			for (uint32_t j = 0; j < threadCount; j++)
 			{
 				IV3DCommandBuffer* pCommandBuffer;
-				V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(commandPoolDesc, V3D_COMMAND_BUFFER_TYPE_SECONDARY, &pCommandBuffer);
+				V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(m_ParallelData.commandPools[j], V3D_COMMAND_BUFFER_TYPE_SECONDARY, &pCommandBuffer);
 				if (result != V3D_OK)
 				{
 					return false;
@@ -1070,6 +1098,7 @@ private:
 	struct ParallelData
 	{
 		uint32_t frame;
+		std::vector<IV3DCommandPool*> commandPools;
 		std::vector<std::vector<IV3DCommandBuffer*>> commandBuffer;
 		IV3DRenderPass* pRenderPass;
 		IV3DFrameBuffer* pFrameBuffer;
