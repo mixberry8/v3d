@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 typedef void(__stdcall *PParallelFunction)(uint32_t thread, uint32_t first, uint32_t count,	void* pData);
 
 class ParallelManager
@@ -24,9 +26,10 @@ private:
 	{
 		std::vector<HANDLE> threadHandles;
 		HANDLE wakeupSemaphore;
-		std::vector<HANDLE> compleateEventHandles;
+		std::atomic_uint32_t remainingCount;
+		HANDLE compleateEventHandle;
 
-		CRITICAL_SECTION threadEventCS;
+		CRITICAL_SECTION eventSync;
 		std::vector<ParallelManager::THREAD_EVENT_ARGS> threadEventArgs;
 
 		PParallelFunction function;
