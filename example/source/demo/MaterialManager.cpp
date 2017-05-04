@@ -3,7 +3,11 @@
 
 MaterialManager::MaterialManager() :
 	m_pGraphicsManager(nullptr),
-	m_MaxMaterial(0)
+	m_MaxMaterial(0),
+	m_UniformStride(0),
+	m_pUniformMemory(nullptr),
+	m_pUniformBuffer(nullptr),
+	m_InuseDynamicOffsetCount(0)
 {
 	for (uint32_t i = 0; i < MaterialManager::DUMMY_IMAGE_TYPE_COUNT; i++)
 	{
@@ -29,6 +33,47 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	m_MaxMaterial = maxMaterial;
 
 	// ------------------------------------------------------------------------------------------
+	// ユニフォームバッファを作成
+	// ------------------------------------------------------------------------------------------
+
+	BufferSubresourceDesc uniformBufferSubresource;
+	uniformBufferSubresource.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	uniformBufferSubresource.size = sizeof(Material::Uniform);
+	uniformBufferSubresource.count = maxMaterial;
+
+	BufferMemoryLayout uniformBufferMemoryLayout;
+	uint64_t uniformBufferMemorySize;
+
+	CalcBufferMemoryLayout(pGraphicsManager->GetDevicePtr(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, 1, &uniformBufferSubresource, &uniformBufferMemoryLayout, &uniformBufferMemorySize);
+
+	V3DBufferDesc uniformBufferDesc{};
+	uniformBufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	uniformBufferDesc.size = uniformBufferMemorySize;
+
+	V3D_RESULT result = pGraphicsManager->GetDevicePtr()->CreateBuffer(uniformBufferDesc, &m_pUniformBuffer);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	V3DFlags memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE | V3D_MEMORY_PROPERTY_HOST_COHERENT;
+	result = pGraphicsManager->GetDevicePtr()->CheckResourceMemoryProperty(memoryPropertyFlags, m_pUniformBuffer);
+	if (result != V3D_OK)
+	{
+		memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE;
+	}
+
+	result = pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(memoryPropertyFlags, m_pUniformBuffer);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	m_pUniformBuffer->GetResourceMemory(&m_pUniformMemory);
+
+	m_UniformStride = TO_UI32(uniformBufferMemoryLayout.stride);
+
+	// ------------------------------------------------------------------------------------------
 	// ダミーイメージを作成
 	// ------------------------------------------------------------------------------------------
 
@@ -45,7 +90,7 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	imageDesc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_SAMPLED;
 
 	IV3DImage* pDummyAlbedoImage;
-	V3D_RESULT result = CreateDummyImage(&pDummyAlbedoImage);
+	result = CreateDummyImage(&pDummyAlbedoImage);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -214,7 +259,8 @@ void MaterialManager::Finalize()
 		SAFE_RELEASE(m_pDummyImageViews[i]);
 	}
 
-	m_UniformBufferHeap.Dispose();
+	SAFE_RELEASE(m_pUniformBuffer);
+	SAFE_RELEASE(m_pUniformMemory);
 
 	m_pGraphicsManager = nullptr;
 }
@@ -284,43 +330,30 @@ IV3DSampler* MaterialManager::GetSamplerPtr(V3D_FILTER filter, V3D_ADDRESS_MODE 
 	return m_pSamplers[filter][addressMode];
 }
 
-V3D_RESULT MaterialManager::CreateUniformBuffer(IV3DBuffer** ppBuffer, ResourceHeap::Handle* pHandle)
+void MaterialManager::GetUniformBuffer(IV3DBuffer** ppBuffer)
 {
-	V3DBufferDesc bufferDesc{};
-	bufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-	bufferDesc.size = sizeof(Material::Uniform);
-
-	V3D_RESULT result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(bufferDesc, ppBuffer);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	if (m_UniformBufferHeap.IsInitialized() == false)
-	{
-		V3DFlags memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE | V3D_MEMORY_PROPERTY_HOST_COHERENT;
-		if (m_pGraphicsManager->GetDevicePtr()->CheckResourceMemoryProperty(memoryPropertyFlags, 1, reinterpret_cast<IV3DResource**>(ppBuffer)) != V3D_OK)
-		{
-			memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE;
-		}
-
-		result = m_UniformBufferHeap.Initialize(m_pGraphicsManager->GetDevicePtr(), memoryPropertyFlags, (*ppBuffer)->GetResourceDesc().memorySize * m_MaxMaterial);
-		if (result != V3D_OK)
-		{
-			return result;
-		}
-	}
-
-	result = m_UniformBufferHeap.Bind((*ppBuffer), pHandle);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
-
-	return V3D_OK;
+	SAFE_ADD_REF(m_pUniformBuffer);
+	*ppBuffer = m_pUniformBuffer;
 }
 
-void MaterialManager::ReleaseUniformBuffer(ResourceHeap::Handle handle)
+void MaterialManager::RetainUniformDynamicOffset(uint32_t* pDynamicOffset)
 {
-	m_UniformBufferHeap.Unbind(handle);
+	if (m_UnuseUniformDynamicOffsets.empty() == false)
+	{
+		*pDynamicOffset = m_UnuseUniformDynamicOffsets.back();
+		m_UnuseUniformDynamicOffsets.pop_back();
+	}
+	else
+	{
+		*pDynamicOffset = m_InuseDynamicOffsetCount * m_UniformStride;
+		m_InuseDynamicOffsetCount++;
+	}
+}
+
+void MaterialManager::ReleaseUniformDynamicOffset(uint32_t dynamicOffset)
+{
+	ASSERT(m_InuseDynamicOffsetCount > 0);
+
+	m_UnuseUniformDynamicOffsets.push_back(dynamicOffset);
+	m_InuseDynamicOffsetCount--;
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GraphicsManager.h"
-#include "ResourceHeap.h"
 #include "Texture.h"
 
 class MaterialManager;
@@ -89,7 +88,7 @@ private:
 	GraphicsPipelineHandle m_PipelineHandle;
 
 	IV3DBuffer* m_pUniformBuffer;
-	ResourceHeap::Handle m_UniformBufferHandle;
+	uint32_t m_UniformDynamicOffset;
 	IV3DDescriptorSet* m_pDescriptorSet;
 
 	V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, MaterialManager* pMaterialManager, const wchar_t* pName);

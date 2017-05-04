@@ -29,7 +29,12 @@ private:
 
 	GraphicsManager* m_pGraphicsManager;
 	uint32_t m_MaxMaterial;
-	ResourceHeap m_UniformBufferHeap;
+
+	IV3DResourceMemory* m_pUniformMemory;
+	uint32_t m_UniformStride;
+	IV3DBuffer* m_pUniformBuffer;
+	std::vector<uint32_t> m_UnuseUniformDynamicOffsets;
+	uint32_t m_InuseDynamicOffsetCount;
 
 	Array1<IV3DImageView*, MaterialManager::DUMMY_IMAGE_TYPE_COUNT> m_pDummyImageViews;
 	Array2<IV3DSampler*, MaterialManager::SamplerFilterCount, MaterialManager::SamplerAddressModeCount> m_pSamplers;
@@ -44,8 +49,9 @@ private:
 
 	// ----------------------------------------------------------------------------------------------------
 
-	V3D_RESULT CreateUniformBuffer(IV3DBuffer** ppBuffer, ResourceHeap::Handle* pHandle);
-	void ReleaseUniformBuffer(ResourceHeap::Handle handle);
+	void GetUniformBuffer(IV3DBuffer** ppBuffer);
+	void RetainUniformDynamicOffset(uint32_t* pDynamicOffset);
+	void ReleaseUniformDynamicOffset(uint32_t dynamicOffset);
 
 	friend class Material;
 };

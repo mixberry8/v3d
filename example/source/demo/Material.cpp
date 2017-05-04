@@ -9,7 +9,7 @@ Material::Material() :
 	m_PipelineDesc({}),
 	m_PipelineHandle(nullptr),
 	m_pUniformBuffer(nullptr),
-	m_UniformBufferHandle(nullptr),
+	m_UniformDynamicOffset(~0U),
 	m_pDescriptorSet(nullptr),
 	m_Filter(V3D_FILTER_LINEAR),
 	m_AddressMode(V3D_ADDRESS_MODE_REPEAT)
@@ -55,11 +55,8 @@ V3D_RESULT Material::Initialize(GraphicsManager* pGraphicsManager, MaterialManag
 	// ユニフォームバッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	result = m_pMaterialManager->CreateUniformBuffer(&m_pUniformBuffer, &m_UniformBufferHandle);
-	if (result != V3D_OK)
-	{
-		return result;
-	}
+	m_pMaterialManager->GetUniformBuffer(&m_pUniformBuffer);
+	m_pMaterialManager->RetainUniformDynamicOffset(&m_UniformDynamicOffset);
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットを作成
@@ -112,9 +109,9 @@ void Material::Dispose()
 	SAFE_RELEASE(m_pDescriptorSet);
 	SAFE_RELEASE(m_pUniformBuffer);
 
-	if ((m_pMaterialManager != nullptr) && (m_UniformBufferHandle != nullptr))
+	if ((m_pMaterialManager != nullptr) && (m_UniformDynamicOffset != ~0U))
 	{
-		m_pMaterialManager->ReleaseUniformBuffer(m_UniformBufferHandle);
+		m_pMaterialManager->ReleaseUniformDynamicOffset(m_UniformDynamicOffset);
 	}
 
 	m_PipelineHandle = nullptr;
