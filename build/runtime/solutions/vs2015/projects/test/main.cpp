@@ -15,7 +15,7 @@ static auto constexpr SCREEN_WIDTH = 1024;
 static auto constexpr SCREEN_HEIGHT = 768;
 static auto constexpr BUFFER_COUNT = 2;
 
-static auto constexpr MESH_SIDE_COUNT = 20;
+static auto constexpr MESH_SIDE_COUNT = 10;
 static auto constexpr POINT_LIGHT_SIDE_COUNT = 3;
 
 static auto constexpr MATERIAL_MAX = 100;
