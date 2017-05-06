@@ -22,17 +22,24 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	// ----------------------------------------------------------------------------------------------------
 
 	STLVector<VkPushConstantRange> vkConstantRanges;
-	vkConstantRanges.resize(constantCount);
-	for (uint32_t i = 0; i < constantCount; i++)
+
+	if (constantCount > 0)
 	{
-		const V3DConstantDesc& src = pConstants[i];
-		VkPushConstantRange& dst = vkConstantRanges[i];
+		vkConstantRanges.reserve(constantCount);
+		m_Constants.reserve(constantCount);
 
-		dst.stageFlags = ToVkShaderStageFlags(src.shaderStageFlags);
-		dst.offset = src.offset;
-		dst.size = src.size;
+		for (uint32_t i = 0; i < constantCount; i++)
+		{
+			const V3DConstantDesc& src = pConstants[i];
+			VkPushConstantRange dst{};
 
-		m_Constants.push_back(src);
+			dst.stageFlags = ToVkShaderStageFlags(src.shaderStageFlags);
+			dst.offset = src.offset;
+			dst.size = src.size;
+
+			vkConstantRanges.push_back(dst);
+			m_Constants.push_back(src);
+		}
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -40,14 +47,19 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	// ----------------------------------------------------------------------------------------------------
 
 	STLVector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
-	vkDescriptorSetLayouts.resize(descriptorSetLayoutCount);
 
-	m_DescriptorSetLayouts.reserve(descriptorSetLayoutCount);
-
-	for (uint32_t i = 0; i < descriptorSetLayoutCount; i++)
+	if (descriptorSetLayoutCount > 0)
 	{
-		vkDescriptorSetLayouts[i] = static_cast<V3DDescriptorSetLayout*>(ppDescriptorSetLayouts[i])->GetSource().descriptorSetLayout;
-		m_DescriptorSetLayouts.push_back(V3D_TO_ADD_REF(ppDescriptorSetLayouts[i]));
+		vkDescriptorSetLayouts.reserve(descriptorSetLayoutCount);
+		m_DescriptorSetLayouts.reserve(descriptorSetLayoutCount);
+
+		for (uint32_t i = 0; i < descriptorSetLayoutCount; i++)
+		{
+			V3DDescriptorSetLayout* pInternalDescriptorSet = static_cast<V3DDescriptorSetLayout*>(ppDescriptorSetLayouts[i]);
+
+			vkDescriptorSetLayouts.push_back(pInternalDescriptorSet->GetSource().descriptorSetLayout);
+			m_DescriptorSetLayouts.push_back(V3D_TO_ADD_REF(pInternalDescriptorSet));
+		}
 	}
 
 	// ----------------------------------------------------------------------------------------------------
