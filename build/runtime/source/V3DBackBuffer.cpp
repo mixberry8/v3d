@@ -12,7 +12,7 @@ V3DBackBuffer* V3DBackBuffer::Create()
 	return V3D_NEW_T(V3DBackBuffer);
 }
 
-V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height)
+V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(image != VK_NULL_HANDLE);
@@ -29,6 +29,7 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	m_Desc.format = ToV3DFormat(format);
 	m_Desc.width = width;
 	m_Desc.height = height;
+	m_Desc.usageFlags = ToVkImageUsageFlags(usage);
 
 	m_ResourceDesc.memoryTypeBits = vkMemReq.memoryTypeBits;
 	m_ResourceDesc.memorySize = vkMemReq.size;
@@ -145,7 +146,6 @@ V3DBackBuffer::V3DBackBuffer() :
 	m_Desc.layerCount = 1;
 	m_Desc.samples = V3D_SAMPLE_COUNT_1;
 	m_Desc.tiling = V3D_IMAGE_TILING_OPTIMAL;
-	m_Desc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_SRC | V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_COLOR_ATTACHMENT;
 
 	m_Source.image = VK_NULL_HANDLE;
 	m_Source.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;

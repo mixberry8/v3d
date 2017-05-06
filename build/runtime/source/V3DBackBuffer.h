@@ -8,7 +8,7 @@ class V3DBackBuffer : public IV3DImageBase
 {
 public:
 	static V3DBackBuffer* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage);
 
 	/*****************/
 	/* IV3DImageBase */
