@@ -255,7 +255,7 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 	vkDepthStencilState.front.failOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilFront.failOp);
 	vkDepthStencilState.front.passOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilFront.passOp);
 	vkDepthStencilState.front.depthFailOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilFront.depthFailOp);
-	vkDepthStencilState.front.compareOp = ToVkCompareOp(pipelineDesc.depthStencil.stencilFront.compareOP);
+	vkDepthStencilState.front.compareOp = ToVkCompareOp(pipelineDesc.depthStencil.stencilFront.compareOp);
 	vkDepthStencilState.front.compareMask = pipelineDesc.depthStencil.stencilFront.readMask;
 	vkDepthStencilState.front.writeMask = pipelineDesc.depthStencil.stencilFront.writeMask;
 	vkDepthStencilState.front.reference = pipelineDesc.depthStencil.stencilFront.reference;
@@ -263,7 +263,7 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 	vkDepthStencilState.back.failOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilBack.failOp);
 	vkDepthStencilState.back.passOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilBack.passOp);
 	vkDepthStencilState.back.depthFailOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilBack.depthFailOp);
-	vkDepthStencilState.back.compareOp = ToVkCompareOp(pipelineDesc.depthStencil.stencilBack.compareOP);
+	vkDepthStencilState.back.compareOp = ToVkCompareOp(pipelineDesc.depthStencil.stencilBack.compareOp);
 	vkDepthStencilState.back.compareMask = pipelineDesc.depthStencil.stencilBack.readMask;
 	vkDepthStencilState.back.writeMask = pipelineDesc.depthStencil.stencilBack.writeMask;
 	vkDepthStencilState.back.reference = pipelineDesc.depthStencil.stencilBack.reference;
