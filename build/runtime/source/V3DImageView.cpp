@@ -50,8 +50,6 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 
 	m_Desc = desc;
 
-	// ----------------------------------------------------------------------------------------------------
-
 	const V3DImageDesc& imageDesc = m_pImage->GetDesc();
 
 	m_Source.image = createInfo.image;
@@ -59,27 +57,6 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 	m_Source.extent.width = V3D_MAX(1, imageDesc.width / (desc.baseLevel + 1));
 	m_Source.extent.height = V3D_MAX(1, imageDesc.height / (desc.baseLevel + 1));
 	m_Source.extent.depth = imageDesc.depth;
-
-	if (imageDesc.tiling == V3D_IMAGE_TILING_LINEAR)
-	{
-		VkDevice vkDevice = m_pDevice->GetSource().device;
-
-		VkImageSubresource vkImageSubresource{};
-		vkImageSubresource.aspectMask = m_Source.imageSubresourceRange.aspectMask;
-
-		VkSubresourceLayout vkSubresourceLayout;
-
-		for (uint32_t i = 0; i < m_Desc.levelCount; i++)
-		{
-			vkImageSubresource.mipLevel = m_Source.imageSubresourceRange.baseMipLevel + i;
-			for (uint32_t j = 0; j < m_Desc.layerCount; j++)
-			{
-				vkImageSubresource.arrayLayer = m_Source.imageSubresourceRange.baseArrayLayer + j;
-
-				vkGetImageSubresourceLayout(vkDevice, m_Source.image, &vkImageSubresource, &vkSubresourceLayout);
-			}
-		}
-	}
 
 	// ----------------------------------------------------------------------------------------------------
 
