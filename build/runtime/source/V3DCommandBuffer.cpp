@@ -177,16 +177,27 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 			return V3D_ERROR_FAIL;
 		}
 	}
+
+	if (usageFlags & V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE)
+	{
+		if (m_Type == V3D_COMMAND_BUFFER_TYPE_PRIMARY)
+		{
+			V3D_LOG_WARNING(Log_Warning_CommandBufferSimultaneousUse);
+		}
+	}
 #endif //_DEBUG
 
-	VkCommandBufferInheritanceInfo& commandBufferInheritanceInfo = m_Source.commandBufferInheritanceInfo;
-	commandBufferInheritanceInfo.renderPass = (pRenderPass != nullptr)? static_cast<V3DRenderPass*>(pRenderPass)->GetSource().renderPass : VK_NULL_HANDLE;
-	commandBufferInheritanceInfo.subpass = subpass;
-	commandBufferInheritanceInfo.framebuffer = (pFrameBuffer != nullptr)? static_cast<V3DFrameBuffer*>(pFrameBuffer)->GetSource().framebuffer : VK_NULL_HANDLE;
+	if (m_Type == V3D_COMMAND_BUFFER_TYPE_SECONDARY)
+	{
+		VkCommandBufferInheritanceInfo& commandBufferInheritanceInfo = m_Source.commandBufferInheritanceInfo;
+		commandBufferInheritanceInfo.renderPass = (pRenderPass != nullptr) ? static_cast<V3DRenderPass*>(pRenderPass)->GetSource().renderPass : VK_NULL_HANDLE;
+		commandBufferInheritanceInfo.subpass = subpass;
+		commandBufferInheritanceInfo.framebuffer = (pFrameBuffer != nullptr) ? static_cast<V3DFrameBuffer*>(pFrameBuffer)->GetSource().framebuffer : VK_NULL_HANDLE;
+	}
 
 	VkCommandBufferBeginInfo& commandBufferBeginInfo = m_Source.commandBufferBeginInfo;
 	commandBufferBeginInfo.flags = ToVkCommandBufferUsageFlags(usageFlags);
-	commandBufferBeginInfo.pInheritanceInfo = &m_Source.commandBufferInheritanceInfo;
+	commandBufferBeginInfo.pInheritanceInfo = (m_Type == V3D_COMMAND_BUFFER_TYPE_SECONDARY)? &m_Source.commandBufferInheritanceInfo : nullptr;
 
 	VkResult vkResult = vkBeginCommandBuffer(m_Source.commandBuffer, &m_Source.commandBufferBeginInfo);
 	if (vkResult != VK_SUCCESS)
