@@ -646,10 +646,9 @@ enum V3D_SAMPLE_COUNT_FLAG
 
 //! @enum V3D_COMPARE_OP
 //! @brief 比較オペレーター
-//! <br>
-//! <table>
-//! <tr><td></td><td></td></tr>
-//! </table>
+//! @sa V3DSamplerDesc::compareOp
+//! @sa V3DPipelineStencilOpDesc::compareOp
+//! @sa V3DPipelineDepthStencilDesc::depthCompareOp
 enum V3D_COMPARE_OP
 {
 	V3D_COMPARE_OP_NEVER = 0, //!< テストは絶対に通過しません。
@@ -1516,8 +1515,12 @@ struct V3DSamplerDesc
 	float mipLodBias; //!< 計算されたミップマップレベルからのオフセットです。
 	bool anisotropyEnable; //!< 異方性フィルタリングを有効にするかどうかを指定します。
 	float maxAnisotropy; //!< 異方性値クランプ値です。
-	bool compareEnable; //!< 比較オペーレーションである compareOp を有効にするかどうかを指定します。
-	V3D_COMPARE_OP compareOp; //!< 比較オペレーターです。
+	bool compareEnable; //!< 比較オペーレーターである compareOp を有効にするかどうかを指定します。
+
+	//! @brief 比較オペレーターです。<br>
+	//! \link V3D_COMPARE_OP \endlink の説明にある R はサンプラーによって入力される値であり、S はアタッチメントのテクセルの値を表します。
+	V3D_COMPARE_OP compareOp;
+
 	float minLod; //!< 計算されたミップレベルをクランプする最小値です。<br>通常この値は最初のミップマップを指定します。
 	float maxLod; //!< 計算されたミップレベルをクランプする最大値です。<br>通常この値はミップマップの数を指定します。
 	V3D_BORDER_COLOR borderColor; //!< 境界線の色です。
@@ -2411,7 +2414,10 @@ struct V3DPipelineStencilOpDesc
 	V3D_STENCIL_OP failOp; //!< ステンシルテストに失敗したサンプルに対して実行されるアクションです。
 	V3D_STENCIL_OP passOp; //!< 深さテストとステンシルテストの両方に合格したサンプルに対して実行されるアクションです。
 	V3D_STENCIL_OP depthFailOp; //!< ステンシルテストに合格し、深度テストに合格しなかったサンプルに対して実行されるアクションです。
-	V3D_COMPARE_OP compareOP; //!< ステンシルテストで使用される比較オペレーターです。
+
+	//! @brief ステンシルテストで使用される比較オペレーターです。<br>
+	//! \link V3D_COMPARE_OP \endlink の説明にある R はマスクされた reference の値であり、S はマスクされたステンシルの値を表します。
+	V3D_COMPARE_OP compareOp;
 
 	//! @brief ステンシルテストによって読み込まれる値のビットマスクを指定します。<br>
 	//! この値は IV3DCommandBuffer::SetStencilReadMask で変更することができます。
@@ -2447,7 +2453,8 @@ struct V3DPipelineDepthStencilDesc
 	bool depthTestEnable;
 	//! @brief 深度を書き込むかどうかを指定します。
 	bool depthWriteEnable;
-	//! @brief 深度テストの比較オペレーターを指定します。
+	//! @brief 深度テストの比較オペレーターを指定します。<br>
+	//! \link V3D_COMPARE_OP \endlink の説明にある R は入力される深度であり、S はアタッチメントの深度を表します。
 	V3D_COMPARE_OP depthCompareOp;
 
 	//! @brief ステンシルテストをするかどうかを指定します。
@@ -2790,7 +2797,8 @@ enum V3D_COMMAND_BUFFER_USAGE
 	V3D_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT = 0x00000001,
 	//! @brief プライマリコマンドバッファーで開始されたレンダーパス内で実行されるセカンダリコマンドバッファーがレンダーパス、サブパス、フレームバッファを引き継ぐことを表します。
 	V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE = 0x00000002,
-	//! @brief セカンダリコマンドバッファーが複数のプライマリコマンドバッファーに記録 ( IV3DCommandBuffer::ExecuteCommandBuffers ) できることを表します。
+	//! @brief コマンドバッファーが複数のキューに送信 (IV3DQueue::Submit) またはプライマリコマンドバッファーに記録 ( IV3DCommandBuffer::ExecuteCommandBuffers ) できることを表します。<br>
+	//! また、プライマリコマンドバッファーにこの使用法が指定されている場合、そこで実行されるセカンダリコマンドバッファーも同様にこの使用法を指定する必要があります。
 	V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE = 0x00000004,
 };
 
@@ -2901,14 +2909,14 @@ struct V3DCopyBufferToImageRange
 	V3DPoint3D dstImageOffset; //!< コピー先イメージのオフセットです。
 	V3DSize3D dstImageSize; //!< コピー先イメージのサイズ
 
-	uint64_t srcBufferOffset; //!< コピー元バッファのオフセットです。( バイト単位 )
+	uint64_t srcBufferOffset; //!< コピー元バッファのオフセットをバイト単位で指定します。
 };
 
 //! @struct V3DCopyImageToBufferRange
 //! @brief イメージをバッファにコピーする範囲
 struct V3DCopyImageToBufferRange
 {
-	uint64_t dstBufferOffset; //!< コピー先バッファのオフセットです。( バイト単位 )
+	uint64_t dstBufferOffset; //!< コピー先バッファのオフセットをバイト単位で指定します。
 
 	V3DImageSubresourceRange srcImageSubresource; //!< コピー元イメージのサブリソースです。
 	V3DPoint3D srcImageOffset; //!< コピー元イメージのオフセットです。
@@ -4894,7 +4902,7 @@ struct V3DDeviceCaps
 	uint32_t maxUniformBufferSize;
 	//! @brief ストレージバッファの最大サイズです。
 	uint32_t maxStorageBufferSize;
-	//! @brief IV3DCommandBuffer::PushConstant でプッシュできる定数の最大サイズです。( バイト単位 )
+	//! @brief IV3DCommandBuffer::PushConstant でプッシュできる定数の最大サイズをバイト単位で指定します。
 	uint32_t maxPushConstantsSize;
 	//! @brief デバイスが作成できるリソースメモリの最大数です。
 	//! @sa IV3DDevice::AllocateResourceMemory
@@ -4958,9 +4966,9 @@ struct V3DDeviceCaps
 	uint32_t maxVertexInputElements;
 	//! @brief 一度にバインドできる頂点バッファの最大数です。
 	uint32_t maxVertexInputBindings;
-	//! @brief 頂点要素の最大オフセットです。( バイト単位 )
+	//! @brief 頂点要素の最大オフセットをバイト単位で指定します。
 	uint32_t maxVertexInputElementOffset;
-	//! @brief 頂点レイアウトの最大ストライド ( V3DPipelineVertexLayout::stride ) です。( バイト単位 )
+	//! @brief 頂点レイアウトの最大ストライド ( V3DPipelineVertexLayout::stride ) をバイト単位で指定します。
 	uint32_t maxVertexInputBindingStride;
 	//! @brief バーテックスシェーダーによって出力することのできる変数の成分の最大数です。
 	uint32_t maxVertexOutputComponents;
@@ -5584,7 +5592,10 @@ public:
 	virtual V3D_RESULT CreateComputePipeline(IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline) = 0;
 
 	//! @brief デバイスがアイドル状態になるまで待機します
-	//! @retval V3D_OK デバイスがアイドル状態になった
+	//! @retval V3D_OK
+	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
+	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
+	//! @retval V3D_ERROR_DEVICE_LOST
 	virtual V3D_RESULT WaitIdle() = 0;
 
 protected:
@@ -5624,8 +5635,8 @@ enum V3D_LOG_FLAG : V3DFlags
 	V3D_LOG_ERROR = 0x00000008, //!< エラーです。
 	V3D_LOG_DEBUG = 0x00000010, //!< デバッグです。
 
-	V3D_LOG_STANDARD = V3D_LOG_WARNING | V3D_LOG_ERROR, //!< 標準のログを表表します。
-	V3D_LOG_ALL = V3D_LOG_INFORMATION | V3D_LOG_WARNING | V3D_LOG_PERFORMANCE_WARNING | V3D_LOG_ERROR | V3D_LOG_DEBUG, //!< すべてのログを表表します。
+	V3D_LOG_STANDARD = V3D_LOG_WARNING | V3D_LOG_ERROR, //!< 標準のログを表示します。
+	V3D_LOG_ALL = V3D_LOG_INFORMATION | V3D_LOG_WARNING | V3D_LOG_PERFORMANCE_WARNING | V3D_LOG_ERROR | V3D_LOG_DEBUG, //!< すべてのログを表示します。
 };
 
 //! @}
