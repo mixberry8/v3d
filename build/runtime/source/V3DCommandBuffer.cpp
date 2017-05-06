@@ -177,15 +177,10 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 			return V3D_ERROR_FAIL;
 		}
 	}
-
-	if (usageFlags & V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE)
-	{
-		if (m_Type == V3D_COMMAND_BUFFER_TYPE_PRIMARY)
-		{
-			V3D_LOG_WARNING(Log_Warning_CommandBufferSimultaneousUse);
-		}
-	}
 #endif //_DEBUG
+
+	VkCommandBufferBeginInfo& commandBufferBeginInfo = m_Source.commandBufferBeginInfo;
+	commandBufferBeginInfo.flags = ToVkCommandBufferUsageFlags(usageFlags);
 
 	if (m_Type == V3D_COMMAND_BUFFER_TYPE_SECONDARY)
 	{
@@ -193,11 +188,13 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 		commandBufferInheritanceInfo.renderPass = (pRenderPass != nullptr) ? static_cast<V3DRenderPass*>(pRenderPass)->GetSource().renderPass : VK_NULL_HANDLE;
 		commandBufferInheritanceInfo.subpass = subpass;
 		commandBufferInheritanceInfo.framebuffer = (pFrameBuffer != nullptr) ? static_cast<V3DFrameBuffer*>(pFrameBuffer)->GetSource().framebuffer : VK_NULL_HANDLE;
-	}
 
-	VkCommandBufferBeginInfo& commandBufferBeginInfo = m_Source.commandBufferBeginInfo;
-	commandBufferBeginInfo.flags = ToVkCommandBufferUsageFlags(usageFlags);
-	commandBufferBeginInfo.pInheritanceInfo = (m_Type == V3D_COMMAND_BUFFER_TYPE_SECONDARY)? &m_Source.commandBufferInheritanceInfo : nullptr;
+		commandBufferBeginInfo.pInheritanceInfo = &m_Source.commandBufferInheritanceInfo;
+	}
+	else
+	{
+		commandBufferBeginInfo.pInheritanceInfo = nullptr;
+	}
 
 	VkResult vkResult = vkBeginCommandBuffer(m_Source.commandBuffer, &m_Source.commandBufferBeginInfo);
 	if (vkResult != VK_SUCCESS)
@@ -1958,19 +1955,35 @@ void V3DCommandBuffer::ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCo
 		return;
 	}
 
+	uint32_t degbuErrorCount = 0;
+
 	for (uint32_t i = 0; i < commandBufferCount; i++)
 	{
 		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_SECONDARY)
 		{
 			V3D_LOG_ERROR(Log_Error_NotSecondaryCommandBuffer, V3D_LOG_TYPE(ppCommandBuffers), i);
-			return;
+			degbuErrorCount++;
 		}
 
-		if (static_cast<V3DCommandBuffer*>(ppCommandBuffers[i])->m_Debug.isBegin == true)
+		V3DCommandBuffer* pInternalCommandBuffer = static_cast<V3DCommandBuffer*>(ppCommandBuffers[i]);
+
+		if (pInternalCommandBuffer->m_Debug.isBegin == true)
 		{
 			V3D_LOG_ERROR(Log_Error_SecondaryCommandBufferNotEnd, V3D_LOG_TYPE(ppCommandBuffers), i);
-			return;
+			degbuErrorCount++;
 		}
+
+		if ((m_Source.commandBufferBeginInfo.flags & VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT) &&
+			((pInternalCommandBuffer->GetSource().commandBufferBeginInfo.flags & VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT) == 0))
+		{
+			V3D_LOG_ERROR(Log_Error_CommandBuffersSimultaneousUse, V3D_LOG_TYPE(ppCommandBuffers), i);
+			degbuErrorCount++;
+		}
+	}
+
+	if (degbuErrorCount > 0)
+	{
+		return;
 	}
 #endif //_DEBUG
 
