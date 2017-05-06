@@ -1,6 +1,15 @@
 #include "ParallelManager.h"
 #include <process.h>
 
+ParallelManager::ParallelManager() :
+	m_Init(false)
+{
+}
+
+ParallelManager::~ParallelManager()
+{
+}
+
 bool ParallelManager::Initialize()
 {
 	SYSTEM_INFO sysInfo;
@@ -31,11 +40,18 @@ bool ParallelManager::Initialize()
 		::SetThreadAffinityMask(m_ThreadData.threadHandles[i], mask);
 	}
 
+	m_Init = true;
+
 	return true;
 }
 
 void ParallelManager::Finalize()
 {
+	if (m_Init == false)
+	{
+		return;
+	}
+
 	// スレッドに終了を通知
 	m_ThreadData.threadEventArgs.clear();
 
@@ -55,6 +71,8 @@ void ParallelManager::Finalize()
 	::DeleteCriticalSection(&m_ThreadData.eventSync);
 	::CloseHandle(m_ThreadData.compleateEventHandle);
 	::CloseHandle(m_ThreadData.wakeupSemaphore);
+
+	m_Init = false;
 }
 
 void ParallelManager::Execute(PParallelFunction function, uint32_t count, void* pData)

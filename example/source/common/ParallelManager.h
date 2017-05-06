@@ -7,6 +7,9 @@ typedef void(__stdcall *PParallelFunction)(uint32_t thread, uint32_t first, uint
 class ParallelManager
 {
 public:
+	ParallelManager();
+	~ParallelManager();
+
 	bool Initialize();
 	void Finalize();
 
@@ -36,6 +39,7 @@ private:
 		void* pData;
 	};
 
+	bool m_Init;
 	THREAD_DATA m_ThreadData;
 
 	static unsigned __stdcall WorkThread(void* pData);
