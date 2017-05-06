@@ -43,6 +43,8 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 	STLVector<VkImageView> vkImageViews;
 	vkImageViews.reserve(attachmentCount);
 
+	m_ImageViews.reserve(attachmentCount);
+
 	const V3DImageView::Source& imageViewSource = static_cast<V3DImageView*>(ppAttachments[0])->GetSource();
 
 	for (uint32_t i = 0; i < attachmentCount; i++)
