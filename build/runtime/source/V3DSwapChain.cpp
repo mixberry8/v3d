@@ -578,7 +578,7 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight);
+		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage);
 		if (result != V3D_OK)
 		{
 			V3D_RELEASE(pBackBuffer);
@@ -712,7 +712,7 @@ V3D_RESULT V3DSwapChain::RecreateSwapChain()
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight);
+		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage);
 		if (result != V3D_OK)
 		{
 			V3D_RELEASE(pBackBuffer);
