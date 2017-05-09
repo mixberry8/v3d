@@ -276,6 +276,52 @@ void Matrix4x4::Transform(uint32_t vectorCount, Vector4* vectors)
 	}
 }
 
+void Matrix4x4::TransformSR(uint32_t vectorCount, Vector3* vectors)
+{
+	ASSERT(vectorCount > 0);
+	ASSERT(vectors != nullptr);
+
+	Vector3* src = vectors;
+	Vector3* srcEnd = src + vectorCount;
+
+	while (src != srcEnd)
+	{
+		float vx = (x.x * src->x) + (y.x * src->y) + (z.x * src->z);
+		float vy = (x.y * src->x) + (y.y * src->y) + (z.y * src->z);
+		float vz = (x.z * src->x) + (y.z * src->y) + (z.z * src->z);
+
+		src->x = vx;
+		src->y = vy;
+		src->z = vz;
+
+		src++;
+	}
+}
+
+void Matrix4x4::TransformSR(uint32_t vectorCount, Vector4* vectors)
+{
+	ASSERT(vectorCount > 0);
+	ASSERT(vectors != nullptr);
+
+	Vector4* src = vectors;
+	Vector4* srcEnd = src + vectorCount;
+
+	while (src != srcEnd)
+	{
+		float vx = (x.x * src->x) + (y.x * src->y) + (z.x * src->z);
+		float vy = (x.y * src->x) + (y.y * src->y) + (z.y * src->z);
+		float vz = (x.z * src->x) + (y.z * src->y) + (z.z * src->z);
+		float vw = (x.w * src->x) + (y.w * src->y) + (z.w * src->z);
+
+		src->x = vx;
+		src->y = vy;
+		src->z = vz;
+		src->w = vw;
+
+		src++;
+	}
+}
+
 Matrix4x4 Matrix4x4::ToTranspose() const
 {
 	Matrix4x4 result(*this);

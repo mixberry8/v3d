@@ -32,6 +32,9 @@ public:
 	void Transform(uint32_t vectorCount, Vector3* vectors);
 	void Transform(uint32_t vectorCount, Vector4* vectors);
 
+	void TransformSR(uint32_t vectorCount, Vector3* vectors);
+	void TransformSR(uint32_t vectorCount, Vector4* vectors);
+
 	bool operator == (const Matrix4x4& matrix) const;
 	bool operator != (const Matrix4x4& matrix) const;
 
