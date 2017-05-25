@@ -25,6 +25,7 @@ public:
 	/*****************/
 	virtual const V3DImageViewDesc& GetDesc() const override;
 	virtual void GetImage(IV3DImage** ppImage) override;
+	virtual const V3DSize3D& GetImageSubresourceSize() const override;
 
 	/*******************/
 	/* IV3DDeviceChild */
@@ -47,6 +48,7 @@ private:
 	V3DDevice* m_pDevice;
 	IV3DImageBase* m_pImage;
 	V3DImageViewDesc m_Desc;
+	V3DSize3D m_SubresourceSize;
 	V3DImageView::Source m_Source;
 
 	V3DImageView();

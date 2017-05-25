@@ -52,11 +52,15 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 
 	const V3DImageDesc& imageDesc = m_pImage->GetDesc();
 
+	m_SubresourceSize.width = V3D_MAX(1, imageDesc.width / (desc.baseLevel + 1));
+	m_SubresourceSize.height = V3D_MAX(1, imageDesc.height / (desc.baseLevel + 1));
+	m_SubresourceSize.depth = imageDesc.depth;
+
 	m_Source.image = createInfo.image;
 	m_Source.imageSubresourceRange = createInfo.subresourceRange;
-	m_Source.extent.width = V3D_MAX(1, imageDesc.width / (desc.baseLevel + 1));
-	m_Source.extent.height = V3D_MAX(1, imageDesc.height / (desc.baseLevel + 1));
-	m_Source.extent.depth = imageDesc.depth;
+	m_Source.extent.width = m_SubresourceSize.width;
+	m_Source.extent.height = m_SubresourceSize.height;
+	m_Source.extent.depth = m_SubresourceSize.depth;
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -92,6 +96,11 @@ void V3DImageView::GetImage(IV3DImage** ppImage)
 {
 	(*ppImage) = V3D_TO_ADD_REF(m_pImage);
 
+}
+
+const V3DSize3D& V3DImageView::GetImageSubresourceSize() const
+{
+	return m_SubresourceSize;
 }
 
 /*************************************/
@@ -135,6 +144,7 @@ V3DImageView::V3DImageView() :
 	m_pDevice(nullptr),
 	m_pImage(nullptr),
 	m_Desc({}),
+	m_SubresourceSize({}),
 	m_Source({})
 {
 	m_Source.imageView = VK_NULL_HANDLE;
