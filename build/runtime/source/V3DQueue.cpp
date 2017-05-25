@@ -220,13 +220,14 @@ int64_t V3DQueue::GetRefCount() const
 
 void V3DQueue::AddRef()
 {
-	++m_RefCounter;
+	V3D_REF_INC(m_RefCounter);
 }
 
 void V3DQueue::Release()
 {
-	if (--m_RefCounter == 0)
+	if (V3D_REF_DEC(m_RefCounter))
 	{
+		V3D_REF_FENCE();
 		V3D_DELETE_THIS_T(this, V3DQueue);
 	}
 }

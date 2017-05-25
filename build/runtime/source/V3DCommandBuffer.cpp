@@ -1520,8 +1520,6 @@ void V3DCommandBuffer::BindVertexBuffers(uint32_t firstBinding, uint32_t binding
 	V3DBuffer** ppSrcBuffer = reinterpret_cast<V3DBuffer**>(ppBuffers);
 	V3DBuffer** ppSrcBufferEnd = ppSrcBuffer + bindingCount;
 
-	const uint64_t* pSrcOffset = &pOffsets[0];
-
 	while (ppSrcBuffer != ppSrcBufferEnd)
 	{
 		*pDstBuffer++ = (*ppSrcBuffer++)->GetSource().buffer;
@@ -2021,13 +2019,14 @@ int64_t V3DCommandBuffer::GetRefCount() const
 
 void V3DCommandBuffer::AddRef()
 {
-	++m_RefCounter;
+	V3D_REF_INC(m_RefCounter);
 }
 
 void V3DCommandBuffer::Release()
 {
-	if (--m_RefCounter == 0)
+	if (V3D_REF_DEC(m_RefCounter))
 	{
+		V3D_REF_FENCE();
 		V3D_DELETE_THIS_T(this, V3DCommandBuffer);
 	}
 }

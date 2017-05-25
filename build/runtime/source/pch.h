@@ -26,6 +26,10 @@
 
 typedef std::atomic<int64_t> ReferenceCounter;
 
+#define V3D_REF_INC(counter) std::atomic_fetch_add_explicit(&counter, 1, std::memory_order_relaxed)
+#define V3D_REF_DEC(counter) (std::atomic_fetch_sub_explicit(&counter, 1, std::memory_order_release) == 1)
+#define V3D_REF_FENCE() std::_Atomic_thread_fence(std::memory_order_acquire)
+
 static const char* V3D_LAYER_LUNARG_standard_validation = "VK_LAYER_LUNARG_standard_validation";
 
 struct V3DFindLayer

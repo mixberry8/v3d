@@ -39,6 +39,10 @@ public:
 	virtual void Release() override;
 
 private:
+#ifdef _DEBUG
+	uint64_t m_DebugImageAddr;
+#endif //_DEBUG
+
 	ReferenceCounter m_RefCounter;
 	V3DDevice* m_pDevice;
 	IV3DImageBase* m_pImage;

@@ -35,6 +35,10 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	m_ResourceDesc.memorySize = vkMemReq.size;
 	m_ResourceDesc.memoryAlignment = vkMemReq.alignment;
 
+#ifdef _DEBUG
+	m_DebugImageAddr = reinterpret_cast<uint64_t>(image);
+#endif //_DEBUG
+
 	return V3D_OK;
 }
 
@@ -115,13 +119,14 @@ int64_t V3DBackBuffer::GetRefCount() const
 
 void V3DBackBuffer::AddRef()
 {
-	++m_RefCounter;
+	V3D_REF_INC(m_RefCounter);
 }
 
 void V3DBackBuffer::Release()
 {
-	if (--m_RefCounter == 0)
+	if (V3D_REF_DEC(m_RefCounter))
 	{
+		V3D_REF_FENCE();
 		V3D_DELETE_THIS_T(this, V3DBackBuffer);
 	}
 }
@@ -137,6 +142,10 @@ V3DBackBuffer::V3DBackBuffer() :
 	m_Desc({}),
 	m_Source({})
 {
+#ifdef _DEBUG
+	m_DebugImageAddr = 0;
+#endif //_DEBUG
+
 	m_ResourceDesc.type = V3D_RESOURCE_TYPE_IMAGE;
 
 	m_Desc.type = V3D_IMAGE_TYPE_2D;

@@ -93,13 +93,14 @@ int64_t V3DComputePipeline::GetRefCount() const
 
 void V3DComputePipeline::AddRef()
 {
-	++m_RefCounter;
+	V3D_REF_INC(m_RefCounter);
 }
 
 void V3DComputePipeline::Release()
 {
-	if (--m_RefCounter == 0)
+	if (V3D_REF_DEC(m_RefCounter))
 	{
+		V3D_REF_FENCE();
 		V3D_DELETE_THIS_T(this, V3DComputePipeline);
 	}
 }

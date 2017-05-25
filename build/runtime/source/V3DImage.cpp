@@ -115,6 +115,12 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 
 	// ----------------------------------------------------------------------------------------------------
 
+#ifdef _DEBUG
+	m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image);
+#endif //_DEBUG
+
+	// ----------------------------------------------------------------------------------------------------
+
 	return V3D_OK;
 }
 
@@ -230,13 +236,14 @@ int64_t V3DImage::GetRefCount() const
 
 void V3DImage::AddRef()
 {
-	++m_RefCounter;
+	V3D_REF_INC(m_RefCounter);
 }
 
 void V3DImage::Release()
 {
-	if (--m_RefCounter == 0)
+	if (V3D_REF_DEC(m_RefCounter))
 	{
+		V3D_REF_FENCE();
 		V3D_DELETE_THIS_T(this, V3DImage);
 	}
 }
@@ -255,6 +262,10 @@ V3DImage::V3DImage() :
 {
 	m_ResourceDesc.type = V3D_RESOURCE_TYPE_IMAGE;
 	m_Source.image = VK_NULL_HANDLE;
+
+#ifdef _DEBUG
+	m_DebugImageAddr = 0;
+#endif //_DEBUG
 }
 
 V3DImage::~V3DImage()

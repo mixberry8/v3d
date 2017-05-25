@@ -305,13 +305,14 @@ int64_t V3DRenderPass::GetRefCount() const
 
 void V3DRenderPass::AddRef()
 {
-	++m_RefCounter;
+	V3D_REF_INC(m_RefCounter);
 }
 
 void V3DRenderPass::Release()
 {
-	if (--m_RefCounter == 0)
+	if (V3D_REF_DEC(m_RefCounter))
 	{
+		V3D_REF_FENCE();
 		V3D_DELETE_THIS_T(this, V3DRenderPass);
 	}
 }
