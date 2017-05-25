@@ -21,6 +21,7 @@ public:
 	/*******************/
 	/* IV3DFrameBuffer */
 	/*******************/
+	virtual const V3DFrameBufferDesc& GetDesc() const override;
 	virtual void GetRenderPass(IV3DRenderPass** ppRenderPass) override;
 	virtual uint32_t GetAttachmentCount() const override;
 	virtual void GetAttachment(uint32_t attachmentIndex, IV3DImageView** ppImage) override;
@@ -40,6 +41,7 @@ public:
 private:
 	ReferenceCounter m_RefCounter;
 	V3DDevice* m_pDevice;
+	V3DFrameBufferDesc m_Desc;
 	V3DRenderPass* m_pRenderPass;
 	STLVector<IV3DImageView*> m_ImageViews;
 	V3DFrameBuffer::Source m_Source;
