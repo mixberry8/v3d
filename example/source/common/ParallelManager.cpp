@@ -1,6 +1,8 @@
 #include "ParallelManager.h"
 #include <process.h>
 
+//#define PARALLEL_FAKE
+
 ParallelManager::ParallelManager() :
 	m_Init(false)
 {
@@ -17,28 +19,45 @@ bool ParallelManager::Initialize()
 
 	//	sysInfo.dwNumberOfProcessors = 1;
 
-	m_ThreadData.wakeupSemaphore = ::CreateSemaphore(nullptr, 0, sysInfo.dwNumberOfProcessors, nullptr);
-	m_ThreadData.compleateEventHandle = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+#ifdef PARALLEL_FAKE
 
-	::InitializeCriticalSection(&m_ThreadData.eventSync);
-	m_ThreadData.threadEventArgs.reserve(sysInfo.dwNumberOfProcessors);
+	m_ThresdHandles.resize(sysInfo.dwNumberOfProcessors);
 
-	m_ThreadData.threadHandles.resize(sysInfo.dwNumberOfProcessors);
+#else //PARALLEL_FAKE
+
+	m_ThreadShareData.wakeupSemaphore = ::CreateSemaphore(nullptr, 0, LONG_MAX, nullptr);
+
+	::InitializeCriticalSection(&m_ThreadShareData.requestSync);
+	m_ThreadShareData.requests.reserve(sysInfo.dwNumberOfProcessors);
+
+	m_ThreadDatum.resize(sysInfo.dwNumberOfProcessors);
+	m_ThresdHandles.resize(sysInfo.dwNumberOfProcessors);
 
 	for (uint32_t i = 0; i < sysInfo.dwNumberOfProcessors; i++)
 	{
 		DWORD mask = 1 << i;
 
-		uintptr_t handle = ::_beginthreadex(nullptr, 0, ParallelManager::WorkThread, &m_ThreadData, 0, nullptr);
+		m_ThreadShareData.compleateEventHandles.push_back(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
+
+		m_ThreadDatum[i].pShare = &m_ThreadShareData;
+		m_ThreadDatum[i].id = i;
+
+		uintptr_t handle = ::_beginthreadex(nullptr, 0, ParallelManager::WorkThread, &m_ThreadDatum[i], CREATE_SUSPENDED, nullptr);
 		if (handle == -1)
 		{
 			return false;
 		}
 
-		m_ThreadData.threadHandles[i] = reinterpret_cast<HANDLE>(handle);
+		m_ThresdHandles[i] = reinterpret_cast<HANDLE>(handle);
 
-		::SetThreadAffinityMask(m_ThreadData.threadHandles[i], mask);
+		::SetThreadAffinityMask(m_ThresdHandles[i], mask);
+
+		ResumeThread(m_ThresdHandles[i]);
 	}
+
+#endif //PARALLEL_FAKE
+
+	m_FunctionJobPool.resize(sysInfo.dwNumberOfProcessors);
 
 	m_Init = true;
 
@@ -52,110 +71,192 @@ void ParallelManager::Finalize()
 		return;
 	}
 
+#ifndef PARALLEL_FAKE
+
 	// スレッドに終了を通知
-	m_ThreadData.threadEventArgs.clear();
+	uint32_t threadCount = GetThreadCount();
 
-	::ReleaseSemaphore(m_ThreadData.wakeupSemaphore, static_cast<LONG>(m_ThreadData.threadHandles.size()), nullptr);
-	::WaitForMultipleObjects(static_cast<DWORD>(m_ThreadData.threadHandles.size()), m_ThreadData.threadHandles.data(), TRUE, INFINITE);
-
-	//解放
-	if (m_ThreadData.threadHandles.empty() == false)
+	for (uint32_t i = 0; i < threadCount; i++)
 	{
-		for (size_t i = 0; i < m_ThreadData.threadHandles.size(); i++)
-		{
-			::CloseHandle(m_ThreadData.threadHandles[i]);
-		}
-		m_ThreadData.threadHandles.clear();
+		m_ThreadShareData.requests.push_back(ParallelManager::THREAD_REQUEST(nullptr, i, i));
 	}
 
-	::DeleteCriticalSection(&m_ThreadData.eventSync);
-	::CloseHandle(m_ThreadData.compleateEventHandle);
-	::CloseHandle(m_ThreadData.wakeupSemaphore);
+	::ReleaseSemaphore(m_ThreadShareData.wakeupSemaphore, threadCount, nullptr);
+	::WaitForMultipleObjects(static_cast<DWORD>(m_ThresdHandles.size()), m_ThresdHandles.data(), TRUE, INFINITE);
+
+	//解放
+	if (m_ThresdHandles.empty() == false)
+	{
+		for (size_t i = 0; i < m_ThresdHandles.size(); i++)
+		{
+			::CloseHandle(m_ThresdHandles[i]);
+		}
+
+		m_ThresdHandles.clear();
+	}
+
+	::DeleteCriticalSection(&m_ThreadShareData.requestSync);
+
+	if (m_ThreadShareData.compleateEventHandles.empty() == false)
+	{
+		for (size_t i = 0; i < m_ThreadShareData.compleateEventHandles.size(); i++)
+		{
+			::CloseHandle(m_ThreadShareData.compleateEventHandles[i]);
+			m_ThreadShareData.compleateEventHandles[i] = nullptr;
+		}
+		m_ThreadShareData.compleateEventHandles.clear();
+	}
+
+	::CloseHandle(m_ThreadShareData.wakeupSemaphore);
+
+#endif // PARALLEL_FAKE
 
 	m_Init = false;
 }
 
 void ParallelManager::Execute(PParallelFunction function, uint32_t count, void* pData)
 {
-	uint32_t numThread = static_cast<uint32_t>(m_ThreadData.threadHandles.size());
-	uint32_t wakeupCount = (numThread < count) ? numThread : count;
+	if (count == 0)
+	{
+		return;
+	}
 
-	m_ThreadData.threadEventArgs.clear();
-	m_ThreadData.threadEventArgs.resize(wakeupCount);
+	uint32_t threadCount = GetThreadCount();
+	uint32_t wakeupCount = (threadCount < count) ? threadCount : count;
 
-	ParallelManager::THREAD_EVENT_ARGS* eventArgs = m_ThreadData.threadEventArgs.data();
-	uint32_t batchCount = count / numThread;
-	uint32_t batchRemainder = count % numThread;
+	m_FunctionJobPool.resize(wakeupCount);
+
+	ParallelManager::ParallelFunctionJob* pJobs = m_FunctionJobPool.data();
+	uint32_t batchCount = count / threadCount;
+	uint32_t batchRemainder = count % threadCount;
 	uint32_t batchFirst = 0;
 
 	for (uint32_t i = 0; i < wakeupCount; i++)
 	{
-		eventArgs[i].thread = i;
-		eventArgs[i].first = batchFirst;
-		eventArgs[i].count = batchCount;
+		ParallelManager::ParallelFunctionJob* pSrc = &pJobs[i];
+		pSrc->first = batchFirst;
+		pSrc->count = batchCount;
+		pSrc->function = function;
+		pSrc->pData = pData;
 
 		if (batchRemainder > 0)
 		{
-			eventArgs[i].count += 1;
+			pSrc->count += 1;
 			batchRemainder--;
 		}
 
-		batchFirst += eventArgs[i].count;
+		batchFirst += pSrc->count;
+
+#ifdef PARALLEL_FAKE
+		pSrc->function(i, pSrc->first, pSrc->count, pSrc->pData);
+#else //PARALLEL_FAKE
+		m_ThreadShareData.requests.push_back(ParallelManager::THREAD_REQUEST(pSrc, i, i));
+#endif //PARALLEL_FAKE
 	}
 
-	m_ThreadData.function = function;
-	m_ThreadData.pData = pData;
+#ifndef PARALLEL_FAKE
+	::ReleaseSemaphore(m_ThreadShareData.wakeupSemaphore, wakeupCount, nullptr);
+	::WaitForMultipleObjects(wakeupCount, m_ThreadShareData.compleateEventHandles.data(), TRUE, INFINITE);
+#endif //PARALLEL_FAKE
+}
 
-	m_ThreadData.remainingCount = wakeupCount;
-	::ReleaseSemaphore(m_ThreadData.wakeupSemaphore, wakeupCount, nullptr);
-	::WaitForSingleObject(m_ThreadData.compleateEventHandle, INFINITE);
+void ParallelManager::ExecuteBatch(PParallelFunction function, uint32_t totalCount, uint32_t batchCount, void* pData)
+{
+	uint32_t threadCount = GetThreadCount();
+	uint32_t wakeupCount = (totalCount % batchCount)? (totalCount / batchCount + 1) : (totalCount / batchCount);
+
+	uint32_t compleateEventHandleCount = TO_UI32(m_ThreadShareData.compleateEventHandles.size());
+	if (compleateEventHandleCount < wakeupCount)
+	{
+		uint32_t addCount = wakeupCount - compleateEventHandleCount;
+		for (uint32_t i = 0; i < addCount; i++)
+		{
+			m_ThreadShareData.compleateEventHandles.push_back(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
+		}
+	}
+
+	m_FunctionJobPool.resize(wakeupCount);
+
+	ParallelManager::ParallelFunctionJob* pJobs = m_FunctionJobPool.data();
+	uint32_t jobCount = totalCount;
+
+	uint32_t batchFirst = 0;
+
+	for (uint32_t i = 0; i < wakeupCount; i++)
+	{
+		ParallelManager::ParallelFunctionJob* pSrc = &pJobs[i];
+		pSrc->first = batchFirst;
+		pSrc->count = (batchCount < jobCount)? batchCount : jobCount;
+		pSrc->function = function;
+		pSrc->pData = pData;
+
+		if (jobCount >= batchCount)
+		{
+			jobCount -= batchCount;
+		}
+
+		batchFirst += pSrc->count;
+
+#ifdef PARALLEL_FAKE
+		pSrc->function(i % GetThreadCount(), pSrc->first, pSrc->count, pSrc->pData);
+#else //PARALLEL_FAKE
+		m_ThreadShareData.requests.push_back(ParallelManager::THREAD_REQUEST(pSrc, i % threadCount, i));
+#endif //PARALLEL_FAKE
+	}
+
+#ifndef PARALLEL_FAKE
+	::ReleaseSemaphore(m_ThreadShareData.wakeupSemaphore, wakeupCount, nullptr);
+	::WaitForMultipleObjects(wakeupCount, m_ThreadShareData.compleateEventHandles.data(), TRUE, INFINITE);
+#endif //PARALLEL_FAKE
 }
 
 uint32_t ParallelManager::GetThreadCount() const
 {
-	return static_cast<uint32_t>(m_ThreadData.threadHandles.size());
+	return static_cast<uint32_t>(m_ThresdHandles.size());
 }
 
 unsigned __stdcall ParallelManager::WorkThread(void* pData)
 {
-#ifdef _DEBUG
-	::OutputDebugString(L"ParallelManager : Start thread\n");
-#endif //_DEBUG
-
 	ParallelManager::THREAD_DATA* pThreadData = static_cast<ParallelManager::THREAD_DATA*>(pData);
-	ParallelManager::THREAD_EVENT_ARGS args;
+	ParallelManager::THREAD_SHARE_DATA* pThreadShareData = pThreadData->pShare;
 	bool continueLoop = true;
+
+#ifdef _DEBUG
+	std::wstringstream stringStream;
+
+	stringStream << L"ParallelManager : Start thread[" << pThreadData->id << L"]\n";
+	::OutputDebugStringW(stringStream.str().c_str());
+#endif //_DEBUG
 
 	do
 	{
-		::WaitForSingleObject(pThreadData->wakeupSemaphore, INFINITE);
+		::WaitForSingleObject(pThreadShareData->wakeupSemaphore, INFINITE);
 
-		::EnterCriticalSection(&pThreadData->eventSync);
-		if (pThreadData->threadEventArgs.size() > 0)
+		ParallelManager::THREAD_REQUEST request(nullptr, 0, 0);
+
+		::EnterCriticalSection(&pThreadShareData->requestSync);
+
+		request = pThreadShareData->requests.back();
+		pThreadShareData->requests.pop_back();
+
+		::LeaveCriticalSection(&pThreadShareData->requestSync);
+
+		if (request.pJob != nullptr)
 		{
-			args = pThreadData->threadEventArgs.back();
-			pThreadData->threadEventArgs.pop_back();
+			request.pJob->OnExecute(pThreadData->id, request.page);
+			SetEvent(pThreadShareData->compleateEventHandles[request.index]);
 		}
 		else
 		{
 			continueLoop = false;
 		}
-		::LeaveCriticalSection(&pThreadData->eventSync);
-
-		if (continueLoop == true)
-		{
-			pThreadData->function(args.thread, args.first, args.count, pThreadData->pData);
-
-			if (--pThreadData->remainingCount == 0)
-			{
-				SetEvent(pThreadData->compleateEventHandle);
-			}
-		}
 
 	} while (continueLoop == true);
 
 #ifdef _DEBUG
-	::OutputDebugString(L"ParallelManager : End thread\n");
+	stringStream.str(L"");
+	stringStream << L"ParallelManager : End thread[" << pThreadData->id << L"]\n";
+	::OutputDebugStringW(stringStream.str().c_str());
 #endif //_DEBUG
 
 	return 0;
