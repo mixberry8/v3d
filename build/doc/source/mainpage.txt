@@ -26,7 +26,7 @@ Copyright (c) 2017 mixberry<br>
 v3d を使用するためには以下のものがインストールされている必要があります。<br>
 <ul>
   <li>Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3</li>
-  <li>Vulkan SDK 1.0.64.0</li>
+  <li>Vulkan SDK 1.0.49.0</li>
 </ul>
 @section structure_section 構成
 <ul>
