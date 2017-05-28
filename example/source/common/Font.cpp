@@ -529,6 +529,17 @@ bool Font::Bake(IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence*
 		pCommandBuffer->BarrierImage(pBlock->pHostImage, barrier);
 		pCommandBuffer->ClearImage(pBlock->pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, V3DClearValue{});
 
+		// デバイスイメージのバリア
+		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+		pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
+
 		pBlock++;
 	}
 
@@ -572,7 +583,7 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t hei
 	while (pBlock != pBlockEnd)
 	{			
 		V3DBarrierImageDesc barrier{};
-
+/*
 		// デバイスイメージのバリア
 		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
 		barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
@@ -583,7 +594,7 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t hei
 		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
 		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
 		pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
-
+*/
 		// 描画
 		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pBlock->pDescriptorSet, 0, nullptr);
 		pCommandBuffer->BindVertexBuffers(0, 1, &pBlock->pVertexBuffer, &pBlock->vertexBufferOffset);
