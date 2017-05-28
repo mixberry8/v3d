@@ -46,8 +46,10 @@ public:
 	virtual void BarrierMemory(const V3DBarrierMemoryDesc& barrier) override;
 	virtual void BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBufferDesc& barrier) override;
 	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) override;
+	virtual void BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferView** ppBufferViews, const V3DBarrierBufferViewDesc& barrier) override;
 	virtual void BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc& barrier) override;
 	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageDesc& barrier) override;
+	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageDesc& barrier) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, IV3DBuffer* pSrcBuffer, uint32_t rangeCount, const V3DCopyBufferRange* pRanges) override;
 	virtual void CopyImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout) override;
@@ -112,6 +114,7 @@ private:
 		STLVector<VkDescriptorSet> descriptorSets;
 		STLVector<uint64_t> memoryOffsets;
 		STLVector<VkBufferMemoryBarrier> bufferMemoryBarriers;
+		STLVector<VkImageMemoryBarrier> imageMemoryBarriers;
 		STLVector<VkBufferCopy> bufferCopies;
 		STLVector<VkImageCopy> imageCopies;
 		STLVector<VkImageBlit> imageBlits;

@@ -351,6 +351,55 @@ void V3DCommandBuffer::BarrierBufferView(IV3DBufferView* pBufferView, const V3DB
 		0, nullptr);
 }
 
+void V3DCommandBuffer::BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferView** ppBufferViews, const V3DBarrierBufferViewDesc& barrier)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((bufferViewCount == 0) || (ppBufferViews == nullptr))
+	{
+		V3D_LOG_S_ERROR(L"IV3DCommandBuffer::BarrierBufferView" << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(bufferViewCount, 0) << V3D_LOG_S_PTR(ppBufferViews));
+		return;
+	}
+#endif //_DEBUG
+
+	V3DBufferView** ppSrc = reinterpret_cast<V3DBufferView**>(ppBufferViews);
+	V3DBufferView** ppSrcEnd = ppSrc + bufferViewCount;
+
+	m_Temp.bufferMemoryBarriers.resize(bufferViewCount);
+	VkBufferMemoryBarrier* pDst = m_Temp.bufferMemoryBarriers.data();
+
+	while (ppSrc != ppSrcEnd)
+	{
+		const V3DBufferView::Source& bufferViewSource = (*ppSrc)->GetSource();
+
+		pDst->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		pDst->pNext = nullptr;
+		pDst->srcAccessMask = ToVkAccessFlags(barrier.srcAccessMask);
+		pDst->dstAccessMask = ToVkAccessFlags(barrier.dstAccessMask);
+		pDst->srcQueueFamilyIndex = barrier.srcQueueFamily;
+		pDst->dstQueueFamilyIndex = barrier.dstQueueFamily;
+		pDst->buffer = bufferViewSource.buffer;
+		pDst->offset = bufferViewSource.offset;
+		pDst->size = bufferViewSource.size;
+
+		ppSrc++;
+		pDst++;
+	}
+
+	vkCmdPipelineBarrier(
+		m_Source.commandBuffer,
+		ToVkPipelineStageFlags(barrier.srcStageMask),
+		ToVkPipelineStageFlags(barrier.dstStageMask),
+		ToVkDependencyFlags(barrier.dependencyFlags),
+		0, nullptr,
+		bufferViewCount, m_Temp.bufferMemoryBarriers.data(),
+		0, nullptr);
+}
+
 void V3DCommandBuffer::BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc& barrier)
 {
 #ifdef _DEBUG
@@ -433,6 +482,56 @@ void V3DCommandBuffer::BarrierImageView(IV3DImageView* pImageView, const V3DBarr
 		0, nullptr,
 		1, &vkBarrier);
 }
+
+void V3DCommandBuffer::BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageDesc& barrier)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((imageVewCount == 0) || (ppImageViews == nullptr))
+	{
+		V3D_LOG_S_ERROR(L"IV3DCommandBuffer::BarrierImageView" << Log_Error_InvalidArgument <<  V3D_LOG_S_NUM_GREATER(imageVewCount, 0) << V3D_LOG_S_PTR(ppImageViews));
+		return;
+	}
+#endif //_DEBUG
+
+	V3DImageView** ppSrc = reinterpret_cast<V3DImageView**>(ppImageViews);
+	V3DImageView** ppSrcEnd = ppSrc + imageVewCount;
+
+	m_Temp.imageMemoryBarriers.resize(imageVewCount);
+	VkImageMemoryBarrier* pDst = m_Temp.imageMemoryBarriers.data();
+
+	while (ppSrc != ppSrcEnd)
+	{
+		const V3DImageView::Source& imageViewSource = (*ppSrc)->GetSource();
+
+		pDst->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		pDst->pNext = nullptr;
+		pDst->srcAccessMask = ToVkAccessFlags(barrier.srcAccessMask);
+		pDst->dstAccessMask = ToVkAccessFlags(barrier.dstAccessMask);
+		pDst->oldLayout = ToVkImageLayout(barrier.srcLayout);
+		pDst->newLayout = ToVkImageLayout(barrier.dstLayout);
+		pDst->srcQueueFamilyIndex = barrier.srcQueueFamily;
+		pDst->dstQueueFamilyIndex = barrier.dstQueueFamily;
+		pDst->image = imageViewSource.image;
+		pDst->subresourceRange = imageViewSource.imageSubresourceRange;
+
+		ppSrc++;
+		pDst++;
+	}
+
+	vkCmdPipelineBarrier(
+		m_Source.commandBuffer,
+		ToVkPipelineStageFlags(barrier.srcStageMask),
+		ToVkPipelineStageFlags(barrier.dstStageMask),
+		ToVkDependencyFlags(barrier.dependencyFlags),
+		0, nullptr,
+		0, nullptr,
+		imageVewCount, m_Temp.imageMemoryBarriers.data());
+	}
 
 void V3DCommandBuffer::CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size)
 {

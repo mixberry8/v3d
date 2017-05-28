@@ -1410,6 +1410,9 @@ public:
 	//! @brief アクセスするイメージを取得します。
 	//! @param[out] ppImage 取得したイメージを渡す IV3DImage インターフェースのポインタのアドレスです。
 	virtual void GetImage(IV3DImage** ppImage) = 0;
+	//! @brief アクセスするイメージのサブリソースのサイズを取得します。
+	//! @return アクセスするイメージのサブリソースのサイズを返します。
+	virtual const V3DSize3D& GetImageSubresourceSize() const = 0;
 
 protected:
 	//! @cond MISC
@@ -1706,6 +1709,21 @@ protected:
 // フレームバッファ
 // ----------------------------------------------------------------------------------------------------
 
+//! @addtogroup v3d_struct_group
+//! @{
+
+//! @struct V3DFrameBufferDesc
+//! @brief フレームバッファーの記述
+struct V3DFrameBufferDesc
+{
+	uint32_t attachmentWidth; //!< アタッチメントの幅です。
+	uint32_t attachmentHeight; //!< アタッチメントの高さです。
+	uint32_t attachmentDepth; //!< アタッチメントの深さです。
+	uint32_t attachmentLayerCount; //!< アタッチメントのレイヤー数です。
+};
+
+//! @}
+
 //! @addtogroup v3d_interface_group
 //! @{
 
@@ -1715,6 +1733,10 @@ protected:
 class V3D_DLL_API IV3DFrameBuffer : public IV3DDeviceChild
 {
 public:
+	//! @brief フレームバッファの記述を取得します。
+	//! @return フレームバッファの記述を返します。
+	virtual const V3DFrameBufferDesc& GetDesc() const = 0;
+
 	//! @brief レンダーパスを取得します。
 	//! @param[out] ppRenderPass 取得したレンダーパスを渡す IV3DRenderPass インターフェースのポインタのアドレスです。
 	virtual void GetRenderPass(IV3DRenderPass** ppRenderPass) = 0;
@@ -1907,13 +1929,11 @@ public:
 	//! @brief イメージビューを設定します。<br>
 	//! @param[in] binding イメージビューを設定するバインディングです。
 	//! @param[in] pImageView 設定するイメージビューのポインタです。
-	//! @param[in] imageLayout デスクリプタセットをバインドした際に移行するイメージのレイアウトです。<br>
+	//! @param[in] imageLayout デスクリプタセットをバインドする際のイメージレイアウトです。<br>
+	//! デスクリプタセットをバインドしたする前にこのイメージレイアウトに移行しておく必要があります。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! @note
-	//! 設定したイメージは操作終了後にバインド前のイメージレイアウトに戻ります。
-	//! <br>
 	//! サポートしているデスクリプタタイプ<br><br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink<br>
@@ -1945,7 +1965,8 @@ public:
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink である必要があります。
 	//! @param[in] binding イメージビューを設定するバインディングです。
 	//! @param[in] pImageView 設定するイメージビューのポインタです。
-	//! @param[in] imageLayout デスクリプタセットがバインドされた際のイメージレイアウトです。
+	//! @param[in] imageLayout デスクリプタセットをバインドする際のイメージレイアウトです。<br>
+	//! デスクリプタセットをバインドする前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSampler 設定するサンプラーのポインタです。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
@@ -3123,6 +3144,32 @@ public:
 	//! </table>
 	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) = 0;
 
+	//! @brief バッファービューにバリアを張ります。
+	//! @param[in] bufferViewCount バリアを張るバッファビューの数です。
+	//! @param[in] ppBufferView バリアを張るバッファビューの配列です。
+	//! @param[in] barrier バリアを張るバッファーの記述です。
+	//! @note
+	//! <table>
+	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
+	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
+	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!     </td>
+	//!     <td>
+	//!     有効
+	//!     </td>
+	//!   </tr>
+	//! </table>
+	virtual void BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferView** ppBufferViews, const V3DBarrierBufferViewDesc& barrier) = 0;
+
 	//! @brief イメージにバリアを張ります。
 	//! @param[in] pImage バリアを張るイメージです。
 	//! @param[in] barrier バリアを張るイメージの記述です。
@@ -3172,6 +3219,32 @@ public:
 	//!   </tr>
 	//! </table>
 	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageDesc& barrier) = 0;
+
+	//! @brief イメージビューにバリアを張ります。
+	//! @param[in] imageVewCount バリアを張るイメージビューの数です。
+	//! @param[in] ppImageViews バリアを張るイメージビューの配列です。
+	//! @param[in] barrier バリアを張るイメージの記述です。
+	//! @note
+	//! <table>
+	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
+	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
+	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!     </td>
+	//!     <td>
+	//!     有効
+	//!     </td>
+	//!   </tr>
+	//! </table>
+	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageDesc& barrier) = 0;
 
 	//! @brief バッファーをコピーします。
 	//! @param[in] pDstBuffer コピー先のバッファを表す IV3DBuffer インターフェースのポインタです。
