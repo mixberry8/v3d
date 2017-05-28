@@ -175,7 +175,7 @@ V3D_RESULT _stdcall LoadBitmapImage(IInputStream* pInputStream, V3D_FORMAT forma
 	}
 
 	// î•ñƒwƒbƒ_
-	BITMAPV5HEADER infoHeader;
+	BITMAPV5HEADER infoHeader{};
 
 	// Å‰ BITMAPV5HEADER::bV5Size ‚¾‚¯“Ç‚Ýž‚Þ
 	if (pInputStream->Read(sizeof(DWORD), &infoHeader) != sizeof(DWORD))
@@ -287,7 +287,8 @@ V3D_RESULT _stdcall LoadBitmapImage(IInputStream* pInputStream, V3D_FORMAT forma
 
 	if (infoHeader.bV5BitCount == 24)
 	{
-		uint64_t srcPitch = infoHeader.bV5Width * 3;
+		uint64_t srcOffset = infoHeader.bV5Width % 4;
+		uint64_t srcPitch = infoHeader.bV5Width * 3 + srcOffset;
 
 		for (LONG y = 0; y < infoHeader.bV5Height; y++)
 		{
@@ -298,7 +299,7 @@ V3D_RESULT _stdcall LoadBitmapImage(IInputStream* pInputStream, V3D_FORMAT forma
 			}
 
 			const uint8_t* pSrcPixelEnd = reinterpret_cast<uint8_t*>(pImageMemory);
-			const uint8_t* pSrcPixel = pSrcPixelEnd + srcPitch - 1;
+			const uint8_t* pSrcPixel = pSrcPixelEnd + srcPitch - srcOffset - 1;
 
 			uint32_t* pDstPixel = reinterpret_cast<uint32_t*>(pImageMemory) + infoHeader.bV5Width - 1;
 
@@ -308,7 +309,7 @@ V3D_RESULT _stdcall LoadBitmapImage(IInputStream* pInputStream, V3D_FORMAT forma
 				uint32_t g = *pSrcPixel--;
 				uint32_t r = *pSrcPixel--;
 
-				*pDstPixel-- = (0xFF000000) | (r << 16) | (g << 8) + b;
+				*pDstPixel-- = (0xFF000000) | (b << 16) | (g << 8) + r;
 			}
 
 			pImageMemory -= imageRowPitch;
