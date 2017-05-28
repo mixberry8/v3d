@@ -22,7 +22,7 @@ Window::~Window()
 	Dispose();
 }
 
-bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, WINDOW_BUFFERING_TYPE bufferingType, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue)
+bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, bool waitVSync, WINDOW_BUFFERING_TYPE bufferingType, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue)
 {
 	m_BufferingType = bufferingType;
 
@@ -100,7 +100,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	swapChainDesc.imageCount = Window::BufferCount;
 	swapChainDesc.imageUsageFlags = V3D_IMAGE_USAGE_TRANSFER_SRC | V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_COLOR_ATTACHMENT;
 	swapChainDesc.fullscreenAssistEnable = true;
-	swapChainDesc.vsyncEnable = false;
+	swapChainDesc.vsyncEnable = waitVSync;
 	swapChainDesc.windowed = true;
 	swapChainDesc.queueFamily = m_pGraphicsQueue->GetFamily();
 	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
@@ -118,7 +118,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	}
 
 	// ----------------------------------------------------------------------------------------------------
-	// ワークコマンドバッファを作成
+	// 作業用のコマンドプール、コマンドバッファーを作成
 	// ----------------------------------------------------------------------------------------------------
 
 	{
@@ -127,13 +127,6 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 		commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
 
 		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pWorkCommandPool);
-		if (result != V3D_OK)
-		{
-			Dispose();
-			return false;
-		}
-
-		result = Application::GetDevice()->CreateCommandBuffer(m_pWorkCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &m_pWorkCommandBuffer);
 		if (result != V3D_OK)
 		{
 			Dispose();
@@ -149,7 +142,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	}
 
 	// ----------------------------------------------------------------------------------------------------
-	// グラフィックスコマンドプールを作成
+	// グラフィックス用のコマンドプールを作成
 	// ----------------------------------------------------------------------------------------------------
 
 	{
@@ -537,6 +530,16 @@ V3D_RESULT Window::CreateSwapChainResources()
 	}
 
 	// ----------------------------------------------------------------------------------------------------
+	// 作業用コマンドバッファを作成
+	// ----------------------------------------------------------------------------------------------------
+
+	V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(m_pWorkCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &m_pWorkCommandBuffer);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	// ----------------------------------------------------------------------------------------------------
 	// イメージの取得
 	// ----------------------------------------------------------------------------------------------------
 
@@ -574,6 +577,8 @@ void Window::ReleaseSwapChainResources()
 		}
 		m_Frames.clear();
 	}
+
+	SAFE_RELEASE(m_pWorkCommandBuffer);
 }
 
 void Window::LostSwapChain()

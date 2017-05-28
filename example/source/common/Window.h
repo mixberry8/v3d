@@ -12,7 +12,7 @@ public:
 	Window();
 	virtual ~Window();
 
-	virtual bool Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, WINDOW_BUFFERING_TYPE bufferingType, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue);
+	virtual bool Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height, bool waitVSync, WINDOW_BUFFERING_TYPE bufferingType, IV3DQueue* pWorkQueue, IV3DQueue* pGraphicsQueue);
 
 	bool Restart();
 	void Resize(uint32_t width, uint32_t height);
