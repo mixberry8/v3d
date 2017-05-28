@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "Vector4.h"
 #include "Quaternion.h"
 
@@ -72,6 +73,62 @@ public:
 	{
 		Matrix4x4 result;
 		result.SetTranslation(translation);
+		return result;
+	}
+
+	static Matrix4x4 LookAt(const Vector3& eye, const Vector3& at, const Vector3& up)
+	{
+		Matrix4x4 result;
+
+		Vector3 n = (eye - at).ToNormalize();
+		Vector3 u = Vector3::Cross(up, n);
+		Vector3 v = Vector3::Cross(n, u);
+
+		result.x.Set(u.x, v.x, n.x, 0.0f);
+		result.y.Set(u.y, v.y, n.y, 0.0f);
+		result.z.Set(u.z, v.z, n.z, 0.0f);
+		result.w.Set(-Vector3::Dot(eye, u), -Vector3::Dot(eye, v), -Vector3::Dot(eye, n), 1.0f);
+
+		return result;
+	}
+
+	static Matrix4x4 Ortho(float width, float height, float nearClip, float farClip)
+	{
+		Matrix4x4 result;
+
+		result.x.x = 2.0f / width;
+		result.y.y = 2.0f / height;
+		result.z.z = 1.0f / (nearClip - farClip);
+		result.w.z = (1.0f / (nearClip - farClip)) * nearClip;
+
+		return result;
+	}
+
+	static Matrix4x4 Ortho(const Vector3& minimum, const Vector3& maximum)
+	{
+		Matrix4x4 result;
+
+		result.x.x = 2.0f / (maximum.x - minimum.x);
+		result.y.y = 2.0f / (maximum.y - minimum.y);
+		result.z.z = 2.0f / (minimum.z - maximum.z);
+		result.w.x = (maximum.x + minimum.x) / (maximum.x - minimum.x);
+		result.w.y = (maximum.y + minimum.y) / (maximum.y - minimum.y);
+		result.w.z = (minimum.z + maximum.z) / (minimum.z - maximum.z);
+
+		return result;
+	}
+
+	static Matrix4x4 OrthoOffCenter(const Vector3& minimum, const Vector3& maximum)
+	{
+		Matrix4x4 result;
+
+		result.x.x = 2.0f / (maximum.x - minimum.x);
+		result.y.y = 2.0f / (maximum.y - minimum.y);
+		result.z.z = 1.0f / (minimum.z - maximum.z);
+		result.w.x = (maximum.x + minimum.x) / (maximum.x - minimum.x);
+		result.w.y = (maximum.y + minimum.y) / (maximum.y - minimum.y);
+		result.w.z = minimum.z / (minimum.z - maximum.z);
+
 		return result;
 	}
 };
