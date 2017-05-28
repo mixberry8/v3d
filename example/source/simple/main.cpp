@@ -308,19 +308,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			V3D_RESULT result = BeginFrame(&pFrame);
 			if (result == V3D_OK)
 			{
-				// レンダーパス開始時の 0番めのアタッチメントのイメージレイアウトは V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT にしてあるので、
-				// アクセスは V3D_ACCESS_COLOR_ATTACHMENT_WRITE、レイアウトは V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT に移行する。
-				V3DBarrierImageDesc barrier{};
-				barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-				barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-				barrier.srcAccessMask = V3D_ACCESS_MEMORY_READ;
-				barrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-				barrier.srcQueueFamily = queueFamily;
-				barrier.dstQueueFamily = queueFamily;
-				barrier.srcLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-				barrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
-				pFrame->pGraphicsCommandBuffer->BarrierImageView(pFrame->pImageView, barrier);
-
 				// レンダーパスを開始
 				pFrame->pGraphicsCommandBuffer->BeginRenderPass(g_pRenderPass, pFrame->pFrameBuffer, true);
 
@@ -426,8 +413,8 @@ V3D_RESULT CreateSwapChainChilds()
 	attachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE; // レンダーパス終了時にアタッチメントの内容を保存します。
 	attachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;   // ステンシルはないので定義しません。
 	attachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED; // ↑に同じ
-	attachments[0].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;  // レンダーパス開始時にこのイメージレイアウトに移行しておく必要があります。( 自動的に移行はしないので注意してください )
-	attachments[0].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;         // レンダーパス終了時にこのイメージレイアウトに自動的に移行します。
+	attachments[0].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC; // レンダーパス開始時のイメージレイアウトです。( イメージレイアウトの移行はサブパスの依存性で指定します )
+	attachments[0].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;   // レンダーパス終了時のイメージレイアウトです。( イメージレイアウトの移行はサブパスの依存性で指定します )
 	attachments[0].clearValue.color.float32[0] = 0.1f; // レンダーパス開始時のクリア色
 	attachments[0].clearValue.color.float32[1] = 0.1f;
 	attachments[0].clearValue.color.float32[2] = 0.1f;
@@ -448,14 +435,31 @@ V3D_RESULT CreateSwapChainChilds()
 	subpasses[0].preserveAttachmentCount = 0;    // サブパスが一つのため特に内容の保持を保証したいアタッチメントはありません。
 	subpasses[0].pPreserveAttachments = nullptr; // ↑に同じ
 
-	// サブパスの依存性はありません。
-	// サブパスが複数の場合に設定する必要があります。
-	// std::array<V3DSubpassDependencyDesc, 0> subpassDependencies;
+	// サブパスの依存性
+	std::array<V3DSubpassDependencyDesc, 2> subpassDependencies;
+
+	// レンダーパス開始 → サブパス 0 への移行を定義します。
+	subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL; // サブパス外 ( レンダーパス開始 ) からの移行なので V3D_SUBPASS_EXTERNAL を指定します。
+	subpassDependencies[0].dstSubpass = 0;
+	subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;             // 最初のステージから
+	subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT; // カラーアタッチメントのステージへ移行します。
+	subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;            // ディスプレイに表示できる読み込みアクセスから
+	subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE; // カラーアタッチメントの書き込みアクセスへ移行します。
+	subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
+	// サブパス 0 → レンーダパス終了 への移行を定義します。
+	subpassDependencies[1].srcSubpass = 0;
+	subpassDependencies[1].dstSubpass = V3D_SUBPASS_EXTERNAL; // サブパス外 ( レンダーパス終了 ) への移行なので V3D_SUBPASS_EXTERNAL を指定します。
+	subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT; // カラーアタッチメントのステージから
+	subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;          // 最後のステージへ移行します。
+	subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE; // カラーアタッチメントの書き込みアクセスから
+	subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;            // ディスプレイに表示できる読み込みアクセスへ移行します。
+	subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 	V3D_RESULT result = g_pDevice->CreateRenderPass(
 		static_cast<uint32_t>(attachments.size()), attachments.data(),
 		static_cast<uint32_t>(subpasses.size()), subpasses.data(),
-		0, nullptr,
+		static_cast<uint32_t>(subpassDependencies.size()), subpassDependencies.data(),
 		&g_pRenderPass);
 
 	if (result != V3D_OK)
@@ -526,14 +530,14 @@ V3D_RESULT CreateSwapChainChilds()
 
 			pImage->Release();
 
-			// イメージビューにバリアを張って、アクセス、レイアウトを初期化します。
+			// イメージビューにバリアを張って、ステージ、アクセス、レイアウトを初期化します。
 			V3DBarrierImageDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dependencyFlags = 0;
 			barrier.srcAccessMask = 0; // イメージ作成直後は何も指定されていないので 0 を指定します。
 			barrier.dstAccessMask = V3D_ACCESS_MEMORY_READ; // イメージレイアウトが V3D_IMAGE_LAYOUT_PRESENT_SRC の場合は V3D_ACCESS_MEMORY_READ というおまじないです。
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED; // キューファミリーの移行はないので両方に V3D_QUEUE_FAMILY_IGNORED を指定します。
 			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED; // スワップチェイン作成直後のイメージレイアウトは V3D_IMAGE_LAYOUT_UNDEFINED です。
 			barrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC; // イメージをウィンドウに表示できるレイアウトにします。

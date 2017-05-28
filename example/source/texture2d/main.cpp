@@ -252,31 +252,17 @@ protected:
 		matrix.z.x = -1.0f;
 		matrix.z.y = -1.0f;
 
-		IV3DFrameBuffer* pFrameBuffer = m_FrameBuffers[GetSwapChain()->GetCurrentImageIndex()];
-
-		IV3DImageView* pImageView;
-		pFrameBuffer->GetAttachment(0, &pImageView);
-
 		// ----------------------------------------------------------------------------------------------------
 		// コマンドを書き込んで実行
 		// ----------------------------------------------------------------------------------------------------
+
+		IV3DFrameBuffer* pFrameBuffer = m_FrameBuffers[GetSwapChain()->GetCurrentImageIndex()];
 
 		IV3DCommandBuffer* pCommandBufer = BeginGraphics();
 		if (pCommandBufer == nullptr)
 		{
 			return false;
 		}
-
-		V3DBarrierImageDesc barrier{};
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.srcAccessMask = V3D_ACCESS_MEMORY_READ;
-		barrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
-		pCommandBufer->BarrierImageView(pImageView, barrier);
 
 		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
 
@@ -310,10 +296,6 @@ protected:
 		}
 
 		// ----------------------------------------------------------------------------------------------------
-		// 後処理
-		// ----------------------------------------------------------------------------------------------------
-
-		SAFE_RELEASE(pImageView);
 
 		return true;
 	}
@@ -350,7 +332,7 @@ protected:
 		attachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
 		attachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
 		attachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
-		attachments[0].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		attachments[0].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
 		attachments[0].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
 		attachments[0].clearValue.color.float32[0] = 0.1f;
 		attachments[0].clearValue.color.float32[1] = 0.1f;
@@ -372,10 +354,29 @@ protected:
 		subpasses[0].preserveAttachmentCount = 0;
 		subpasses[0].pPreserveAttachments = nullptr;
 
+		// サブパスの依存性
+		std::array<V3DSubpassDependencyDesc, 2> subpassDependencies;
+
+		subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL;
+		subpassDependencies[0].dstSubpass = 0;
+		subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
+		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
+		subpassDependencies[1].srcSubpass = 0;
+		subpassDependencies[1].dstSubpass = V3D_SUBPASS_EXTERNAL;
+		subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+		subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+		subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
 		V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 			TO_UI32(attachments.size()), attachments.data(),
 			TO_UI32(subpasses.size()), subpasses.data(),
-			0, nullptr,
+			TO_UI32(subpassDependencies.size()), subpassDependencies.data(),
 			&m_pRenderPass);
 
 		// ----------------------------------------------------------------------------------------------------
@@ -501,7 +502,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"texture2d", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"texture2d", 1024, 768, true, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

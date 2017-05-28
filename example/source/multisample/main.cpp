@@ -359,26 +359,19 @@ protected:
 		IV3DFrameBuffer* pFrameBuffer = m_FrameBuffers[currentImageIndex];
 		IV3DFrameBuffer* pTextFrameBuffer = m_TextFrameBuffers[currentImageIndex];
 
+#ifndef RENDER_PASS_MULTISAMPLE
 		IV3DImageView* pImageView;
 		pFrameBuffer->GetAttachment(0, &pImageView);
+#endif //RENDER_PASS_MULTISAMPLE
 
 		IV3DCommandBuffer* pCommandBufer = BeginGraphics();
 		if (pCommandBufer == nullptr)
 		{
+#ifndef RENDER_PASS_MULTISAMPLE
 			SAFE_RELEASE(pImageView);
+#endif //RENDER_PASS_MULTISAMPLE
 			return false;
 		}
-
-		V3DBarrierImageDesc barrier{};
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.srcAccessMask = V3D_ACCESS_MEMORY_READ;
-		barrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
-		pCommandBufer->BarrierImageView(pImageView, barrier);
 
 		/*********************************/
 		/* レンダーパス - メッシュの描画 */
@@ -416,6 +409,8 @@ protected:
 
 		if (sampleNum != 1)
 		{
+			V3DBarrierImageDesc barrier{};
+
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
 			barrier.srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
@@ -475,7 +470,9 @@ protected:
 
 		if (EndGraphics() == false)
 		{
+#ifndef RENDER_PASS_MULTISAMPLE
 			SAFE_RELEASE(pImageView);
+#endif //RENDER_PASS_MULTISAMPLE
 			return false;
 		}
 
@@ -483,7 +480,9 @@ protected:
 		// 後処理
 		// ----------------------------------------------------------------------------------------------------
 
+#ifndef RENDER_PASS_MULTISAMPLE
 		SAFE_RELEASE(pImageView);
+#endif //RENDER_PASS_MULTISAMPLE
 
 		return true;
 	}
@@ -645,7 +644,7 @@ private:
 			attachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
 			attachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
 			attachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
-			attachments[0].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+			attachments[0].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
 			attachments[0].finalLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
 			attachments[0].clearValue.color.float32[0] = 0.1f;
 			attachments[0].clearValue.color.float32[1] = 0.1f;
@@ -725,10 +724,24 @@ private:
 			subpasses[0].preserveAttachmentCount = 0;
 			subpasses[0].pPreserveAttachments = nullptr;
 
+			/********************/
+			/* サブパスの依存性 */
+			/********************/
+
+			Array1<V3DSubpassDependencyDesc, 1> subpassDependencies;
+
+			subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL;
+			subpassDependencies[0].dstSubpass = 0;
+			subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+			subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+			subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
+			subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+			subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
 			V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 				TO_UI32(attachments.size()), attachments.data(),
 				TO_UI32(subpasses.size()), subpasses.data(),
-				0, nullptr,
+				TO_UI32(subpassDependencies.size()), subpassDependencies.data(),
 				&m_pRenderPass);
 		}
 
@@ -768,11 +781,30 @@ private:
 			subpasses[0].preserveAttachmentCount = 0;
 			subpasses[0].pPreserveAttachments = nullptr;
 
+			/********************/
+			/* サブパスの依存性 */
+			/********************/
+
+			Array1<V3DSubpassDependencyDesc, 1> subpassDependencies;
+
+			subpassDependencies[0].srcSubpass = 1;
+			subpassDependencies[0].dstSubpass = V3D_SUBPASS_EXTERNAL;
+			subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+			subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+			subpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+			subpassDependencies[0].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+			subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
 			V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 				TO_UI32(attachments.size()), attachments.data(),
 				TO_UI32(subpasses.size()), subpasses.data(),
-				0, nullptr,
+				TO_UI32(subpassDependencies.size()), subpassDependencies.data(),
 				&m_pTextRenderPass);
+
+			if (result != V3D_OK)
+			{
+				return false;
+			}
 		}
 
 		// ----------------------------------------------------------------------------------------------------
@@ -1106,7 +1138,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"multisample", 1024, 768, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"multisample", 1024, 768, true, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);
