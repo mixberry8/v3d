@@ -81,3 +81,44 @@ bool Frustum::Contains(const Sphere& sphere) const
 
 	return true;
 }
+
+bool Frustum::Contains(const AABB& aabb) const
+{
+	const Plane* pPlane = &(m_Planes[0]);
+	const Plane* pPlaneEnd = pPlane + 6;
+
+	const Vector3* pPointBegin = &(aabb.points[0]);
+	const Vector3* pPointEnd = pPointBegin + 8;
+	const Vector3* pPoint = NULL;
+
+	float dist;
+	uint32_t count;
+
+	while (pPlane != pPlaneEnd)
+	{
+		const Vector3& norm = pPlane->normal;
+
+		count = 8;
+		pPoint = pPointBegin;
+		while (pPoint != pPointEnd)
+		{
+			dist = (norm.x * pPoint->x) + (norm.y * pPoint->y) + (norm.z * pPoint->z) + pPlane->d;
+			if (dist < 0.0f)
+			{
+				ASSERT(count > 0);
+				count--;
+			}
+
+			pPoint++;
+		}
+
+		if (count == 0)
+		{
+			return false;
+		}
+
+		pPlane++;
+	}
+
+	return true;
+}

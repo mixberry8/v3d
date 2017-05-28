@@ -2,6 +2,7 @@
 
 #include "Plane.h"
 #include "Sphere.h"
+#include "AABB.h"
 
 class Frustum final
 {
@@ -21,6 +22,7 @@ public:
 	const Plane& GetPlane(Frustum::PLANE_TYPE type) const;
 
 	bool Contains(const Sphere& sphere) const;
+	bool Contains(const AABB& aabb) const;
 
 private:
 	Plane m_Planes[6];
