@@ -1,6 +1,7 @@
 #include "Texture.h"
 
-Texture::Texture(IV3DImageView* pImageView) :
+Texture::Texture(const wchar_t* pFilePath, IV3DImageView* pImageView) :
+	m_FilePath(pFilePath),
 	m_pImage(nullptr),
 	m_pImageView(nullptr)
 {
@@ -10,7 +11,8 @@ Texture::Texture(IV3DImageView* pImageView) :
 	m_pImageView->GetImage(&m_pImage);
 }
 
-Texture::Texture(IV3DImage* pImage, IV3DImageView* pImageView) :
+Texture::Texture(const wchar_t* pFilePath, IV3DImage* pImage, IV3DImageView* pImageView) :
+	m_FilePath(pFilePath),
 	m_pImage(nullptr),
 	m_pImageView(nullptr)
 {
@@ -24,6 +26,11 @@ Texture::Texture(IV3DImage* pImage, IV3DImageView* pImageView) :
 Texture::~Texture()
 {
 	Dispose();
+}
+
+const wchar_t* Texture::GetFilePath() const
+{
+	return m_FilePath.c_str();
 }
 
 IV3DImage* Texture::GetImagePtr()
