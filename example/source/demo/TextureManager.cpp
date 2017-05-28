@@ -42,6 +42,9 @@ TexturePtr TextureManager::Load(const wchar_t* pFilePath)
 		return it->second;
 	}
 
+	std::wstring filePath;
+	CreateFilePath(pFilePath, filePath);
+
 	IV3DImageView* pImageView;
 
 	V3D_RESULT result = CreateImageFromFile(
@@ -49,7 +52,7 @@ TexturePtr TextureManager::Load(const wchar_t* pFilePath)
 		m_pGraphicsManager->GetQueuePtr(),
 		m_pGraphicsManager->GetCommandBufferPtr(),
 		m_pGraphicsManager->GetFencePtr(),
-		pFilePath,
+		filePath.c_str(),
 		true,
 		&pImageView);
 
@@ -58,7 +61,7 @@ TexturePtr TextureManager::Load(const wchar_t* pFilePath)
 		return nullptr;
 	}
 
-	TexturePtr texture = std::make_shared<Texture>(pImageView);
+	TexturePtr texture = std::make_shared<Texture>(pFilePath, pImageView);
 	m_TextureMap[pFilePath] = texture;
 
 	SAFE_RELEASE(pImageView);
