@@ -15,6 +15,7 @@ build/runtime/solutions/vs2015/bin/
 build/runtime/solutions/vs2015/ipch/
 build/runtime/solutions/vs2015/obj/
 build/runtime/solutions/vs2015/projects/test/data/
+build/runtime/solutions/vs2015/projects/test/screenshot.bmp
 
 build/resource/
 
