@@ -344,16 +344,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\AABB.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Application.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\BitmapImage.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Camera.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\DDSImage.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\DynamicOffsetHeap.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Font.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\Frustum.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\IInputStream.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\MemoryInputStream.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\NamingService.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\ParallelManager.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\Plane.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\ResourceHeap.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\Sphere.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Window.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Matrix3x3.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Matrix4x4.h" />
@@ -368,12 +373,25 @@
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\Mesh.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\MeshManager.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\ObjParser.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\SkeletalMesh.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\SkyDome.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\StaticMesh.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\Texture.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\TextureManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\AABB.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common.h</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common.h</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Application.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
@@ -404,7 +422,27 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)common\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\DynamicOffsetHeap.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Font.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\Frustum.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
@@ -434,7 +472,27 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\Plane.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\ResourceHeap.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\Sphere.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)common\</ObjectFileName>
@@ -555,6 +613,27 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)demo\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\demo\MeshManager.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)demo\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkeletalMesh.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkyDome.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)demo\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)demo\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\StaticMesh.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)demo\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">$(IntDir)demo\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)demo\</ObjectFileName>

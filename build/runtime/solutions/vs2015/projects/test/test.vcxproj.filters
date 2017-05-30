@@ -72,9 +72,6 @@
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\MaterialManager.h">
       <Filter>source\demo</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\Mesh.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\demo\MeshManager.h">
       <Filter>source\demo</Filter>
     </ClInclude>
@@ -95,6 +92,33 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\ParallelManager.h">
       <Filter>source\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\StaticMesh.h">
+      <Filter>source\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\Mesh.h">
+      <Filter>source\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\SkeletalMesh.h">
+      <Filter>source\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\DynamicOffsetHeap.h">
+      <Filter>source\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\Frustum.h">
+      <Filter>source\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\Plane.h">
+      <Filter>source\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\Sphere.h">
+      <Filter>source\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\AABB.h">
+      <Filter>source\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\demo\SkyDome.h">
+      <Filter>source\demo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -143,9 +167,6 @@
     <ClCompile Include="..\..\..\..\..\..\example\source\demo\MaterialManager.cpp">
       <Filter>source\demo</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\Mesh.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\demo\MeshManager.cpp">
       <Filter>source\demo</Filter>
     </ClCompile>
@@ -166,6 +187,33 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\StaticMesh.cpp">
+      <Filter>source\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\Mesh.cpp">
+      <Filter>source\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkeletalMesh.cpp">
+      <Filter>source\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\DynamicOffsetHeap.cpp">
+      <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\Frustum.cpp">
+      <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\Plane.cpp">
+      <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\Sphere.cpp">
+      <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\AABB.cpp">
+      <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkyDome.cpp">
+      <Filter>source\demo</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
