@@ -1965,6 +1965,20 @@ public:
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink である必要があります。
 	//! @param[in] binding イメージビューを設定するバインディングです。
 	//! @param[in] pImageView 設定するイメージビューのポインタです。
+	//! デスクリプタセットをバインドする前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] pSampler 設定するサンプラーのポインタです。
+	//! @retval V3D_OK
+	//! @retval V3D_ERROR_FAIL
+	//! @retval V3D_ERROR_INVALID_ARGUMENT
+	//! @sa V3DDescriptorDesc
+	//! @note イメージレイアウトは \link V3D_IMAGE_LAYOUT_SHADER_READ_ONLY \endlink を指定したことになります。
+	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, IV3DSampler* pSampler) = 0;
+
+	//! @brief イメージビューとサンラプーを設定します。<br>
+	//! このバインディングのデスクリプタは 
+	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink である必要があります。
+	//! @param[in] binding イメージビューを設定するバインディングです。
+	//! @param[in] pImageView 設定するイメージビューのポインタです。
 	//! @param[in] imageLayout デスクリプタセットをバインドする際のイメージレイアウトです。<br>
 	//! デスクリプタセットをバインドする前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSampler 設定するサンプラーのポインタです。

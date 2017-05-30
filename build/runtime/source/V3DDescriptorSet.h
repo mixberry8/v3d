@@ -40,6 +40,7 @@ public:
 	virtual V3D_RESULT SetImageView(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout) override;
 	virtual V3D_RESULT GetSampler(uint32_t binding, IV3DSampler** ppSampler) override;
 	virtual V3D_RESULT SetSampler(uint32_t binding, IV3DSampler* pSampler) override;
+	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, IV3DSampler* pSampler) override;
 	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler) override;
 	virtual void Update() override;
 

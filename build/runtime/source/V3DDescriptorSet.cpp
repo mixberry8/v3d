@@ -377,6 +377,11 @@ V3D_RESULT V3DDescriptorSet::SetSampler(uint32_t binding, IV3DSampler* pSampler)
 	return V3D_OK;
 }
 
+V3D_RESULT V3DDescriptorSet::SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, IV3DSampler* pSampler)
+{
+	return SetImageViewAndSampler(binding, pImageView, V3D_IMAGE_LAYOUT_SHADER_READ_ONLY, pSampler);
+}
+
 V3D_RESULT V3DDescriptorSet::SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler)
 {
 	if (pSampler == nullptr)
