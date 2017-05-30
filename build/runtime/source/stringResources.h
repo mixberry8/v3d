@@ -12,7 +12,7 @@ static constexpr wchar_t* Log_Error_InvalidArgument = L" : •s³‚Èˆø”‚ª“n‚³‚ê‚Ü‚
 
 static constexpr wchar_t* Log_Error_InvalidSubpass = L"IV3DDevice::CreateGraphicsPipeline : w’è‚³‚ê‚½ƒTƒuƒpƒX %d ‚Í–³Œø‚Å‚·B";
 static constexpr wchar_t* Log_Error_MismatchSubpassColorAttachmentCount = L"IV3DDevice::CreateGraphicsPipeline : ƒTƒuƒpƒX‚ÌƒJƒ‰[ƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentCount = L"IV3DDevice::CreateFrameBuffer : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX‚Æì¬‚µ‚æ‚¤‚Æ‚µ‚Ä‚¢‚éƒŒƒ“ƒ_[ƒAƒ^ƒbƒ`ƒƒ“ƒgƒRƒ“ƒeƒi‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentCount = L"IV3DDevice::CreateFrameBuffer : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX‚Æì¬‚µ‚æ‚¤‚Æ‚µ‚Ä‚¢‚éƒtƒŒ[ƒ€ƒoƒbƒtƒ@[‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
 static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentSize = L"IV3DDevice::CreateFrameBuffer : ‘S‚Ä‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Í •A‚‚³AƒŒƒCƒ„[”‚ª“¯‚¶‚Å‚È‚¢‚Æ‚¢‚¯‚Ü‚¹‚ñB";
 static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentFormatOrSamples = L"IV3DDevice::CreateFrameBuffer : ƒAƒ^ƒbƒ`ƒƒ“ƒg %d ‚ÌƒtƒH[ƒ}ƒbƒg‚à‚µ‚­‚íƒTƒ“ƒvƒ‹”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
 static constexpr wchar_t* Log_Error_OutOfInputAttachment = L"IV3DDevice::CreateRenderPass : ƒCƒ“ƒvƒbƒgƒAƒ^ƒbƒ`ƒƒ“ƒg ( [%u].attachment %u ) ‚ÍƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì” ( %u ) ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
@@ -52,6 +52,7 @@ static constexpr wchar_t* Log_Error_OutOfIndexBuffer = L"IV3DCommandBuffer::Bind
 static constexpr wchar_t* Log_Error_WriteTimeStampQueryType = L"IV3DCommandBuffer::WriteTimestamp : ƒNƒGƒŠ‚Í %s ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B";
 static constexpr wchar_t* Log_Error_NotSecondaryCommandBuffer = L"IV3DCommandBuffer::ExecuteCommandBuffers : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@ %s[%u] ‚ÍƒZƒJƒ“ƒ_ƒŠ‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
 static constexpr wchar_t* Log_Error_SecondaryCommandBufferNotEnd = L"IV3DCommandBuffer::ExecuteCommandBuffers : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@ %s[%u] ‚Í IV3DCommandBuffer::End ‚ÅI—¹‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ";
+static constexpr wchar_t* Log_Error_CommandBuffersSimultaneousUse = L"IV3DCommandBuffer::ExecuteCommandBuffers : ƒvƒ‰ƒCƒ}ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ìg—p–@‚É V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE ‚ªw’è‚³‚ê‚Ä‚¢‚éê‡‚ÍAƒZƒJƒ“ƒ_ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚à“¯—l‚É‚±‚Ìg—p–@‚ğw’è‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B";
 
 // ----------------------------------------------------------------------------------------------------
 // IV3DCommandQueue
