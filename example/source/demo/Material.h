@@ -2,25 +2,33 @@
 
 #include "GraphicsManager.h"
 #include "Texture.h"
+#include "DynamicOffsetHeap.h"
 
+class TextureManager;
 class MaterialManager;
+
+enum RENDER_TYPE
+{
+	RENDER_TYPE_GEOMETRY = 0,
+	RENDER_TYPE_SHADOW = 1,
+
+	RENDER_TYPE_COUNT = 2,
+};
 
 class Material
 {
 public:
-	enum BINDING
-	{
-		BINDING_UNIFORM = 0,
-		BINDING_ALBEDO_TEXTURE = 1,
-		BINDING_NORMAL_TEXTURE = 2,
-	};
-
 	Material();
 	~Material();
 
+	const wchar_t* GetName() const;
+
 	uint64_t GetKey() const;
 
-	const wchar_t* GetName() const;
+	IV3DPipelineLayout* GetPipelineLayoutPtr(RENDER_TYPE renderType);
+	IV3DPipeline* GetPipelinePtr(RENDER_TYPE renderType);
+	IV3DDescriptorSet* GetDescriptorSetPtr();
+	uint32_t GetDynamicOffset() const;
 
 	V3D_FILTER GetFilter() const;
 	void SetFilter(V3D_FILTER filter);
@@ -46,6 +54,12 @@ public:
 	TexturePtr GetDiffuseTexture();
 	void SetDiffuseTexture(TexturePtr texture);
 
+	TexturePtr GetMaskTexture();
+	void SetMaskTexture(TexturePtr texture);
+
+	TexturePtr GetSpecularTexture();
+	void SetSpecularTexture(TexturePtr texture);
+
 	float GetSpecularPower() const;
 	void SetSpecularPower(float sepcularPower);
 
@@ -57,9 +71,27 @@ public:
 
 	V3D_RESULT Update();
 
-	void Bind(IV3DCommandBuffer* pCommandBuffer);
+	void Bind(IV3DCommandBuffer* pCommandBuffer, RENDER_TYPE renderType);
 
 private:
+	static constexpr GraphicsPipelienDesc ShadowPipelineDesc =
+	{
+		V3D_POLYGON_MODE_FILL,
+		V3D_CULL_MODE_FRONT,
+		true,
+		true,
+		BLEND_MODE_COPY,
+	};
+
+	enum BINDING
+	{
+		BINDING_UNIFORM = 0,
+		BINDING_DIFFUSE_TEXTURE = 1,
+		BINDING_SPECULAR_TEXTURE = 2,
+		BINDING_MASK_TEXTURE = 3,
+		BINDING_NORMAL_TEXTURE = 4,
+	};
+
 	struct Uniform
 	{
 		Vector4 diffuseColor;
@@ -67,6 +99,26 @@ private:
 		float specularPower;
 		float shininess;
 		float reserve;
+	};
+
+	struct SerialData
+	{
+		wchar_t name[256];
+
+		float diffuseColor[4];
+		float ambient;
+		float specularPower;
+		float shininess;
+		float reserve1[1];
+
+		uint32_t filter;
+		uint32_t addressMode;
+		uint32_t reserve2[2];
+
+		wchar_t diffuseTextureFilePath[256];
+		wchar_t specularTextureFilePath[256];
+		wchar_t maskTextureFilePath[256];
+		wchar_t normalTextureFilePath[256];
 	};
 
 	GraphicsManager* m_pGraphicsManager;
@@ -80,21 +132,28 @@ private:
 	V3D_FILTER m_Filter;
 	V3D_ADDRESS_MODE m_AddressMode;
 	TexturePtr m_DiffuseTexture;
+	TexturePtr m_SpecularTexture;
+	TexturePtr m_MaskTexture;
 	TexturePtr m_NormalTexture;
 
-	IV3DPipelineLayout* m_pPipelineLayout;
+	GraphicsPipelienDesc m_GeometryPipelineDesc;
 
-	GraphicsPipelienDesc m_PipelineDesc;
-	GraphicsPipelineHandle m_PipelineHandle;
+	Array1<IV3DPipelineLayout*, RENDER_TYPE_COUNT> m_PipelineLayouts;
+	Array1<GraphicsPipelineHandle, RENDER_TYPE_COUNT> m_PipelineHandles;
 
 	IV3DBuffer* m_pUniformBuffer;
-	uint32_t m_UniformDynamicOffset;
+	DynamicOffsetHeap::Handle m_UniformDynamicOffsetHandle;
 	IV3DDescriptorSet* m_pDescriptorSet;
 
 	V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, MaterialManager* pMaterialManager, const wchar_t* pName);
+	V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, const Material::SerialData* pData);
 	void Dispose();
 
+	bool Serialize(Material::SerialData* pData);
+
 	friend class Mesh;
+	friend class StaticMesh;
+	friend class SkeletalMesh;
 	friend class MaterialManager;
 };
 

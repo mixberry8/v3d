@@ -1,160 +1,108 @@
 #pragma once
 
-#include "Material.h"
+#include "Mesh.h"
+#include "DynamicOffsetHeap.h"
 
-class GraphicsManager;
-class TextureManager;
-class MaterialManager;
-class MeshManager;
-
-class Mesh
+class StaticMesh : public Mesh
 {
 public:
-	struct LoadDesc
-	{
-		Matrix4x4 rotation;
-		bool invertTex[2];
-		bool invertNormal;
-		bool flipFace;
-		bool isSmoosing;
-		float smoosingAngle;
-	};
+	/**************/
+	/* StaticMesh */
+	/**************/
 
-	struct Vertex
-	{
-		Vector3 pos;
-		Vector2 uv;
-		Vector3 normal;
-		Vector3 tangent;
-		Vector3 binormal;
-	};
-
-	struct Subset
-	{
-		uint32_t material;
-		uint32_t indexCount;
-		uint32_t firstIndex;
-	};
-
-	Mesh();
-	~Mesh();
-
-	std::shared_ptr<Mesh> Clone();
-
-	uint64_t GetKey() const;
-
-	uint32_t GetMaterialCount() const;
-	MaterialPtr GetMaterial(uint32_t material);
-
-	uint32_t GetSubsetCount() const;
-	const Mesh::Subset& GetSubset(uint32_t subset) const;
+	StaticMesh();
+	virtual ~StaticMesh();
 
 	const Matrix4x4& GetWorldMatrix() const;
 	void SetWorldMatrix(const Matrix4x4& worldMatrix);
 
-	V3D_RESULT Update(const Matrix4x4& viewProjMat);
-
 	void BindVertexIndexBuffer(IV3DCommandBuffer* pCommandBuffer);
 	void BindDescriptorSet(IV3DCommandBuffer* pCommandBuffer);
 
+	uint32_t GetSubsetCount() const;
+	const MeshSubset& GetSubset(uint32_t subset) const;
+
 	void Draw(IV3DCommandBuffer* pCommandBuffer);
 
+	std::shared_ptr<StaticMesh> Clone();
+
+	/********/
+	/* Mesh */
+	/********/
+
+	virtual MESH_TYPE GetType() const override;
+
+	virtual IV3DBuffer* GetVertexIndexBuffer() override;
+	virtual uint64_t GetVertexOffset() const override;
+	virtual uint64_t GetIndexOffset() const override;
+	virtual V3D_INDEX_TYPE GetIndexType() const override;
+
+	virtual V3D_RESULT Update() override;
+
+	virtual bool Save(const wchar_t* pFilePath) override;
+
+protected:
+	/********/
+	/* Mesh */
+	/********/
+
+	virtual V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, MeshManager* pMeshManager) override;
+	virtual void Dispose()  override;
+
+	virtual V3D_RESULT Import(const wchar_t* pFilePath, const MeshImportDesc& importDesc) override;
+	virtual bool Load(const wchar_t* pFilePath) override;
+
 private:
-	/************/
-	/* ç≈ìKâªóp */
-	/************/
+	/**************/
+	/* StaticMesh */
+	/**************/
 
-	struct FaceOpt
+	static constexpr uint32_t MagicNumber = ('V' << 24) | ('S' << 16) | ('T' << 8) | 'M';
+	static constexpr uint32_t Version = 0x01000000;
+
+	struct FileHeader
 	{
-		uint32_t indices[3];
+		uint32_t magicNumber;
+		uint32_t version;
 	};
 
-	struct SubsetOpt
+	struct InfoHeader
 	{
-		uint32_t material;
-
-		uint32_t firstIndex;
-		uint32_t indexCount;
-
-		uint32_t firstFace;
-		uint32_t faceCount;
-		std::vector<Mesh::Vertex> vertices;
-		std::vector<uint32_t> indices;
+		uint32_t materialCount;
+		uint32_t opSubsetCount;
+		uint32_t trSubsetCount;
+		uint64_t verticesSize;
+		uint64_t indicesSize;
+		uint32_t indexType;
+		float localCenter[4];
+		float halfExtent[4];
 	};
-
-	struct IndexOpt
-	{
-		uint32_t index;
-		bool assigned;
-	};
-
-	struct MaterialOpt
-	{
-		std::wstring name;
-		Vector3 ambientColor; // RGB
-		Vector4 diffuseColor; // RGBA
-		Vector3 specularColor; // RGB
-		Vector3 emissiveColor; // RGB
-		float specularPower;
-		float shininess;
-
-		std::wstring diffuseTexture;
-	};
-
-	/************/
-	/* Ç‡ÇÎÇ‡ÇÎ */
-	/************/
 
 	struct Uniform
 	{
 		Matrix4x4 worldMat;
-		Matrix4x4 worldViewProjMat;
 	};
 
-	GraphicsManager* m_pGraphicsManager;
-	TextureManager* m_pTextureManager;
-	MaterialManager* m_pMaterialManager;
-	MeshManager* m_pMeshManager;
+	Vector3 m_LocalCenter;
+	Vector3 m_HalfExtent;
 
 	IV3DPipelineLayout* m_pPipelineLayout;
 
-	Mesh::Uniform m_Uniform;
+	StaticMesh::Uniform m_Uniform;
 	IV3DBuffer* m_pUniformBuffer;
-	uint32_t m_UniformDynamicOffset;
+	DynamicOffsetHeap::Handle m_UniformDynamicOffsetHandle;
 	IV3DDescriptorSet* m_pDescriptorSet;
 
 	IV3DBuffer* m_pBuffer;
 	uint64_t m_VertexOffset;
+	uint64_t m_VerticesSize;
 	uint64_t m_IndexOffset;
+	uint64_t m_IndicesSize;
 	V3D_INDEX_TYPE m_IndexType;
 
-	std::vector<Mesh::Subset> m_Subsets;
-	std::vector<std::shared_ptr<Material>> m_Materials;
-
-	uint64_t m_Key;
-	std::wstring m_Name;
-
-	V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, MeshManager* pMeshManager);
-	void Dispose();
-
-	V3D_RESULT LoadFromFile(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDesc);
-
-	static void Optimize(
-		std::vector<Mesh::Vertex>& srcVertices, std::vector<Mesh::SubsetOpt>& srcSubsets,
-		std::vector<Mesh::Vertex>& dstVertices, std::vector<uint32_t>& dstIndices, std::vector<Mesh::Subset>& dstSubsets,
-		bool flipFace, bool isSmoosing, float smoosingCos);
-
-	static V3D_RESULT LoadObj(
-		const wchar_t* pDirPath,
-		uint64_t bufferSize, void* pBuffer,
-		std::vector<Mesh::Vertex>& vertices,
-		std::vector<Mesh::SubsetOpt>& subsets,
-		std::vector<Mesh::MaterialOpt>& materials);
-
-	static V3D_RESULT LoadObjMaterial(const wchar_t* pDirPath, const wchar_t* pFilePath, std::vector<Mesh::MaterialOpt>& materials);
-	static V3D_RESULT LoadObjMaterial(const wchar_t* pDirPath, uint64_t bufferSize, void* pBuffer, std::vector<Mesh::MaterialOpt>& materials);
+	std::vector<MeshSubset> m_Subsets;
 
 	friend class MeshManager;
 };
 
-typedef std::shared_ptr<Mesh> MeshPtr;
+typedef std::shared_ptr<StaticMesh> StaticMeshPtr;

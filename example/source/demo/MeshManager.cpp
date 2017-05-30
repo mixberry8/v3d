@@ -4,10 +4,9 @@ MeshManager::MeshManager() :
 	m_pGraphicsManager(nullptr),
 	m_pTextureManager(nullptr),
 	m_pMaterialManager(nullptr),
-	m_pMemory(nullptr),
+	m_pUniformMemory(nullptr),
 	m_pUniformBuffer(nullptr),
-	m_pDescriptorSet(nullptr),
-	m_InuseDynamicOffsetCount(0)
+	m_pDescriptorSet(nullptr)
 {
 }
 
@@ -15,13 +14,11 @@ MeshManager::~MeshManager()
 {
 }
 
-V3D_RESULT MeshManager::Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, uint32_t maxMesh)
+V3D_RESULT MeshManager::Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, uint32_t maxUniform)
 {
 	m_pGraphicsManager = pGraphicsManager;
 	m_pTextureManager = pTextureManager;
 	m_pMaterialManager = pMaterialManager;
-	m_MaxMesh = maxMesh;
-	m_UnuseUniformDynamicOffsets.reserve(maxMesh);
 
 	// ----------------------------------------------------------------------------------------------------
 	// ユニフォームバッファを作成
@@ -29,8 +26,8 @@ V3D_RESULT MeshManager::Initialize(GraphicsManager* pGraphicsManager, TextureMan
 
 	BufferSubresourceDesc uniformBufferSubresource;
 	uniformBufferSubresource.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
-	uniformBufferSubresource.size = sizeof(Mesh::Uniform);
-	uniformBufferSubresource.count = maxMesh;
+	uniformBufferSubresource.size = sizeof(StaticMesh::Uniform);
+	uniformBufferSubresource.count = maxUniform;
 
 	BufferMemoryLayout uniformBufferMemoryLayout;
 	uint64_t uniformBufferMemorySize;
@@ -60,21 +57,21 @@ V3D_RESULT MeshManager::Initialize(GraphicsManager* pGraphicsManager, TextureMan
 		return result;
 	}
 
-	m_pUniformBuffer->GetResourceMemory(&m_pMemory);
+	m_pUniformBuffer->GetResourceMemory(&m_pUniformMemory);
 
-	m_UniformStride = TO_UI32(uniformBufferMemoryLayout.stride);
+	m_UniformOffsetHeap.Initialize(maxUniform, TO_UI32(uniformBufferMemoryLayout.stride));
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	result = pGraphicsManager->CreateDescriptorSet(GRAPHICS_RENDERPASS_TYPE_DFFERED_GEOMETRY, GRAPHICS_PIPELINE_TYPE_GEOMETRY, GRAPHICS_DESCRIPTOR_SET_TYPE_MESH, &m_pDescriptorSet);
+	result = pGraphicsManager->CreateDescriptorSet(GRAPHICS_PIPELINE_TYPE_GEOMETRY, GRAPHICS_DESCRIPTOR_SET_TYPE_MESH, &m_pDescriptorSet);
 	if (result != V3D_OK)
 	{
 		return result;
 	}
 
-	result = m_pDescriptorSet->SetBuffer(0, m_pUniformBuffer, 0, sizeof(Mesh::Uniform));
+	result = m_pDescriptorSet->SetBuffer(0, m_pUniformBuffer, 0, sizeof(StaticMesh::Uniform));
 	if (result != V3D_OK)
 	{
 		return result;
@@ -103,7 +100,7 @@ void MeshManager::Finalize()
 
 	SAFE_RELEASE(m_pDescriptorSet);
 	SAFE_RELEASE(m_pUniformBuffer);
-	SAFE_RELEASE(m_pMemory);
+	SAFE_RELEASE(m_pUniformMemory);
 
 	m_pGraphicsManager = nullptr;
 	m_pTextureManager = nullptr;
@@ -112,22 +109,22 @@ void MeshManager::Finalize()
 
 V3D_RESULT MeshManager::BeginUpdate()
 {
-	return m_pMemory->BeginMap();
+	return m_pUniformMemory->BeginMap();
 }
 
 V3D_RESULT MeshManager::EndUpdate()
 {
-	return m_pMemory->EndMap();
+	return m_pUniformMemory->EndMap();
 }
 
-MeshPtr MeshManager::Load(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDesc)
+StaticMeshPtr MeshManager::ImportStatic(const wchar_t* pFilePath, const MeshImportDesc& importDesc)
 {
-	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+	std::shared_ptr<StaticMesh> mesh = std::make_shared<StaticMesh>();
 
 	MeshManager::MeshMap::iterator it_mesh = m_MeshMap.find(pFilePath);
 	if (it_mesh != m_MeshMap.end())
 	{
-		return it_mesh->second;
+		return std::static_pointer_cast<StaticMesh>(it_mesh->second);
 	}
 
 	V3D_RESULT result = mesh->Initialize(m_pGraphicsManager, m_pTextureManager, m_pMaterialManager, this);
@@ -136,7 +133,10 @@ MeshPtr MeshManager::Load(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDe
 		return nullptr;
 	}
 
-	result = mesh->LoadFromFile(pFilePath, loadDesc);
+	std::wstring filePath;
+	CreateFilePath(pFilePath, filePath);
+
+	result = mesh->Import(filePath.c_str(), importDesc);
 	if (result != V3D_OK)
 	{
 		return nullptr;
@@ -148,35 +148,116 @@ MeshPtr MeshManager::Load(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDe
 	return std::move(mesh);
 }
 
-void MeshManager::GetDescriptorSet(IV3DDescriptorSet** ppDescriptorSet)
+SkeletalMeshPtr MeshManager::ImportSkeletal(const wchar_t* pFilePath, const MeshImportDesc& importDesc)
 {
+	SkeletalMeshPtr mesh = std::make_shared<SkeletalMesh>();
+
+	MeshManager::MeshMap::iterator it_mesh = m_MeshMap.find(pFilePath);
+	if (it_mesh != m_MeshMap.end())
+	{
+		return std::static_pointer_cast<SkeletalMesh>(it_mesh->second);
+	}
+
+	V3D_RESULT result = mesh->Initialize(m_pGraphicsManager, m_pTextureManager, m_pMaterialManager, this);
+	if (result != V3D_OK)
+	{
+		return nullptr;
+	}
+
+	std::wstring filePath;
+	CreateFilePath(pFilePath, filePath);
+
+	result = mesh->Import(filePath.c_str(), importDesc);
+	if (result != V3D_OK)
+	{
+		return nullptr;
+	}
+
+	m_NamingService.Add(pFilePath, mesh->m_Name);
+	m_MeshMap[pFilePath] = mesh;
+
+	return std::move(mesh);
+}
+
+StaticMeshPtr MeshManager::LoadStatic(const wchar_t* pFilePath)
+{
+	StaticMeshPtr mesh = std::make_shared<StaticMesh>();
+
+	MeshManager::MeshMap::iterator it_mesh = m_MeshMap.find(pFilePath);
+	if (it_mesh != m_MeshMap.end())
+	{
+		return std::static_pointer_cast<StaticMesh>(it_mesh->second);
+	}
+
+	V3D_RESULT result = mesh->Initialize(m_pGraphicsManager, m_pTextureManager, m_pMaterialManager, this);
+	if (result != V3D_OK)
+	{
+		return nullptr;
+	}
+
+	std::wstring filePath;
+	CreateFilePath(pFilePath, filePath);
+
+	if (mesh->Load(filePath.c_str()) == false)
+	{
+		return nullptr;
+	}
+
+	m_NamingService.Add(pFilePath, mesh->m_Name);
+	m_MeshMap[pFilePath] = mesh;
+
+	return std::move(mesh);
+}
+
+SkeletalMeshPtr MeshManager::LoadSkeletal(const wchar_t* pFilePath)
+{
+	SkeletalMeshPtr mesh = std::make_shared<SkeletalMesh>();
+
+	MeshManager::MeshMap::iterator it_mesh = m_MeshMap.find(pFilePath);
+	if (it_mesh != m_MeshMap.end())
+	{
+		return std::static_pointer_cast<SkeletalMesh>(it_mesh->second);
+	}
+
+	V3D_RESULT result = mesh->Initialize(m_pGraphicsManager, m_pTextureManager, m_pMaterialManager, this);
+	if (result != V3D_OK)
+	{
+		return nullptr;
+	}
+
+	std::wstring filePath;
+	CreateFilePath(pFilePath, filePath);
+
+	if(mesh->Load(filePath.c_str()) == false)
+	{
+		return nullptr;
+	}
+
+	m_NamingService.Add(pFilePath, mesh->m_Name);
+	m_MeshMap[pFilePath] = mesh;
+
+	return std::move(mesh);
+}
+
+V3D_RESULT MeshManager::CreateDescriptorSet(IV3DDescriptorSet** ppDescriptorSet, DynamicOffsetHeap::Handle* pHandle)
+{
+	if (m_UniformOffsetHeap.Retain(pHandle) == false)
+	{
+		return V3D_ERROR_FAIL;
+	}
+
 	SAFE_ADD_REF(m_pDescriptorSet);
 	*ppDescriptorSet = m_pDescriptorSet;
+
+	return V3D_OK;
 }
 
-void MeshManager::RetainUniformDynamicOffset(uint32_t* pDynamicOffset)
+void MeshManager::ReleaseDescriptorSet(DynamicOffsetHeap::Handle* pHandle)
 {
-	if (m_UnuseUniformDynamicOffsets.empty() == false)
-	{
-		*pDynamicOffset = m_UnuseUniformDynamicOffsets.back();
-		m_UnuseUniformDynamicOffsets.pop_back();
-	}
-	else
-	{
-		*pDynamicOffset = m_InuseDynamicOffsetCount * m_UniformStride;
-		m_InuseDynamicOffsetCount++;
-	}
+	m_UniformOffsetHeap.Release(pHandle);
 }
 
-void MeshManager::ReleaseUniformDynamicOffset(uint32_t dynamicOffset)
-{
-	ASSERT(m_InuseDynamicOffsetCount > 0);
-
-	m_UnuseUniformDynamicOffsets.push_back(dynamicOffset);
-	m_InuseDynamicOffsetCount--;
-}
-
-void MeshManager::Add(const wchar_t* pName, MeshPtr mesh)
+void MeshManager::Add(const wchar_t* pName, std::shared_ptr<Mesh> mesh)
 {
 	m_NamingService.Add(pName, mesh->m_Name);
 

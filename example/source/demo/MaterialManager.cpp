@@ -1,13 +1,12 @@
 #include "MaterialManager.h"
 #include "GraphicsManager.h"
+#include "TextureManager.h"
 
 MaterialManager::MaterialManager() :
 	m_pGraphicsManager(nullptr),
 	m_MaxMaterial(0),
-	m_UniformStride(0),
 	m_pUniformMemory(nullptr),
-	m_pUniformBuffer(nullptr),
-	m_InuseDynamicOffsetCount(0)
+	m_pUniformBuffer(nullptr)
 {
 	for (uint32_t i = 0; i < MaterialManager::DUMMY_IMAGE_TYPE_COUNT; i++)
 	{
@@ -27,9 +26,10 @@ MaterialManager::~MaterialManager()
 {
 }
 
-V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32_t maxMaterial)
+V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, uint32_t maxMaterial)
 {
 	m_pGraphicsManager = pGraphicsManager;
+	m_pTextureManager = pTextureManager;
 	m_MaxMaterial = maxMaterial;
 
 	// ------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 
 	m_pUniformBuffer->GetResourceMemory(&m_pUniformMemory);
 
-	m_UniformStride = TO_UI32(uniformBufferMemoryLayout.stride);
+	m_UniformOffsetHeap.Initialize(maxMaterial, TO_UI32(uniformBufferMemoryLayout.stride));
 
 	// ------------------------------------------------------------------------------------------
 	// ダミーイメージを作成
@@ -89,8 +89,22 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	imageDesc.tiling = V3D_IMAGE_TILING_OPTIMAL;
 	imageDesc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_SAMPLED;
 
-	IV3DImage* pDummyAlbedoImage;
-	result = CreateDummyImage(&pDummyAlbedoImage);
+	IV3DImage* pDummyDiffuseImage;
+	result = CreateDummyImage(&pDummyDiffuseImage);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	IV3DImage* pDummySpecularImage;
+	result = CreateDummyImage(&pDummySpecularImage);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	IV3DImage* pDummyMaskImage;
+	result = CreateDummyImage(&pDummyMaskImage);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -107,7 +121,9 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	if (pCommandBuffer == nullptr)
 	{
 		SAFE_RELEASE(pDummyNormalImage);
-		SAFE_RELEASE(pDummyAlbedoImage);
+		SAFE_RELEASE(pDummyMaskImage);
+		SAFE_RELEASE(pDummySpecularImage);
+		SAFE_RELEASE(pDummyDiffuseImage);
 		return V3D_ERROR_FAIL;
 	}
 
@@ -122,7 +138,9 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
 	barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
 	barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-	pCommandBuffer->BarrierImage(pDummyAlbedoImage, barrier);
+	pCommandBuffer->BarrierImage(pDummyDiffuseImage, barrier);
+	pCommandBuffer->BarrierImage(pDummySpecularImage, barrier);
+	pCommandBuffer->BarrierImage(pDummyMaskImage, barrier);
 	pCommandBuffer->BarrierImage(pDummyNormalImage, barrier);
 
 	V3DClearValue clearValue{};
@@ -131,7 +149,19 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	clearValue.color.float32[1] = 1.0f;
 	clearValue.color.float32[2] = 1.0f;
 	clearValue.color.float32[3] = 1.0f;
-	pCommandBuffer->ClearImage(pDummyAlbedoImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
+	pCommandBuffer->ClearImage(pDummyDiffuseImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
+
+	clearValue.color.float32[0] = 1.0f;
+	clearValue.color.float32[1] = 1.0f;
+	clearValue.color.float32[2] = 1.0f;
+	clearValue.color.float32[3] = 1.0f;
+	pCommandBuffer->ClearImage(pDummySpecularImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
+
+	clearValue.color.float32[0] = 1.0f;
+	clearValue.color.float32[1] = 1.0f;
+	clearValue.color.float32[2] = 1.0f;
+	clearValue.color.float32[3] = 1.0f;
+	pCommandBuffer->ClearImage(pDummyMaskImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
 
 	clearValue.color.float32[0] = 1.0f;
 	clearValue.color.float32[1] = 0.0f;
@@ -145,13 +175,17 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
 	barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
 	barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-	pCommandBuffer->BarrierImage(pDummyAlbedoImage, barrier);
+	pCommandBuffer->BarrierImage(pDummyDiffuseImage, barrier);
+	pCommandBuffer->BarrierImage(pDummySpecularImage, barrier);
+	pCommandBuffer->BarrierImage(pDummyMaskImage, barrier);
 	pCommandBuffer->BarrierImage(pDummyNormalImage, barrier);
 
 	if (m_pGraphicsManager->FlushCommandBuffer() == false)
 	{
 		SAFE_RELEASE(pDummyNormalImage);
-		SAFE_RELEASE(pDummyAlbedoImage);
+		SAFE_RELEASE(pDummyMaskImage);
+		SAFE_RELEASE(pDummySpecularImage);
+		SAFE_RELEASE(pDummyDiffuseImage);
 		return V3D_ERROR_FAIL;
 	}
 
@@ -162,11 +196,33 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	imageViewDesc.baseLayer = 0;
 	imageViewDesc.layerCount = 1;
 
-	result = m_pGraphicsManager->GetDevicePtr()->CreateImageView(pDummyAlbedoImage, imageViewDesc, &m_pDummyImageViews[MaterialManager::DUMMY_IMAGE_TYPE_DIFFUSE]);
+	result = m_pGraphicsManager->GetDevicePtr()->CreateImageView(pDummyDiffuseImage, imageViewDesc, &m_pDummyImageViews[MaterialManager::DUMMY_IMAGE_TYPE_DIFFUSE]);
 	if (result != V3D_OK)
 	{
 		SAFE_RELEASE(pDummyNormalImage);
-		SAFE_RELEASE(pDummyAlbedoImage);
+		SAFE_RELEASE(pDummyMaskImage);
+		SAFE_RELEASE(pDummySpecularImage);
+		SAFE_RELEASE(pDummyDiffuseImage);
+		return result;
+	}
+
+	result = m_pGraphicsManager->GetDevicePtr()->CreateImageView(pDummySpecularImage, imageViewDesc, &m_pDummyImageViews[MaterialManager::DUMMY_IMAGE_TYPE_SPECULAR]);
+	if (result != V3D_OK)
+	{
+		SAFE_RELEASE(pDummyNormalImage);
+		SAFE_RELEASE(pDummyMaskImage);
+		SAFE_RELEASE(pDummySpecularImage);
+		SAFE_RELEASE(pDummyDiffuseImage);
+		return result;
+	}
+
+	result = m_pGraphicsManager->GetDevicePtr()->CreateImageView(pDummyMaskImage, imageViewDesc, &m_pDummyImageViews[MaterialManager::DUMMY_IMAGE_TYPE_MASK]);
+	if (result != V3D_OK)
+	{
+		SAFE_RELEASE(pDummyNormalImage);
+		SAFE_RELEASE(pDummyMaskImage);
+		SAFE_RELEASE(pDummySpecularImage);
+		SAFE_RELEASE(pDummyDiffuseImage);
 		return result;
 	}
 
@@ -174,12 +230,16 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 	if (result != V3D_OK)
 	{
 		SAFE_RELEASE(pDummyNormalImage);
-		SAFE_RELEASE(pDummyAlbedoImage);
+		SAFE_RELEASE(pDummyMaskImage);
+		SAFE_RELEASE(pDummySpecularImage);
+		SAFE_RELEASE(pDummyDiffuseImage);
 		return result;
 	}
 
 	SAFE_RELEASE(pDummyNormalImage);
-	SAFE_RELEASE(pDummyAlbedoImage);
+	SAFE_RELEASE(pDummyMaskImage);
+	SAFE_RELEASE(pDummySpecularImage);
+	SAFE_RELEASE(pDummyDiffuseImage);
 
 	// ------------------------------------------------------------------------------------------
 	// サンプラーを作成
@@ -199,6 +259,8 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 		V3D_ADDRESS_MODE_CLAMP_TO_BORDER,
 	};
 
+	const V3DDeviceCaps& deviceCaps = m_pGraphicsManager->GetDevicePtr()->GetCaps();
+
 	for (uint32_t i = 0; i < MaterialManager::SamplerFilterCount; i++)
 	{
 		for (uint32_t j = 0; j < MaterialManager::SamplerAddressModeCount; j++)
@@ -211,11 +273,11 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, uint32
 			samplerDesc.addressModeV = addressModeTable[j];
 			samplerDesc.addressModeW = addressModeTable[j];
 			samplerDesc.mipLodBias = 0.0f;
-			samplerDesc.anisotropyEnable = false;
-			samplerDesc.maxAnisotropy = 0.0f;
+			samplerDesc.anisotropyEnable = (deviceCaps.flags & V3D_CAP_SAMPLER_ANISOTROPY) == V3D_CAP_SAMPLER_ANISOTROPY;
+			samplerDesc.maxAnisotropy = (samplerDesc.anisotropyEnable == true) ? deviceCaps.maxSamplerAnisotropy : 0.0f;
 			samplerDesc.compareOp = V3D_COMPARE_OP_NEVER;
 			samplerDesc.minLod = 0.0f;
-			samplerDesc.maxLod = 1.0f;
+			samplerDesc.maxLod = 100.0f;
 			samplerDesc.compareEnable = false;
 			samplerDesc.borderColor = V3D_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
@@ -265,7 +327,7 @@ void MaterialManager::Finalize()
 	m_pGraphicsManager = nullptr;
 }
 
-MaterialPtr MaterialManager::Create(const wchar_t* pName)
+MaterialPtr MaterialManager::Create(const wchar_t* pFullName, const wchar_t* pName)
 {
 	MaterialManager::MaterialMap::iterator it = m_MaterialMap.find(pName);
 	if (it != m_MaterialMap.end())
@@ -281,7 +343,28 @@ MaterialPtr MaterialManager::Create(const wchar_t* pName)
 		return nullptr;
 	}
 
-	m_MaterialMap[pName] = material;
+	m_MaterialMap[pFullName] = material;
+
+	return std::move(material);
+}
+
+MaterialPtr MaterialManager::CreateFromSerial(const wchar_t* pFullName, const Material::SerialData* pData)
+{
+	MaterialManager::MaterialMap::iterator it = m_MaterialMap.find(pFullName);
+	if (it != m_MaterialMap.end())
+	{
+		return it->second;
+	}
+
+	MaterialPtr material = std::make_shared<Material>();
+
+	V3D_RESULT result = material->Initialize(m_pGraphicsManager, m_pTextureManager, this, pData);
+	if (result != V3D_OK)
+	{
+		return nullptr;
+	}
+
+	m_MaterialMap[pFullName] = material;
 
 	return std::move(material);
 }
@@ -320,6 +403,85 @@ V3D_RESULT MaterialManager::CreateDummyImage(IV3DImage** ppImage)
 	return V3D_OK;
 }
 
+V3D_RESULT MaterialManager::CreateDescriptorSet(V3D_FILTER filter, V3D_ADDRESS_MODE addressMode, IV3DDescriptorSet** ppDescriptorSet, DynamicOffsetHeap::Handle* pHandle)
+{
+	if (m_UniformOffsetHeap.Retain(pHandle) == false)
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	V3D_RESULT result = m_pGraphicsManager->CreateDescriptorSet(GRAPHICS_PIPELINE_TYPE_GEOMETRY, GRAPHICS_DESCRIPTOR_SET_TYPE_MATERIAL, ppDescriptorSet);
+	if (result != V3D_OK)
+	{
+		m_UniformOffsetHeap.Release(pHandle);
+		return result;
+	}
+
+	result = (*ppDescriptorSet)->SetBuffer(Material::BINDING_UNIFORM, m_pUniformBuffer, 0, sizeof(Material::Uniform));
+	if (result != V3D_OK)
+	{
+		m_UniformOffsetHeap.Release(pHandle);
+		return result;
+	}
+
+	result = (*ppDescriptorSet)->SetImageViewAndSampler(
+		Material::BINDING_DIFFUSE_TEXTURE,
+		GetDummyImageViewPtr(MaterialManager::DUMMY_IMAGE_TYPE_DIFFUSE),
+		V3D_IMAGE_LAYOUT_SHADER_READ_ONLY,
+		GetSamplerPtr(filter, addressMode));
+
+	if (result != V3D_OK)
+	{
+		m_UniformOffsetHeap.Release(pHandle);
+		return result;
+	}
+
+	result = (*ppDescriptorSet)->SetImageViewAndSampler(
+		Material::BINDING_SPECULAR_TEXTURE,
+		GetDummyImageViewPtr(MaterialManager::DUMMY_IMAGE_TYPE_SPECULAR),
+		V3D_IMAGE_LAYOUT_SHADER_READ_ONLY,
+		GetSamplerPtr(filter, addressMode));
+
+	if (result != V3D_OK)
+	{
+		m_UniformOffsetHeap.Release(pHandle);
+		return result;
+	}
+
+	result = (*ppDescriptorSet)->SetImageViewAndSampler(
+		Material::BINDING_MASK_TEXTURE,
+		GetDummyImageViewPtr(MaterialManager::DUMMY_IMAGE_TYPE_MASK),
+		V3D_IMAGE_LAYOUT_SHADER_READ_ONLY,
+		GetSamplerPtr(V3D_FILTER_NEAREST, addressMode));
+
+	if (result != V3D_OK)
+	{
+		m_UniformOffsetHeap.Release(pHandle);
+		return result;
+	}
+
+	result = (*ppDescriptorSet)->SetImageViewAndSampler(
+		Material::BINDING_NORMAL_TEXTURE,
+		GetDummyImageViewPtr(MaterialManager::DUMMY_IMAGE_TYPE_NORMAL),
+		V3D_IMAGE_LAYOUT_SHADER_READ_ONLY,
+		GetSamplerPtr(V3D_FILTER_NEAREST, addressMode));
+
+	if (result != V3D_OK)
+	{
+		m_UniformOffsetHeap.Release(pHandle);
+		return result;
+	}
+
+	(*ppDescriptorSet)->Update();
+
+	return V3D_OK;
+}
+
+void MaterialManager::ReleaseDescriptorSet(DynamicOffsetHeap::Handle* pHandle)
+{
+	m_UniformOffsetHeap.Release(pHandle);
+}
+
 IV3DImageView* MaterialManager::GetDummyImageViewPtr(MaterialManager::DUMMY_IMAGE_TYPE type)
 {
 	return m_pDummyImageViews[type];
@@ -328,32 +490,4 @@ IV3DImageView* MaterialManager::GetDummyImageViewPtr(MaterialManager::DUMMY_IMAG
 IV3DSampler* MaterialManager::GetSamplerPtr(V3D_FILTER filter, V3D_ADDRESS_MODE addressMode)
 {
 	return m_pSamplers[filter][addressMode];
-}
-
-void MaterialManager::GetUniformBuffer(IV3DBuffer** ppBuffer)
-{
-	SAFE_ADD_REF(m_pUniformBuffer);
-	*ppBuffer = m_pUniformBuffer;
-}
-
-void MaterialManager::RetainUniformDynamicOffset(uint32_t* pDynamicOffset)
-{
-	if (m_UnuseUniformDynamicOffsets.empty() == false)
-	{
-		*pDynamicOffset = m_UnuseUniformDynamicOffsets.back();
-		m_UnuseUniformDynamicOffsets.pop_back();
-	}
-	else
-	{
-		*pDynamicOffset = m_InuseDynamicOffsetCount * m_UniformStride;
-		m_InuseDynamicOffsetCount++;
-	}
-}
-
-void MaterialManager::ReleaseUniformDynamicOffset(uint32_t dynamicOffset)
-{
-	ASSERT(m_InuseDynamicOffsetCount > 0);
-
-	m_UnuseUniformDynamicOffsets.push_back(dynamicOffset);
-	m_InuseDynamicOffsetCount--;
 }

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Mesh.h"
+#include "StaticMesh.h"
+#include "SkeletalMesh.h"
 #include "NamingService.h"
-#include "ResourceHeap.h"
+#include "DynamicOffsetHeap.h"
 
 class GraphicsManager;
 class TextureManager;
@@ -14,39 +15,40 @@ public:
 	MeshManager();
 	~MeshManager();
 
-	V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, uint32_t maxMesh);
+	V3D_RESULT Initialize(GraphicsManager* pGraphicsManager, TextureManager* pTextureManager, MaterialManager* pMaterialManager, uint32_t maxUniform);
 	void Finalize();
 
 	V3D_RESULT BeginUpdate();
 	V3D_RESULT EndUpdate();
 
-	MeshPtr Load(const wchar_t* pFilePath, const Mesh::LoadDesc& loadDesc);
+	StaticMeshPtr ImportStatic(const wchar_t* pFilePath, const MeshImportDesc& importDesc);
+	SkeletalMeshPtr ImportSkeletal(const wchar_t* pFilePath, const MeshImportDesc& importDesc);
+
+	StaticMeshPtr LoadStatic(const wchar_t* pFilePath);
+	SkeletalMeshPtr LoadSkeletal(const wchar_t* pFilePath);
 
 private:
+	typedef std::map<std::wstring, std::shared_ptr<Mesh>> MeshMap;
+
 	GraphicsManager* m_pGraphicsManager;
 	TextureManager* m_pTextureManager;
 	MaterialManager* m_pMaterialManager;
-	uint32_t m_MaxMesh;
 
-	typedef std::map<std::wstring, MeshPtr> MeshMap;
+	NamingService m_NamingService;
 	MeshMap m_MeshMap;
 
-public:
-	NamingService m_NamingService;
-	IV3DResourceMemory* m_pMemory;
+	IV3DResourceMemory* m_pUniformMemory;
 	IV3DBuffer* m_pUniformBuffer;
+	DynamicOffsetHeap m_UniformOffsetHeap;
 	IV3DDescriptorSet* m_pDescriptorSet;
-	uint32_t m_UniformStride;
-	std::vector<uint32_t> m_UnuseUniformDynamicOffsets;
-	uint32_t m_InuseDynamicOffsetCount;
 
 	// ----------------------------------------------------------------------------------------------------
 
-	void GetDescriptorSet(IV3DDescriptorSet** ppDescriptorSet);
-	void RetainUniformDynamicOffset(uint32_t* pDynamicOffset);
-	void ReleaseUniformDynamicOffset(uint32_t dynamicOffset);
+	V3D_RESULT CreateDescriptorSet(IV3DDescriptorSet** ppDescriptorSet, DynamicOffsetHeap::Handle* pHandle);
+	void ReleaseDescriptorSet(DynamicOffsetHeap::Handle* pHandle);
 
-	void Add(const wchar_t* pName, MeshPtr mesh);
+	void Add(const wchar_t* pName, std::shared_ptr<Mesh> mesh);
 
-	friend class Mesh;
+	friend class StaticMesh;
+	friend class SkeletalMesh;
 };
