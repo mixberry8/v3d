@@ -23,6 +23,8 @@
 #include <crtdbg.h>
 #endif //_DEBUG
 
+#pragma comment(lib, "winmm.lib")
+
 // ----------------------------------------------------------------------------------------------------
 // マクロ
 // ----------------------------------------------------------------------------------------------------
@@ -55,8 +57,8 @@
 #define SAFE_DELETE(x) if ( x != nullptr ) { delete x; x = nullptr; }
 #define SAFE_DELETE_ARRAY(x) if ( x != nullptr ) { delete[] x; x = nullptr; }
 
-#define SAFE_ADD_REF(x) if (x != nullptr) { x->AddRef(); }
-#define SAFE_RELEASE(x) if (x != nullptr) { x->Release(); x = nullptr; }
+#define SAFE_ADD_REF(x) if ((x) != nullptr) { (x)->AddRef(); }
+#define SAFE_RELEASE(x) if ((x) != nullptr) { (x)->Release(); x = nullptr; }
 
 // 1次元配列
 template<typename T, size_t count>
@@ -223,7 +225,7 @@ enum BLEND_MODE
 };
 
 // ブレンドの初期化
-V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode);
+V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode, V3DFlags writeMask = V3D_COLOR_COMPONENT_ALL);
 
 struct BufferSubresourceDesc
 {
@@ -244,6 +246,6 @@ void CalcBufferMemoryLayout(IV3DDevice* pDevice, V3DFlags memoryPropertyFlags, u
 // メモリのコピー
 void MemCopy(void* pDst, uint64_t dstSize, const void* pSrc, uint64_t srcSize);
 // マルチバイト文字列をワイド文字列に変換
-void MbToWc(const char* pSrc, std::wstring& dst);
+void ToWideChar(const char* pSrc, std::wstring& dst);
 // ファイルパスの作成
 void CreateFilePath(const wchar_t* pSrcFilePath, std::wstring& dstFilePath);

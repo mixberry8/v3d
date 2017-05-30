@@ -988,7 +988,7 @@ V3D_RESULT CreatePrefab(
 // ‚»‚Ì‘¼
 // ----------------------------------------------------------------------------------------------------
 
-V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode)
+V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode, V3DFlags writeMask)
 {
 	static constexpr V3DPipelineColorBlendAttachment table[] =
 	{
@@ -1000,7 +1000,10 @@ V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode)
 		{ true, V3D_BLEND_FACTOR_ONE_MINUS_DST_COLOR, V3D_BLEND_FACTOR_ONE , V3D_BLEND_OP_ADD, V3D_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, V3D_BLEND_FACTOR_ONE, V3D_BLEND_OP_ADD, V3D_COLOR_COMPONENT_ALL },
 	};
 
-	return table[mode];
+	V3DPipelineColorBlendAttachment ret = table[mode];
+	ret.writeMask = writeMask;
+
+	return ret;
 }
 
 void CalcBufferMemoryLayout(IV3DDevice* pDevice, V3DFlags memoryPropertyFlags, uint32_t subresourceCount, const BufferSubresourceDesc* pSubresources, BufferMemoryLayout* pMemoryLayouts, uint64_t* pMemorySize)
@@ -1054,7 +1057,7 @@ void MemCopy(void* pDst, uint64_t dstSize, const void* pSrc, uint64_t srcSize)
 #endif //_WIN64
 }
 
-void MbToWc(const char* pSrc, std::wstring& dst)
+void ToWideChar(const char* pSrc, std::wstring& dst)
 {
 	size_t bufferSize = 0;
 
