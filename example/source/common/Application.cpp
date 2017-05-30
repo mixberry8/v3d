@@ -1,5 +1,6 @@
 #include "Application.h"
-#include "Window.h"
+#include <Window.h>
+#include <mmsystem.h>
 #include <vector>
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -41,6 +42,11 @@ int32_t Application::Execute()
 	// ----------------------------------------------------------------------------------------------------
 
 	ApplicationDesc desc{};
+#ifdef _DEBUG
+	desc.layerType = V3D_LAYER_STANDARD_VALIDATION;
+#else //_DEBUG
+	desc.layerType = V3D_LAYER_OPTIMUS;
+#endif //_DEBUG
 	desc.fps = 60;
 
 	OnPreCreate(desc);
@@ -50,12 +56,8 @@ int32_t Application::Execute()
 	// ----------------------------------------------------------------------------------------------------
 
 	V3DInstanceDesc instanceDesc{};
-#ifdef _DEBUG
-	instanceDesc.layerType = V3D_LAYER_STANDARD_VALIDATION;
-#else //_DEBUG
-	instanceDesc.layerType = V3D_LAYER_OPTIMUS;
-#endif //_DEBUG
-	instanceDesc.log.flags = V3D_LOG_WARNING | V3D_LOG_ERROR;
+	instanceDesc.layerType = desc.layerType;
+	instanceDesc.log.flags = V3D_LOG_PERFORMANCE_WARNING | V3D_LOG_WARNING | V3D_LOG_ERROR;
 	instanceDesc.log.pFunction = Application::LogFunction;
 
 	V3D_RESULT result = V3DCreateInstance(instanceDesc, &m_pInstance);
@@ -101,6 +103,8 @@ int32_t Application::Execute()
 
 	bool continueLoop = true;
 	MSG msg{};
+
+	timeBeginPeriod(1);
 
 	while(continueLoop == true)
 	{
@@ -184,7 +188,7 @@ int32_t Application::Execute()
 		// ----------------------------------------------------------------------------------------------------
 		// メッセージポンプ
 		// ----------------------------------------------------------------------------------------------------
-#if 1
+
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) == TRUE)
 		{
 			if (GetMessage(&msg, NULL, 0, 0) == TRUE)
@@ -198,21 +202,7 @@ int32_t Application::Execute()
 				break;
 			}
 		}
-#else
-		if(PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) == TRUE)
-		{
-			if (GetMessage(&msg, NULL, 0, 0) == TRUE)
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			else
-			{
-				continueLoop = false;
-				break;
-			}
-		}
-#endif
+
 		if (continueLoop == true)
 		{
 			OnIdle();
@@ -227,6 +217,8 @@ int32_t Application::Execute()
 			}
 		}
 	}
+
+	timeEndPeriod(1);
 
 	// ----------------------------------------------------------------------------------------------------
 

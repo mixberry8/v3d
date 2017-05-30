@@ -4,6 +4,7 @@ class Window;
 
 struct ApplicationDesc
 {
+	V3D_LAYER_TYPE layerType;
 	int32_t fps;
 };
 
