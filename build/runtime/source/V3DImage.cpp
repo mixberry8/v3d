@@ -116,7 +116,13 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 	// ----------------------------------------------------------------------------------------------------
 
 #ifdef _DEBUG
+
+#ifdef _WIN64
 	m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image);
+#else //_WIN64
+	m_DebugImageAddr = static_cast<uint32_t>(m_Source.image);
+#endif //_WIN64
+
 #endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------

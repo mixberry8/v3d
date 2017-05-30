@@ -41,7 +41,13 @@ public:
 
 private:
 #ifdef _DEBUG
+
+#ifdef _WIN64
 	uint64_t m_DebugImageAddr;
+#else //_WIN64
+	uint32_t m_DebugImageAddr;
+#endif //_WIN64
+
 #endif //_DEBUG
 
 	ReferenceCounter m_RefCounter;

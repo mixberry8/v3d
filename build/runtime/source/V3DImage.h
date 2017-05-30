@@ -47,9 +47,11 @@ public:
 private:
 	static constexpr V3DImageSubresourceLayout DummySubresource = V3DImageSubresourceLayout{};
 
-#ifdef _DEBUG
+#ifdef _WIN64
 	uint64_t m_DebugImageAddr;
-#endif //_DEBUG
+#else //_WIN64
+	uint32_t m_DebugImageAddr;
+#endif //_WIN64
 
 	ReferenceCounter m_RefCounter;
 	V3DDevice* m_pDevice;

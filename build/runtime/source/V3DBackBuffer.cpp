@@ -36,7 +36,13 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	m_ResourceDesc.memoryAlignment = vkMemReq.alignment;
 
 #ifdef _DEBUG
-	m_DebugImageAddr = reinterpret_cast<uint64_t>(image);
+
+#ifdef _WIN64
+	m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image);
+#else //_WIN64
+	m_DebugImageAddr = static_cast<uint32_t>(m_Source.image);
+#endif //_WIN64
+
 #endif //_DEBUG
 
 	return V3D_OK;
