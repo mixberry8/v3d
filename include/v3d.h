@@ -3160,7 +3160,7 @@ public:
 
 	//! @brief バッファービューにバリアを張ります。
 	//! @param[in] bufferViewCount バリアを張るバッファビューの数です。
-	//! @param[in] ppBufferView バリアを張るバッファビューの配列です。
+	//! @param[in] ppBufferViews バリアを張るバッファビューの配列です。
 	//! @param[in] barrier バリアを張るバッファーの記述です。
 	//! @note
 	//! <table>
