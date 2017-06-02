@@ -11,7 +11,7 @@ public:
 	};
 
 	static V3DShaderModule* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, size_t codeSize, const void* pCode);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, size_t codeSize, const void* pCode, const wchar_t* pDebugName);
 	const V3DShaderModule::Source& GetSource() const;
 
 	/*******************/

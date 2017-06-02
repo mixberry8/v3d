@@ -10,7 +10,7 @@ V3DShaderModule* V3DShaderModule::Create()
 	return V3D_NEW_T(V3DShaderModule);
 }
 
-V3D_RESULT V3DShaderModule::Initialize(IV3DDevice* pDevice, size_t codeSize, const void* pCode)
+V3D_RESULT V3DShaderModule::Initialize(IV3DDevice* pDevice, size_t codeSize, const void* pCode, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(codeSize > 0);
@@ -31,6 +31,8 @@ V3D_RESULT V3DShaderModule::Initialize(IV3DDevice* pDevice, size_t codeSize, con
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.shaderModule, pDebugName);
 
 	return V3D_OK;
 }
@@ -88,6 +90,7 @@ V3DShaderModule::~V3DShaderModule()
 	if (m_Source.shaderModule != VK_NULL_HANDLE)
 	{
 		vkDestroyShaderModule(m_pDevice->GetSource().device, m_Source.shaderModule, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.shaderModule);
 	}
 
 	V3D_RELEASE(m_pDevice);

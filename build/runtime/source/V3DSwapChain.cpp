@@ -14,7 +14,7 @@ V3DSwapChain* V3DSwapChain::Create()
 	return V3D_NEW_T(V3DSwapChain);
 }
 
-V3D_RESULT V3DSwapChain::Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks)
+V3D_RESULT V3DSwapChain::Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(swapChainDesc.windowHandle != nullptr);
@@ -28,6 +28,8 @@ V3D_RESULT V3DSwapChain::Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc&
 	m_Callbacks = swapChainCallbacks;
 	m_Source.waitDstStageMask = ToVkPipelineStageFlags(swapChainDesc.queueWaitDstStageMask);
 	m_InitialDesc = m_Desc = swapChainDesc;
+
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// ウィンドウ情報を初期化
@@ -303,21 +305,25 @@ V3DSwapChain::~V3DSwapChain()
 		if (m_Source.swapChain != VK_NULL_HANDLE)
 		{
 			vkDestroySwapchainKHR(m_pDevice->GetSource().device, m_Source.swapChain, nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.swapChain);
 		}
 
 		if (m_Source.surface != VK_NULL_HANDLE)
 		{
 			vkDestroySurfaceKHR(m_pDevice->GetInternalInstancePtr()->GetSource().instance, m_Source.surface, nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.surface);
 		}
 
 		if (m_Source.renderingCompleteSemaphore != VK_NULL_HANDLE)
 		{
 			vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.renderingCompleteSemaphore, nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderingCompleteSemaphore);
 		}
 
 		if (m_Source.presentCompleteSemaphore != VK_NULL_HANDLE)
 		{
 			vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.presentCompleteSemaphore, nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.presentCompleteSemaphore);
 		}
 	}
 
@@ -368,6 +374,8 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 	{
 		return V3D_ERROR_FAIL;
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.surface, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 	// イメージのフォーマット、カラースペースを決める
@@ -551,6 +559,8 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 		return ToV3DResult(vkResult);
 	}
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.swapChain, m_DebugName.c_str());
+
 	// ----------------------------------------------------------------------------------------------------
 	// イメージを作成
 	// ----------------------------------------------------------------------------------------------------
@@ -579,7 +589,11 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage);
+#ifdef _DEBUG
+		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, m_DebugName.c_str());
+#else //_DEBUG
+		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, nullptr);
+#endif //_DEBUG
 		if (result != V3D_OK)
 		{
 			V3D_RELEASE(pBackBuffer);
@@ -604,11 +618,15 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 		return ToV3DResult(vkResult);
 	}
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.presentCompleteSemaphore, m_DebugName.c_str());
+
 	vkResult = vkCreateSemaphore(m_pDevice->GetSource().device, &semaphoreCreateInfo, nullptr, &m_Source.renderingCompleteSemaphore);
 	if (vkResult != VK_SUCCESS)
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderingCompleteSemaphore, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -674,8 +692,13 @@ V3D_RESULT V3DSwapChain::RecreateSwapChain()
 	if (m_Source.swapChainCreateInfo.oldSwapchain != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(m_pDevice->GetSource().device, m_Source.swapChainCreateInfo.oldSwapchain, nullptr);
+
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.swapChainCreateInfo.oldSwapchain);
+
 		m_Source.swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.swapChain, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 	// 記述の更新
@@ -713,7 +736,11 @@ V3D_RESULT V3DSwapChain::RecreateSwapChain()
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage);
+#ifdef _DEBUG
+		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, m_DebugName.c_str());
+#else //_DEBUG
+		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, nullptr);
+#endif //_DEBUG
 		if (result != V3D_OK)
 		{
 			V3D_RELEASE(pBackBuffer);
@@ -763,24 +790,36 @@ V3D_RESULT V3DSwapChain::RecreateSurfaceAndSwapChain()
 	if (m_Source.renderingCompleteSemaphore != VK_NULL_HANDLE)
 	{
 		vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.renderingCompleteSemaphore, nullptr);
+
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderingCompleteSemaphore);
+
 		m_Source.renderingCompleteSemaphore = VK_NULL_HANDLE;
 	}
 
 	if (m_Source.presentCompleteSemaphore != VK_NULL_HANDLE)
 	{
 		vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.presentCompleteSemaphore, nullptr);
+
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.presentCompleteSemaphore);
+
 		m_Source.presentCompleteSemaphore = VK_NULL_HANDLE;
 	}
 
 	if (m_Source.swapChain != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(m_pDevice->GetSource().device, m_Source.swapChain, nullptr);
+
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.swapChain);
+
 		m_Source.swapChain = VK_NULL_HANDLE;
 	}
 
 	if (m_Source.surface != VK_NULL_HANDLE)
 	{
 		vkDestroySurfaceKHR(m_pDevice->GetInternalInstancePtr()->GetSource().instance, m_Source.surface, nullptr);
+
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.surface);
+
 		m_Source.surface = VK_NULL_HANDLE;
 	}
 

@@ -11,7 +11,7 @@ public:
 	};
 
 	static V3DCommandPool* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DCommandPoolDesc& desc);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DCommandPoolDesc& desc, const wchar_t* pDebugName);
 	const V3DCommandPool::Source& GetSource() const;
 
 	/******************************/

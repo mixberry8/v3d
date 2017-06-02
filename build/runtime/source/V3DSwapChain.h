@@ -18,7 +18,7 @@ public:
 	};
 
 	static V3DSwapChain* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, const wchar_t* pDebugName);
 	const V3DSwapChain::Source& GetSource() const;
 	V3D_RESULT RecreateSwapChain();
 	V3D_RESULT RecreateSurfaceAndSwapChain();
@@ -65,6 +65,10 @@ private:
 	STLVector<V3DBackBuffer*> m_Images;
 	V3DSwapChain::Source m_Source;
 	V3DSwapChain::WindowedInfo m_WindowedInfo;
+
+#ifdef _DEBUG
+	std::wstring m_DebugName;
+#endif //_DEBUG
 
 	V3DSwapChain();
 	virtual ~V3DSwapChain();

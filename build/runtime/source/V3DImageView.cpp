@@ -11,7 +11,7 @@ V3DImageView* V3DImageView::Create()
 	return V3D_NEW_T(V3DImageView);
 }
 
-V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, const V3DImageViewDesc& desc)
+V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, const V3DImageViewDesc& desc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(pImage != nullptr);
@@ -45,6 +45,8 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.imageView, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -165,6 +167,7 @@ V3DImageView::~V3DImageView()
 	if (m_Source.imageView != VK_NULL_HANDLE)
 	{
 		vkDestroyImageView(m_pDevice->GetSource().device, m_Source.imageView, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.imageView);
 	}
 
 	V3D_RELEASE(m_pImage);

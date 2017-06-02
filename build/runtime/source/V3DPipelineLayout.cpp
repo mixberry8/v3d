@@ -11,7 +11,7 @@ V3DPipelineLayout* V3DPipelineLayout::Create()
 	return V3D_NEW_T(V3DPipelineLayout);
 }
 
-V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts)
+V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 
@@ -79,6 +79,8 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineLayout, pDebugName);
 
 	return V3D_OK;
 }
@@ -160,6 +162,7 @@ V3DPipelineLayout::~V3DPipelineLayout()
 	if (m_Source.pipelineLayout != VK_NULL_HANDLE)
 	{
 		vkDestroyPipelineLayout(m_pDevice->GetSource().device, m_Source.pipelineLayout, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineLayout);
 	}
 
 	if (m_DescriptorSetLayouts.empty() == false)

@@ -23,7 +23,7 @@ public:
 #endif //_DEBUG
 
 	static V3DCommandBuffer* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType, const wchar_t* pDebugName);
 	const V3DCommandBuffer::Source& GetSource() const;
 #ifdef _DEBUG
 	const V3DCommandBuffer::Debug& GetDebug() const
@@ -77,10 +77,6 @@ public:
 	virtual void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const V3DViewport* pViewports) override;
 	virtual void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) override;
 	virtual void SetBlendConstants(const float blendConstants[4]) override;
-	virtual void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) override;
-	virtual void SetDepthBounds(float minDepthBounds, float maxDepthBounds) override;
-	virtual void SetStencilReadMask(V3DFlags faceMask, uint32_t compareMask) override;
-	virtual void SetStencilWriteMask(V3DFlags faceMask, uint32_t writeMask) override;
 	virtual void SetStencilReference(V3DFlags faceMask, uint32_t reference) override;
 	virtual void ResetQueryPool(IV3DQueryPool* pQueryPool, uint32_t firstQuery, uint32_t queryCount) override;
 	virtual void BeginQuery(IV3DQueryPool* pQueryPool, uint32_t query) override;

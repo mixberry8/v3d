@@ -10,7 +10,7 @@ V3DCommandPool* V3DCommandPool::Create()
 	return V3D_NEW_T(V3DCommandPool);
 }
 
-V3D_RESULT V3DCommandPool::Initialize(IV3DDevice* pDevice, const V3DCommandPoolDesc& desc)
+V3D_RESULT V3DCommandPool::Initialize(IV3DDevice* pDevice, const V3DCommandPoolDesc& desc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 
@@ -29,6 +29,8 @@ V3D_RESULT V3DCommandPool::Initialize(IV3DDevice* pDevice, const V3DCommandPoolD
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandPool, pDebugName);
 
 	return V3D_OK;
 }
@@ -115,6 +117,8 @@ V3DCommandPool::~V3DCommandPool()
 	if (m_pDevice != nullptr)
 	{
 		vkDestroyCommandPool(m_pDevice->GetSource().device, m_Source.commandPool, nullptr);
+
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandPool);
 	}
 
 	V3D_RELEASE(m_pDevice);

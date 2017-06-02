@@ -23,7 +23,7 @@ public:
 	};
 
 	static V3DDescriptorSet* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout, const wchar_t* pDebugName);
 	const V3DDescriptorSet::Source& GetSource() const;
 
 	/*********************/
@@ -66,6 +66,10 @@ private:
 	STLVector<V3DImageView*> m_ImageViews;
 	STLVector<V3DSampler*> m_Samplers;
 	V3DDescriptorSet::Source m_Source;
+
+#ifdef _DEBUG
+	STLStringW m_DebugName;
+#endif //_DEBUG
 
 	V3DDescriptorSet();
 	virtual ~V3DDescriptorSet();

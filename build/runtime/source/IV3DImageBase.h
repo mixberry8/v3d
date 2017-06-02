@@ -17,6 +17,10 @@ public:
 	virtual bool CheckBindMemory() const = 0;
 	virtual V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset) = 0;
 
+#ifdef _DEBUG
+	virtual const wchar_t* GetDebugName() const = 0;
+#endif //_DEBUG
+
 protected:
 	virtual ~IV3DImageBase() {}
 };

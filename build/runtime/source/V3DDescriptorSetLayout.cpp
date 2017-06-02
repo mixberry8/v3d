@@ -26,7 +26,7 @@ V3DDescriptorSetLayout* V3DDescriptorSetLayout::Create()
 	return V3D_NEW_T(V3DDescriptorSetLayout);
 }
 
-V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep)
+V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(descriptorCount > 0);
@@ -154,6 +154,8 @@ V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descr
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSetLayout, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタプールを作成
@@ -352,6 +354,7 @@ V3DDescriptorSetLayout::~V3DDescriptorSetLayout()
 		{
 			V3DDescriptorSetLayout::HandleT* pHandle = (*it);
 			vkDestroyDescriptorPool(vkDevice, pHandle->pool, nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), pHandle->pool);
 			V3D_DELETE_T(pHandle, HandleT);
 		}
 	}
@@ -359,6 +362,7 @@ V3DDescriptorSetLayout::~V3DDescriptorSetLayout()
 	if (m_Source.descriptorSetLayout != VK_NULL_HANDLE)
 	{
 		vkDestroyDescriptorSetLayout(m_pDevice->GetSource().device, m_Source.descriptorSetLayout, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSetLayout);
 	}
 
 	V3D_RELEASE(m_pDevice);
@@ -374,10 +378,13 @@ V3D_RESULT V3DDescriptorSetLayout::AddHandle(V3DDescriptorSetLayout::HandleT** p
 		return ToV3DResult(vkResult);
 	}
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), vkDescriptorPool, m_DebugName.c_str());
+
 	V3DDescriptorSetLayout::HandleT* pHandle = V3D_NEW_T(V3DDescriptorSetLayout::HandleT);
 	if (pHandle == nullptr)
 	{
 		vkDestroyDescriptorPool(m_pDevice->GetSource().device, vkDescriptorPool, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), vkDescriptorPool);
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 

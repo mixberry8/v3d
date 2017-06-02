@@ -14,13 +14,15 @@ V3DDescriptorSet* V3DDescriptorSet::Create()
 	return V3D_NEW_T(V3DDescriptorSet);
 }
 
-V3D_RESULT V3DDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout)
+V3D_RESULT V3DDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(pLayout != nullptr);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 	m_pLayout = V3D_TO_ADD_REF(static_cast<V3DDescriptorSetLayout*>(pLayout));
+
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットを作成
@@ -31,6 +33,8 @@ V3D_RESULT V3DDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLa
 	{
 		return result;
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSet, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットの書き込み情報を作成
@@ -418,7 +422,7 @@ V3D_RESULT V3DDescriptorSet::SetImageViewAndSampler(uint32_t binding, IV3DImageV
 void V3DDescriptorSet::Update()
 {
 #ifdef _DEBUG
-	uint32_t debugCount = 0;
+	uint32_t debugErrorCount = 0;
 
 	for (uint32_t i = 0; i < m_Source.descriptorCount; i++)
 	{
@@ -432,8 +436,8 @@ void V3DDescriptorSet::Update()
 		case V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
 			if (writeDescSet.pBufferInfo->buffer == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, writeDescSet.dstBinding, L"Buffer");
-				debugCount++;
+				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"Buffer");
+				debugErrorCount++;
 			}
 			break;
 
@@ -441,8 +445,8 @@ void V3DDescriptorSet::Update()
 		case V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
 			if (writeDescSet.pTexelBufferView == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, writeDescSet.dstBinding, L"BufferView");
-				debugCount++;
+				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"BufferView");
+				debugErrorCount++;
 			}
 			break;
 
@@ -451,28 +455,28 @@ void V3DDescriptorSet::Update()
 		case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:       // image -------
 			if (writeDescSet.pImageInfo->imageView == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, writeDescSet.dstBinding, L"ImageView");
-				debugCount++;
+				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"ImageView");
+				debugErrorCount++;
 			}
 			break;
 		case VK_DESCRIPTOR_TYPE_SAMPLER:                // ----  sampler
 			if (writeDescSet.pImageInfo->sampler == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, writeDescSet.dstBinding, L"Sampler");
-				debugCount++;
+				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"Sampler");
+				debugErrorCount++;
 			}
 			break;
 		case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: // image sampler
 			if ((writeDescSet.pImageInfo->sampler == VK_NULL_HANDLE) || (writeDescSet.pImageInfo->imageView == VK_NULL_HANDLE))
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, writeDescSet.dstBinding, L"ImageView And Sampler");
-				debugCount++;
+				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"ImageView And Sampler");
+				debugErrorCount++;
 			}
 			break;
 		}
 	}
 
-	if (debugCount > 0)
+	if (debugErrorCount > 0)
 	{
 		return;
 	}
@@ -589,6 +593,7 @@ V3DDescriptorSet::~V3DDescriptorSet()
 	if (m_PoolHandle != nullptr)
 	{
 		m_pLayout->Vulkan_DestroyDescriptorSet(m_PoolHandle, m_Source.descriptorSet);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSet);
 	}
 
 	V3D_RELEASE(m_pLayout);

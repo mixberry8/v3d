@@ -724,8 +724,8 @@ struct V3DRectangle3D
 struct V3DViewport
 {
 	V3DRectangle2D rect; //!< ビューポートの領域です。
-	float minDepth; //!< 最小深度です。 ( 0.0f～1.0f )
-	float maxDepth; //!< 最大深度です。 ( 0.0f～1.0f )
+	float minDepth; //!< 最小深度を 0.0f～1.0f の間で指定します。
+	float maxDepth; //!< 最大深度を 0.0f～1.0f の間で指定します。
 };
 
 //! @union V3DClearColorValue
@@ -741,7 +741,7 @@ union V3DClearColorValue
 //! @brief デプスステンシルのクリア値
 struct V3DClearDepthStencilValue
 {
-	float depth; //!< 深度です。 ( 0.0f～1.0f )
+	float depth; //!< 深度を 0.0f～1.0f の間で指定します。
 	uint32_t stencil; //!< ステンシルです。
 };
 
@@ -934,7 +934,7 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @retval V3D_ERROR_DEVICE_LOST
 	//! @note
-	//! キューを実行 ( IV3DCommandBuffer::ExecuteCommandBuffers ) した後に使用してください。<br>
+	//! キューにサブミット ( IV3DQueue::Submit ) した後に使用してください。<br>
 	//! 返り値が V3D_OK でなくてもクエリの結果を取得しようとした後は IV3DCommandBuffer::ResetQueryPool でクエリプールをリセットしてください。<br>
 	//! <br>
 	//! クエリのタイプが \link V3D_QUERY_TYPE_OCCLUSION \endlink もしくわ \link V3D_QUERY_TYPE_TIMESTAMP \endlink であった場合は queryResultCount の値は queryCount になります。<br>
@@ -1678,12 +1678,12 @@ struct V3DSubpassDesc
 //! @brief サブパスの依存性の記述
 struct V3DSubpassDependencyDesc
 {
-	uint32_t srcSubpass; //!< 現在のサブパスのインデックスです。
-	uint32_t dstSubpass; //!< 次のサブパスのインデックスです。
-	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstStageMask; //!< 次のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstAccessMask; //!< 次のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
+	uint32_t srcSubpass; //!< 移行元のサブパスのインデックスです。
+	uint32_t dstSubpass; //!< 移行先のサブパスのインデックスです。
+	V3DFlags srcStageMask; //!< 移行元のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags srcAccessMask; //!< 移行元のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
 };
 
@@ -1881,7 +1881,13 @@ public:
 	//! </table>
 	//! <br>
 	//! また、指定したバインディングのデスクリプタが \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC \endlink または \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC \endlink の場合、<br>
-	//! size に指定する値は、バッファー自体のサイズではなく、シェーダーが読み書きする範囲のサイズを指定します。
+	//! size に指定する値は、バッファー自体のサイズではなく、シェーダーが読み書きする範囲のサイズを指定します。<br>
+	//! <br>
+	//! サポートしているデスクリプタタイプ<br>
+	//! \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER \endlink<br>
+	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER \endlink<br>
+	//! \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC \endlink<br>
+	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC \endlink<br>
 	virtual V3D_RESULT SetBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset, uint64_t size) = 0;
 
 	//! @brief バッファービューを取得します。
@@ -1897,6 +1903,10 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
+	//! @note
+	//! サポートしているデスクリプタタイプ<br>
+	//! \link V3D_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER \endlink<br>
+	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER \endlink
 	virtual V3D_RESULT SetBufferView(uint32_t binding, IV3DBufferView* pBufferView) = 0;
 
 	//! @brief イメージビューを取得します。
@@ -1920,7 +1930,7 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @note
-	//! サポートしているデスクリプタタイプ<br><br>
+	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_IMAGE \endlink<br> 
@@ -1934,7 +1944,8 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! サポートしているデスクリプタタイプ<br><br>
+	//! @note
+	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_IMAGE \endlink<br>
@@ -1954,10 +1965,10 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! <br>
-	//! サポートしているデスクリプタタイプ<br><br>
-	//! \link V3D_DESCRIPTOR_TYPE_SAMPLER \endlink 、 
-	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink のいずれかである必要があります。
+	//! @note
+	//! サポートしているデスクリプタタイプ<br>
+	//! \link V3D_DESCRIPTOR_TYPE_SAMPLER \endlink<br>
+	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink
 	virtual V3D_RESULT SetSampler(uint32_t binding, IV3DSampler* pSampler) = 0;
 
 	//! @brief イメージビューとサンラプーを設定します。<br>
@@ -1965,13 +1976,16 @@ public:
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink である必要があります。
 	//! @param[in] binding イメージビューを設定するバインディングです。
 	//! @param[in] pImageView 設定するイメージビューのポインタです。
-	//! デスクリプタセットをバインドする前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSampler 設定するサンプラーのポインタです。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @sa V3DDescriptorDesc
-	//! @note イメージレイアウトは \link V3D_IMAGE_LAYOUT_SHADER_READ_ONLY \endlink を指定したことになります。
+	//! @note
+	//! このメソッドで指定したイメージビューはデスクリプタセットをバインドする前にイメージレイアウトを \link V3D_IMAGE_LAYOUT_SHADER_READ_ONLY \endlink に移行しておく必要があります。<br>
+	//! <br>
+	//! サポートしているデスクリプタタイプ<br>
+	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink
 	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, IV3DSampler* pSampler) = 0;
 
 	//! @brief イメージビューとサンラプーを設定します。<br>
@@ -1986,6 +2000,9 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @sa V3DDescriptorDesc
+	//! @note
+	//! サポートしているデスクリプタタイプ<br>
+	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink
 	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler) = 0;
 
 	//! @brief デスクリプタセットを更新します
@@ -2387,14 +2404,11 @@ struct V3DPipelineRasterizationDesc
 
 	//! @brief 深度バイアスを有効にするかどうかを指定します。
 	bool depthBiasEnable;
-	//! @brief 一定の深度値を制御するスカラー因子です。<br>
-	//! この値は IV3DCommandBuffer::SetDepthBias で変更することができます。
+	//! @brief 一定の深度値を制御するスカラー因子です。
 	float depthBiasConstantFactor;
-	//! @brief 最大 または 最小の深度バイアスです。<br>
-	//! この値は IV3DCommandBuffer::SetDepthBias で変更することができます。
+	//! @brief 最大 または 最小の深度バイアスです。
 	float depthBiasClamp;
-	//! @brief 深度バイアスの計算におけるスロープに適用されるスカラー係数です。<br>
-	//! この値は IV3DCommandBuffer::SetDepthBias で変更することができます。
+	//! @brief 深度バイアスの計算におけるスロープに適用されるスカラー係数です。
 	float depthBiasSlopeFactor;
 };
 
@@ -2441,7 +2455,6 @@ struct V3DPipelineMultisampleDesc
 //! <tr><td>compareOP</td><td>V3D_COMPARE_OP_ALWAYS</td></tr>
 //! <tr><td>compareMask</td><td>0x000000FF</td></tr>
 //! <tr><td>writeMask</td><td>0x000000FF</td></tr>
-//! <tr><td>reference</td><td>0</td></tr>
 //! </table>
 //! <br>
 struct V3DPipelineStencilOpDesc
@@ -2454,16 +2467,10 @@ struct V3DPipelineStencilOpDesc
 	//! \link V3D_COMPARE_OP \endlink の説明にある R はマスクされた reference の値であり、S はマスクされたステンシルの値を表します。
 	V3D_COMPARE_OP compareOp;
 
-	//! @brief ステンシルテストによって読み込まれる値のビットマスクを指定します。<br>
-	//! この値は IV3DCommandBuffer::SetStencilReadMask で変更することができます。
+	//! @brief ステンシルテストによって読み込まれる値のビットマスクを指定します。
 	uint32_t readMask;
-	//! @brief ステンシルテストによって書き込まれる値のビットマスクを指定します。<br>
-	//! この値は IV3DCommandBuffer::SetStencilWriteMask で変更することができます。
+	//! @brief ステンシルテストによって書き込まれる値のビットマスクを指定します。
 	uint32_t writeMask;
-	//! @brief ステンシルの比較オペレーターで使用される値です。<br>
-	//! この値は IV3DCommandBuffer::SetStencilReference で変更することができます。
-	//! @sa V3D_COMPARE_OP
-	uint32_t reference;
 };
 
 //! @struct V3DPipelineDepthStencilDesc
@@ -2502,12 +2509,10 @@ struct V3DPipelineDepthStencilDesc
 	//! @brief 深度の境界テストをするかどうかを指定します。
 	bool depthBoundsTestEnable;
 	//! @brief 深度の境界テストの最小値です。<br>
-	//! 値は 0.0f ～ 1.0f の間で指定する必要があります。<br>
-	//! またこの値は IV3DCommandBuffer::SetDepthBounds で変更することができます。
+	//! 値は 0.0f ～ 1.0f の間で指定する必要があります。
 	float minDepthBounds;
 	//! @brief 深度の境界テストの最大値です。<br>
-	//! 値は 0.0f ～ 1.0f の間で指定する必要があります。<br>
-	//! またこの値は IV3DCommandBuffer::SetDepthBounds で変更することができます。
+	//! 値は 0.0f ～ 1.0f の間で指定する必要があります。
 	float maxDepthBounds;
 };
 
@@ -2843,7 +2848,7 @@ enum V3D_STENCIL_FACE_FLAG
 {
 	V3D_STENCIL_FACE_FRONT = 0x00000001, //!< 前を指定します。
 	V3D_STENCIL_FACE_BACK = 0x00000002, //!< 後ろを指定します。
-	V3D_STENCIL_FRONT_AND_BACK = V3D_STENCIL_FACE_FRONT | V3D_STENCIL_FACE_BACK, //!< 前後両方を指定します。
+	V3D_STENCIL_FACE_BOTH = V3D_STENCIL_FACE_FRONT | V3D_STENCIL_FACE_BACK, //!< 前後両方を指定します。
 };
 
 //! @}
@@ -4069,99 +4074,6 @@ public:
 	//! </table>
 	virtual void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) = 0;
 
-	//! @brief 深度バイアスを設定します。
-	//! @param[in] depthBiasConstantFactor 一定の深度値を制御するスカラー因子です。
-	//! @param[in] depthBiasClamp 最大または最小の深度バイアスです。
-	//! @param[in] depthBiasSlopeFactor 深度バイアスの計算におけるスロープに適用されるスカラー係数です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
-	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
-	//!   </tr>
-	//! </table>
-	virtual void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) = 0;
-
-	//! @brief 深度境界テストを設定します。
-	//! @param[in] minDepthBounds 最小深度を 0.0f ～ 1.0f の間で指定します。
-	//! @param[in] maxDepthBounds 最大深度を 0.0f ～ 1.0f の間で指定します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
-	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
-	//!   </tr>
-	//! </table>
-	virtual void SetDepthBounds(float minDepthBounds, float maxDepthBounds) = 0;
-
-	//! @brief ステンシルテストによって読み込まれる値のビットマスクを設定します。
-	//! @param[in] faceMask 設定するフェイスを表す \link V3D_STENCIL_FACE_FLAG \endlink 列挙定数の組み合わせです。
-	//! @param[in] readMask 読み込まれる値のビットマスクです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
-	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
-	//!   </tr>
-	//! </table>
-	virtual void SetStencilReadMask(V3DFlags faceMask, uint32_t readMask) = 0;
-
-	//! @brief ステンシルテストによって書き込まれる値のビットマスクを設定します。
-	//! @param[in] faceMask 設定するフェイスを表す \link V3D_STENCIL_FACE_FLAG \endlink 列挙定数の組み合わせです。
-	//! @param[in] writeMask 書き込まれる値のビットマスクです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
-	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
-	//!   </tr>
-	//! </table>
-	virtual void SetStencilWriteMask(V3DFlags faceMask, uint32_t writeMask) = 0;
-
 	//! @brief ステンシルの比較オペレーターで使用される値を設定します。
 	//! @param[in] faceMask 設定するフェイスを表す \link V3D_STENCIL_FACE_FLAG \endlink 列挙定数の組み合わせです。
 	//! @param[in] reference 比較オペレーターで使用される値です。
@@ -4904,7 +4816,6 @@ enum V3D_RASTERIZER_CAP_FLAG : V3DFlags
 	V3D_RASTERIZER_CAP_DEPTH_CLAMP = 0x00000010,
 	//! @brief 深度バイアスのクランプをサポートします。
 	//! @sa V3DPipelineRasterizationDesc::depthBiasEnable
-	//! @sa IV3DCommandBuffer::SetDepthBias
 	V3D_RASTERIZER_CAP_DEPTH_BIAS_CLAMP = 0x00000020,
 };
 
@@ -4929,7 +4840,6 @@ enum V3D_DEPTH_STENCIL_CAP_FLAG : V3DFlags
 {
 	//! @brief 深度の境界テストをサポートします。
 	//! @sa V3DPipelineDepthStencilDesc::depthBoundsTestEnable
-	//! @sa IV3DCommandBuffer::SetDepthBounds
 	V3D_DEPTH_STENCIL_CAP_DEPTH_BOUNDS = 0x00000001,
 };
 
@@ -5332,37 +5242,40 @@ public:
 	//! @brief コマンドプールーを作成します。
 	//! @param[in] desc コマンドプールの記述です。
 	//! @param[out] ppCommandPool 作成したコマンドプールを渡す IV3DCommandPool インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateCommandPool(const V3DCommandPoolDesc& desc, IV3DCommandPool** ppCommandPool) = 0;
+	virtual V3D_RESULT CreateCommandPool(const V3DCommandPoolDesc& desc, IV3DCommandPool** ppCommandPool, const wchar_t* pDebugName = nullptr) = 0;
 	//! @brief コマンドバッファーを作成します。
 	//! @param[in] pPool コマンドプールです。
 	//! @param[in] bufferType コマンドバッファーのタイプです。
 	//! @param[out] ppCommandBuffer 作成したコマンドバッファーを渡す IV3DCommandBuffer インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateCommandBuffer(IV3DCommandPool* pPool, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer) = 0;
-	//! @brief コマンドバッファーを作成します。
+	virtual V3D_RESULT CreateCommandBuffer(IV3DCommandPool* pPool, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer, const wchar_t* pDebugName = nullptr) = 0;
+	//! @brief コマンドプールとコマンドバッファーを同時に作成します。
 	//! @param[in] poolDesc コマンドプールの記述です。
 	//! @param[in] bufferType コマンドバッファーのタイプです。
 	//! @param[out] ppCommandBuffer 作成したコマンドバッファーを渡す IV3DCommandBuffer インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note コマンドプールも同時に作成します。
-	virtual V3D_RESULT CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer) = 0;
+	virtual V3D_RESULT CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief スワップチェインを作成します。
 	//! @param[in] swapChainDesc スワップチェインの記述です。
 	//! @param[in] swapChainCallbacks スワップチェインのコールバックです。
 	//! @param[out] ppSwapChain 作成したスワップチェインを渡す IV3DSwapChain インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5377,45 +5290,49 @@ public:
 	//! <tr><td>レイアウト</td><td>\link V3D_IMAGE_LAYOUT_UNDEFINED \endlink</td></tr>
 	//! <tr><td>使用方法</td><td>\link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink<br>\link V3D_IMAGE_USAGE_TRANSFER_DST \endlink<br>\link V3D_IMAGE_USAGE_COLOR_ATTACHMENT \endlink</td></tr>
 	//! </table>
-	virtual V3D_RESULT CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, IV3DSwapChain** ppSwapChain) = 0;
+	virtual V3D_RESULT CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, IV3DSwapChain** ppSwapChain, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief フェンスを作成します。
 	//! @param[out] ppFence 作成したフェンスを渡す IV3DFence インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateFence(IV3DFence** ppFence) = 0;
+	virtual V3D_RESULT CreateFence(IV3DFence** ppFence, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief クエリプールを作成します。
 	//! @param[in] desc クエリプールの記述です。
 	//! @param[out] ppQueryPool 作成したクエリプールを渡す IV3DQueryPool インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPool** ppQueryPool) = 0;
+	virtual V3D_RESULT CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPool** ppQueryPool, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief サンプラーを作成します。
 	//! @param[in] desc サンプラーの記述です。
 	//! @param[out] ppSampler 作成したサンプラーを渡す IV3DSampler インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** ppSampler) = 0;
+	virtual V3D_RESULT CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** ppSampler, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief シェーダーモジュールを作成します。
 	//! @param[in] codeSize コードのサイズです。
 	//! @param[in] pCode シェーダのコードです。
 	//! @param[out] ppShaderModule 作成したシェーダーモジュールを渡す IV3DShaderModule インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateShaderModule(size_t codeSize, const void* pCode, IV3DShaderModule** ppShaderModule) = 0;
+	virtual V3D_RESULT CreateShaderModule(size_t codeSize, const void* pCode, IV3DShaderModule** ppShaderModule, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief 指定したメモリ特性をリソースがサポートしているかどうかを確認します。
 	//! @param[in] memoryPropertyFlags リソースのメモリ特性を表す \link V3D_MEMORY_PROPERTY_FLAG \endlink 列挙定数の組み合わせです。
@@ -5443,6 +5360,7 @@ public:
 	//! @param[in] memoryPropertyFlags リソースメモリの特性を表す \link V3D_MEMORY_PROPERTY_FLAG \endlink 列挙定数の組み合わせです。
 	//! @param[in] memorySize 確保するメモリのサイズをバイト単位で指定します。
 	//! @param[out] ppResourceMemory 確保したリソースメモリを渡す IV3DResourceMemory インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5471,11 +5389,12 @@ public:
 	//!   <li>メモリサイズ</li><br>
 	//!   リソースのメモリサイズは IV3DResource::GetResourceDesc で取得できる V3DResourceDesc 構造体のメンバである memorySize で確認することができます。<br>
 	//! </ul>
-	virtual V3D_RESULT AllocateResourceMemory(V3DFlags memoryPropertyFlags, uint64_t memorySize, IV3DResourceMemory** ppResourceMemory) = 0;
+	virtual V3D_RESULT AllocateResourceMemory(V3DFlags memoryPropertyFlags, uint64_t memorySize, IV3DResourceMemory** ppResourceMemory, const wchar_t* pDebugName = nullptr) = 0;
 	//! @brief リソースをメモリにバインドします。
 	//! @param[in] pResourceMemory バインド先のメモリです。
 	//! @param[in] pResource バインドするリソースです。
 	//! @param[in] memoryOffset バインドするメモリのオフセットをバイト単位で指定します。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5501,27 +5420,30 @@ public:
 	//! @brief リソースのメモリを確保し、バインドします。
 	//! @param[in] memoryPropertyFlags リソースメモリの特性を表す \link V3D_MEMORY_PROPERTY_FLAG \endlink 列挙定数の組み合わせです。
 	//! @param[in] pResource バインドするリソースです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags memoryPropertyFlags, IV3DResource* pResource) = 0;
+	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags memoryPropertyFlags, IV3DResource* pResource, const wchar_t* pDebugName = nullptr) = 0;
 	//! @brief 複数のリソースを一つのメモリとして確保し、バインドします。
 	//! @param[in] memoryPropertyFlags リソースメモリの特性を表す \link V3D_MEMORY_PROPERTY_FLAG \endlink 列挙定数の組み合わせです。
 	//! @param[in] resourceCount バインドするリソースの数です。
 	//! @param[in] ppResources バインドするリソースを表す IV3DResource インターフェースのポインタの配列です。<br>
+	//! @param[in] pDebugName デバッグ名です。
 	//! 配列の要素の数は resourceCount の値である必要があります。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags memoryPropertyFlags, uint32_t resourceCount, IV3DResource** ppResources) = 0;
+	virtual V3D_RESULT AllocateResourceMemoryAndBind(V3DFlags memoryPropertyFlags, uint32_t resourceCount, IV3DResource** ppResources, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief バッファーを作成します。
 	//! @param[in] desc バッファーの記述です。
 	//! @param[in] ppBuffer 作成したバッファーを渡す IV3DBuffer インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5538,23 +5460,30 @@ public:
 	//! </table>
 	//! <br>
 	//! また、ホストからのアクセス ( IV3DResource::Map ) がある場合は minMemoryMapAlignment も考慮する必要があります。
-	virtual V3D_RESULT CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer) = 0;
+	//! @sa IV3DDevice::CheckBufferFormatFeature
+	virtual V3D_RESULT CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer, const wchar_t* pDebugName = nullptr) = 0;
 	//! @brief イメージを作成します。
 	//! @param[in] imageDesc イメージの記述です。
-	//! @param[in] initialLayout イメージの初期レイアウトです。
+	//! @param[in] initialLayout イメージの初期レイアウトです。<br>
+	//! @param[in] pDebugName デバッグ名です。
+	//! サポートするイメージレイアウト<br>
+	//! \link V3D_IMAGE_LAYOUT_UNDEFINED \endlink<br>
+	//! \link V3D_IMAGE_LAYOUT_PREINITIALIZED \endlink
 	//! @param[out] ppImage 作成したイメージを渡す IV3DImage インターフェースのポインタです。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note イメージの初期レイアウトとして指定できるのは \link V3D_IMAGE_LAYOUT_UNDEFINED \endlink または \link V3D_IMAGE_LAYOUT_PREINITIALIZED \endlink のみになります。<br>
-	virtual V3D_RESULT CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, IV3DImage** ppImage) = 0;
+	//! @sa IV3DDevice::GetImageFormatDesc
+	//! @sa IV3DDevice::CheckImageFormatFeature
+	virtual V3D_RESULT CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, IV3DImage** ppImage, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief バッファービューを作成します。
 	//! @param[in] pBuffer アクセス先のバッファーです。
 	//! @param[in] desc バッファービューの記述です。
 	//! @param[out] ppBufferView 作成したバッファービューを表す IV3DBufferView インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval D3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5566,11 +5495,12 @@ public:
 	//! @sa IV3DDevice::CreateBuffer
 	//! @sa IV3DDevice::AllocateResourceMemory
 	//! @sa IV3DDevice::BindResourceMemory
-	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView) = 0;
+	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView, const wchar_t* pDebugName = nullptr) = 0;
 	//! @brief イメージビューを作成します。
 	//! @param[in] pImage アクセス先のイメージです。
 	//! @param[in] desc イメージビューの記述です。
 	//! @param[out] ppImageView 作成したイメージビューを渡す IV3DImageView インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval D3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5581,7 +5511,7 @@ public:
 	//! @sa IV3DDevice::CreateImage
 	//! @sa IV3DDevice::AllocateResourceMemory
 	//! @sa IV3DDevice::BindResourceMemory
-	virtual V3D_RESULT CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView) = 0;
+	virtual V3D_RESULT CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief レンダーパスを作成します。
 	//! @param[in] attachmentCount アタッチメントの数です。
@@ -5591,6 +5521,7 @@ public:
 	//! @param[in] subpassDependencyCount サブパスの依存性の数です。
 	//! @param[in] pSubpassDependencies subpassDependencyCount の値の数の要素を持つ V3DSubpassDependencyDesc 構造体の配列です。
 	//! @param[out] ppRenderPass 作成したレンダーパスを表す IV3DRenderPass インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5600,19 +5531,22 @@ public:
 		uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments,
 		uint32_t subpassCount, const V3DSubpassDesc* pSubpasses,
 		uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies,
-		IV3DRenderPass** ppRenderPass) = 0;
+		IV3DRenderPass** ppRenderPass,
+		const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief フレームバッファを作成します。
 	//! @param[in] pRenderPass レンダーパス
 	//! @param[in] attachmentCount アタッチメントの数です。
 	//! @param[in] ppAttachments attachmentCount の値の数の要素を持つ IV3DImageView インターフェースのポインタの配列です。
 	//! @param[out] ppFrameBuffer 作成したフレームバッファを渡す IV3DFrameBuffer インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer) = 0;
+	//! @note アタッチメントとして使用する全てのイメージビューは 幅 ( width )、高さ ( height )、深さ ( depth )、レイヤー数 ( layerCount ) が一致している必要があります。
+	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief デスクリプタセットレイアウトを作成します。
 	//! @param[in] descriptorCount デスクリプタの数です。
@@ -5620,6 +5554,7 @@ public:
 	//! @param[in] poolSize デスクリプタセットのプールの初期サイズです。
 	//! @param[in] poolResizeStep デスクリプタセットのプールのリサイズステップです。
 	//! @param[out] ppDescriptorSetLayout 作成したデスクリプタセットレイアウトを渡す IV3DDescriptorSetLayout インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5628,17 +5563,19 @@ public:
 	virtual V3D_RESULT CreateDescriptorSetLayout(
 		uint32_t descriptorCount, const V3DDescriptorDesc* pDescriptors,
 		uint32_t poolSize, uint32_t poolResizeStep,
-		IV3DDescriptorSetLayout** ppDescriptorSetLayout) = 0;
+		IV3DDescriptorSetLayout** ppDescriptorSetLayout,
+		const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief デスクリプタセットを作成します。
 	//! @param[in] pLayout デスクリプタセットのレイアウトのポインタです。
 	//! @param[out] ppDescriptorSet 作成したデスクリプタセットを渡す IV3DDescriptorSet インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet) = 0;
+	virtual V3D_RESULT CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief パイプラインレイアウトを作成します。
 	//! @param[in] constantCount 定数の数です。
@@ -5646,6 +5583,7 @@ public:
 	//! @param[in] descriptorSetLayoutCount デスクリプタセットレイアウトの数です。
 	//! @param[in] ppDescriptorSetLayouts デスクリプタレイアウトを表す descriptorSetLayoutCount の値の数だけ要素を持つ IV3DDescriptorSetLayout インターフェースのポインタの配列です。
 	//! @param[out] ppPipelineLayout 作成したパイプラインレイアウトを表す IV3DPipelineLayout インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5654,29 +5592,32 @@ public:
 	virtual V3D_RESULT CreatePipelineLayout(
 		uint32_t constantCount, V3DConstantDesc* pConstants,
 		uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts,
-		IV3DPipelineLayout** ppPipelineLayout) = 0;
+		IV3DPipelineLayout** ppPipelineLayout,
+		const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief グラフィックスパイプラインを作成します。
 	//! @param[in] pPipelineLayout パイプラインレイアウトです。
 	//! @param[in] pipelineDesc グラフィックスパイプラインの記述です。
 	//! @param[out] ppPipeline 作成したグラフィックスパイプラインを渡す IV3DPipeline インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline) = 0;
+	virtual V3D_RESULT CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief コンピュートパイプラインを作成します。
 	//! @param[in] pPipelineLayout パイプラインレイアウトです。
 	//! @param[in] pipelineDesc コンピュートパイプラインの記述です。
 	//! @param[out] ppPipeline 作成したコンピュートパイプラインを渡す IV3DPipeline インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	virtual V3D_RESULT CreateComputePipeline(IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline) = 0;
+	virtual V3D_RESULT CreateComputePipeline(IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief デバイスがアイドル状態になるまで待機します
 	//! @retval V3D_OK
@@ -5818,13 +5759,14 @@ public:
 	//! @brief デバイスを作成します。
 	//! @param[in] pAdapter アダプタです。
 	//! @param[out] ppDevice 作成したデバイスを渡す IV3DDevice インターフェースのポインタのアドレスです。
+	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @retval V3D_ERROR_DEVICE_LOST
-	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice) = 0;
+	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName = nullptr) = 0;
 
 protected:
 	//! @cond MISC

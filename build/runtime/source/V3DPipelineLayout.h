@@ -11,7 +11,7 @@ public:
 	};
 
 	static V3DPipelineLayout* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts, const wchar_t* pDebugName);
 	const V3DPipelineLayout::Source& GetSource() const;
 
 	/**********************/

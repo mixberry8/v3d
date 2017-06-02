@@ -10,16 +10,16 @@ static constexpr wchar_t* Log_Error_InvalidArgument = L" : •s³‚Èˆø”‚ª“n‚³‚ê‚Ü‚
 // IV3DDevice
 // ----------------------------------------------------------------------------------------------------
 
-static constexpr wchar_t* Log_Error_InvalidSubpass = L"IV3DDevice::CreateGraphicsPipeline : w’è‚³‚ê‚½ƒTƒuƒpƒX %d ‚Í–³Œø‚Å‚·B";
-static constexpr wchar_t* Log_Error_MismatchSubpassColorAttachmentCount = L"IV3DDevice::CreateGraphicsPipeline : ƒTƒuƒpƒX‚ÌƒJƒ‰[ƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentCount = L"IV3DDevice::CreateFrameBuffer : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX‚Æì¬‚µ‚æ‚¤‚Æ‚µ‚Ä‚¢‚éƒtƒŒ[ƒ€ƒoƒbƒtƒ@[‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentSize = L"IV3DDevice::CreateFrameBuffer : ‘S‚Ä‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Í •A‚‚³AƒŒƒCƒ„[”‚ª“¯‚¶‚Å‚È‚¢‚Æ‚¢‚¯‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_MismatchRAContainerAttachmentFormatOrSamples = L"IV3DDevice::CreateFrameBuffer : ƒAƒ^ƒbƒ`ƒƒ“ƒg %d ‚ÌƒtƒH[ƒ}ƒbƒg‚à‚µ‚­‚íƒTƒ“ƒvƒ‹”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_OutOfInputAttachment = L"IV3DDevice::CreateRenderPass : ƒCƒ“ƒvƒbƒgƒAƒ^ƒbƒ`ƒƒ“ƒg ( [%u].attachment %u ) ‚ÍƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì” ( %u ) ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
-static constexpr wchar_t* Log_Error_OutOfColorAttachment = L"IV3DDevice::CreateRenderPass : ƒJƒ‰[ƒAƒ^ƒbƒ`ƒƒ“ƒg ( [%u].attachment %u ) ‚ÍƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì” ( %u ) ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
-static constexpr wchar_t* Log_Error_OutOfResolveAttachment = L"IV3DDevice::CreateRenderPass : ƒŠƒ]ƒ‹ƒuƒAƒ^ƒbƒ`ƒƒ“ƒg ( [%u].attachment %u ) ‚ÍƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì” ( %u ) ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
-static constexpr wchar_t* Log_Error_MismatchResolveAttachmentSamples = L"IV3DDevice::CreateRenderPass : ƒŠƒ]ƒ‹ƒuƒAƒ^ƒbƒ`ƒƒ“ƒg ( [%u].attachment %u ) ‚ÌƒTƒ“ƒvƒ‹”‚Í V3D_SAMPLE_COUNT_1 ‚É‚µ‚Ä‚­‚¾‚³‚¢B";
-static constexpr wchar_t* Log_Error_AlreadyBindResourceMemory = L"IV3DDevice::BindResourceMemory : ƒŠƒ\[ƒX %s[%u] ‚ÍŠù‚Éƒƒ‚ƒŠ‚ğŠm•Û‚µAƒoƒCƒ“ƒh‚³‚ê‚Ä‚¢‚Ü‚·B";
+static constexpr wchar_t* Log_Error_InvalidSubpass = L"IV3DDevice::CreateGraphicsPipeline : %s : w’è‚³‚ê‚½ƒTƒuƒpƒX %u ‚Í”ÍˆÍ‚ğ’´‚¦‚Ä‚¢‚Ü‚·B";
+static constexpr wchar_t* Log_Error_MismatchSubpassColorAttachmentCount = L"IV3DDevice::CreateGraphicsPipeline : %s : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX %s ‚ÌƒTƒuƒpƒX %u ‚ÌƒJƒ‰[ƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_MismatchFrameBufferAttachmentCount = L"IV3DDevice::CreateFrameBuffer : %s : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX %s ‚Æì¬‚µ‚æ‚¤‚Æ‚µ‚Ä‚¢‚éƒtƒŒ[ƒ€ƒoƒbƒtƒ@[‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_MismatchFrameBufferAttachmentSize = L"IV3DDevice::CreateFrameBuffer : %s : ‘S‚Ä‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Í •A‚‚³A[‚³AƒŒƒCƒ„[”‚ª“¯‚¶‚Å‚È‚¢‚Æ‚¢‚¯‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_MismatchFrameBufferAttachmentFormatOrSamples = L"IV3DDevice::CreateFrameBuffer : %s : ƒAƒ^ƒbƒ`ƒƒ“ƒg %u ‚ÌƒtƒH[ƒ}ƒbƒg‚à‚µ‚­‚íƒTƒ“ƒvƒ‹”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_OutOfInputAttachment = L"IV3DDevice::CreateRenderPass : %s : ƒTƒuƒpƒX %u ‚ÌƒCƒ“ƒvƒbƒgƒAƒ^ƒbƒ`ƒƒ“ƒg ( pInputAttachments[%u].attachment = %u < %u ) ‚ª”ÍˆÍ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
+static constexpr wchar_t* Log_Error_OutOfColorAttachment = L"IV3DDevice::CreateRenderPass : %s : ƒTƒuƒpƒX %u ‚ÌƒJƒ‰[ƒAƒ^ƒbƒ`ƒƒ“ƒg ( pColorAttachments[%u].attachment = %u < %u ) ‚ª”ÍˆÍ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
+static constexpr wchar_t* Log_Error_OutOfResolveAttachment = L"IV3DDevice::CreateRenderPass : %s : ƒTƒuƒpƒX %u ‚ÌƒŠƒ]ƒ‹ƒuƒAƒ^ƒbƒ`ƒƒ“ƒg ( pResolveAttachments[%u].attachment = %u < %u ) ‚ª”ÍˆÍ‚ğ’´‚¦‚Äw’è‚³‚ê‚Ä‚¢‚Ü‚·B";
+static constexpr wchar_t* Log_Error_MismatchResolveAttachmentSamples = L"IV3DDevice::CreateRenderPass : %s : ƒTƒuƒpƒX %u ‚ÌƒŠƒ]ƒ‹ƒuƒAƒ^ƒbƒ`ƒƒ“ƒg ( pResolveAttachments[%u].attachment = %u ) ‚ÌƒTƒ“ƒvƒ‹”‚Í V3D_SAMPLE_COUNT_1 ‚É‚µ‚Ä‚­‚¾‚³‚¢B";
+static constexpr wchar_t* Log_Error_AlreadyBindResourceMemory = L"IV3DDevice::BindResourceMemory : %s : ƒŠƒ\[ƒX %s[%u] = %s ‚ÍŠù‚Éƒƒ‚ƒŠ‚ğŠm•Û‚µAƒoƒCƒ“ƒh‚³‚ê‚Ä‚¢‚Ü‚·B";
 
 // ----------------------------------------------------------------------------------------------------
 // IV3DCommandBuffer
@@ -65,4 +65,4 @@ static constexpr wchar_t* Log_Error_PrimaryCommandBufferNotEnd = L"IV3DCommandQu
 // V3DDescriptorSet
 // ----------------------------------------------------------------------------------------------------
 
-static constexpr wchar_t* Log_Error_DescriptorNotSet = L"IV3DDescriptorSet::Update : ƒoƒCƒ“ƒfƒBƒ“ƒO %u ‚ÉƒŠƒ\[ƒX ( %s ) ‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_DescriptorNotSet = L"IV3DDescriptorSet::Update : ƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg %s ‚ÌƒoƒCƒ“ƒfƒBƒ“ƒO %u ‚ÉƒŠƒ\[ƒX ( %s ) ‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB";

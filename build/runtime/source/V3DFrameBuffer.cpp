@@ -15,7 +15,7 @@ V3DFrameBuffer* V3DFrameBuffer::Create()
 	return V3D_NEW_T(V3DFrameBuffer);
 }
 
-V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments)
+V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(attachmentCount > 0);
 	V3D_ASSERT(ppAttachments != nullptr);
@@ -32,7 +32,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 #ifdef _DEBUG
 	if (renderPassSource.debug.attachments.size() != attachmentCount)
 	{
-		V3D_LOG_ERROR(Log_Error_MismatchRAContainerAttachmentCount);
+		V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentCount, V3D_SAFE_NAME(pDebugName), m_pRenderPass->GetDebugName());
 		return V3D_ERROR_FAIL;
 	}
 
@@ -60,7 +60,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 		{
 			if (debugSizeError == false)
 			{
-				V3D_LOG_ERROR(Log_Error_MismatchRAContainerAttachmentSize);
+				V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentSize, V3D_SAFE_NAME(pDebugName));
 				debugSizeError = true;
 				debugErrorCount++;
 			}
@@ -70,7 +70,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 		if ((renderPassSource.debug.attachments[i].format != debugImageDesc.format) ||
 			(renderPassSource.debug.attachments[i].samples != debugImageDesc.samples))
 		{
-			V3D_LOG_ERROR(Log_Error_MismatchRAContainerAttachmentFormatOrSamples, i);
+			V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentFormatOrSamples, V3D_SAFE_NAME(pDebugName), i);
 			debugErrorCount++;
 		}
 #endif //_DEBUG
@@ -123,6 +123,8 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 	m_Source.extent.width = imageViewSource.extent.width;
 	m_Source.extent.height = imageViewSource.extent.height;
 	m_Source.layerCount = imageViewSource.imageSubresourceRange.layerCount;
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.framebuffer, pDebugName);
 
 	return V3D_OK;
 }
@@ -208,6 +210,7 @@ V3DFrameBuffer::~V3DFrameBuffer()
 	if (m_Source.framebuffer != VK_NULL_HANDLE)
 	{
 		vkDestroyFramebuffer(m_pDevice->GetSource().device, m_Source.framebuffer, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.framebuffer);
 	}
 
 	if (m_ImageViews.empty() == false)

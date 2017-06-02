@@ -11,13 +11,15 @@ V3DBuffer* V3DBuffer::Create()
 	return V3D_NEW_T(V3DBuffer);
 }
 
-V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc)
+V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(desc.usageFlags != 0);
 	V3D_ASSERT(desc.size != 0);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
+
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// バッファを作成
@@ -40,6 +42,8 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc)
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.buffer, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// 記述を設定
@@ -93,6 +97,15 @@ V3D_RESULT V3DBuffer::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffs
 
 	return V3D_OK;
 }
+
+#ifdef _DEBUG
+
+const wchar_t* V3DBuffer::GetDebugName() const
+{
+	return m_DebugName.c_str();
+}
+
+#endif //_DEBUG
 
 /********************************/
 /* public override - IV3DBuffer */
@@ -192,6 +205,7 @@ V3DBuffer::~V3DBuffer()
 	if (m_Source.buffer != VK_NULL_HANDLE)
 	{
 		vkDestroyBuffer(m_pDevice->GetSource().device, m_Source.buffer, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.buffer);
 	}
 
 	V3D_RELEASE(m_pMemory);

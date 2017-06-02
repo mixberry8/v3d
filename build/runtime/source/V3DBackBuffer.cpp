@@ -12,7 +12,7 @@ V3DBackBuffer* V3DBackBuffer::Create()
 	return V3D_NEW_T(V3DBackBuffer);
 }
 
-V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage)
+V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(image != VK_NULL_HANDLE);
@@ -20,6 +20,8 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	V3D_ASSERT(height > 0);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
+
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
 
 	VkMemoryRequirements vkMemReq;
 	vkGetImageMemoryRequirements(m_pDevice->GetSource().device, image, &vkMemReq);
@@ -35,15 +37,13 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	m_ResourceDesc.memorySize = vkMemReq.size;
 	m_ResourceDesc.memoryAlignment = vkMemReq.alignment;
 
-#ifdef _DEBUG
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, pDebugName);
 
 #ifdef _WIN64
-	m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image);
+	V3D_DEBUG_CODE(m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image));
 #else //_WIN64
-	m_DebugImageAddr = static_cast<uint32_t>(m_Source.image);
+	V3D_DEBUG_CODE(m_DebugImageAddr = static_cast<uint32_t>(m_Source.image));
 #endif //_WIN64
-
-#endif //_DEBUG
 
 	return V3D_OK;
 }
@@ -66,6 +66,15 @@ V3D_RESULT V3DBackBuffer::BindMemory(V3DResourceMemory* pMemory, uint64_t memory
 {
 	return V3D_ERROR_FAIL;
 }
+
+#ifdef _DEBUG
+
+const wchar_t* V3DBackBuffer::GetDebugName() const
+{
+	return m_DebugName.c_str();
+}
+
+#endif //_DEBUG
 
 /*******************************/
 /* public override - IV3DImage */
@@ -148,9 +157,7 @@ V3DBackBuffer::V3DBackBuffer() :
 	m_Desc({}),
 	m_Source({})
 {
-#ifdef _DEBUG
-	m_DebugImageAddr = 0;
-#endif //_DEBUG
+	V3D_DEBUG_CODE(m_DebugImageAddr = 0);
 
 	m_ResourceDesc.type = V3D_RESOURCE_TYPE_IMAGE;
 
@@ -169,6 +176,7 @@ V3DBackBuffer::V3DBackBuffer() :
 V3DBackBuffer::~V3DBackBuffer()
 {
 	//m_Source.image はスワップチェイン側で破棄される
+	V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image);
 
 	V3D_RELEASE(m_pDevice);
 }

@@ -8,7 +8,7 @@ class V3DBackBuffer : public IV3DImageBase
 {
 public:
 	static V3DBackBuffer* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, VkImage image, VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage, const wchar_t* pDebugName);
 
 	/*****************/
 	/* IV3DImageBase */
@@ -16,6 +16,10 @@ public:
 	virtual const IV3DImageBase::Source& GetSource() const;
 	virtual bool CheckBindMemory() const override;
 	virtual V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset) override;
+
+#ifdef _DEBUG
+	virtual const wchar_t* GetDebugName() const override;
+#endif //_DEBUG
 
 	/*************/
 	/* IV3DImage */
@@ -47,6 +51,8 @@ private:
 	static constexpr V3DImageSubresourceLayout DummySubresource = V3DImageSubresourceLayout{};
 
 #ifdef _DEBUG
+
+	STLStringW m_DebugName;
 
 #ifdef _WIN64
 	uint64_t m_DebugImageAddr;

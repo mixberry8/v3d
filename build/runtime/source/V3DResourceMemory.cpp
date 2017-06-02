@@ -13,7 +13,7 @@ V3DResourceMemory* V3DResourceMemory::Create()
 	return V3D_NEW_T(V3DResourceMemory);
 }
 
-V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint64_t size)
+V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint64_t size, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(propertyFlags != 0);
@@ -40,6 +40,8 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 
 	m_Source.memoryMappedRange.memory = m_Source.deviceMemory;
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory, pDebugName);
+
 	// ----------------------------------------------------------------------------------------------------
 	// 記述を設定
 	// ----------------------------------------------------------------------------------------------------
@@ -52,7 +54,7 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 	return V3D_OK;
 }
 
-V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources)
+V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(propertyFlags != 0);
@@ -76,14 +78,14 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 		case V3D_RESOURCE_TYPE_BUFFER:
 			if (static_cast<V3DBuffer*>(ppResources[i])->CheckBindMemory() == true)
 			{
-				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_LOG_TYPE(ppResources), i);
+				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_SAFE_NAME(pDebugName), V3D_LOG_TYPE(ppResources), i, static_cast<V3DBuffer*>(ppResources[i])->GetDebugName());
 				return V3D_ERROR_FAIL;
 			}
 			break;
 		case V3D_RESOURCE_TYPE_IMAGE:
-			if (static_cast<V3DImage*>(ppResources[i])->CheckBindMemory() == true)
+			if (static_cast<IV3DImageBase*>(ppResources[i])->CheckBindMemory() == true)
 			{
-				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_LOG_TYPE(ppResources), i);
+				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_SAFE_NAME(pDebugName), V3D_LOG_TYPE(ppResources), i, static_cast<IV3DImageBase*>(ppResources[i])->GetDebugName());
 				return V3D_ERROR_FAIL;
 			}
 			break;
@@ -138,6 +140,8 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 	}
 
 	m_Source.memoryMappedRange.memory = m_Source.deviceMemory;
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// 記述を設定
@@ -388,6 +392,7 @@ V3DResourceMemory::~V3DResourceMemory()
 	if (m_Source.deviceMemory != VK_NULL_HANDLE)
 	{
 		vkFreeMemory(m_pDevice->GetSource().device, m_Source.deviceMemory, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory);
 	}
 
 	V3D_RELEASE(m_pDevice);

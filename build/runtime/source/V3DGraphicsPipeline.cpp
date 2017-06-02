@@ -13,7 +13,7 @@ V3DGraphicsPipeline* V3DGraphicsPipeline::Create()
 	return V3D_NEW_T(V3DGraphicsPipeline);
 }
 
-V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc)
+V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pPipelineLayout != nullptr);
 	V3D_ASSERT(pipelineDesc.pRenderPass != nullptr);
@@ -27,13 +27,13 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 #ifdef _DEBUG
 	if (renderPassSource.debug.subpasses.size() <= pipelineDesc.subpass)
 	{
-		V3D_LOG_ERROR(Log_Error_InvalidSubpass, pipelineDesc.subpass);
+		V3D_LOG_ERROR(Log_Error_InvalidSubpass, V3D_SAFE_NAME(pDebugName), pipelineDesc.subpass);
 		return V3D_ERROR_FAIL;
 	}
 
 	if (renderPassSource.debug.subpasses[pipelineDesc.subpass].colorAttachments.size() != pipelineDesc.colorBlend.attachmentCount)
 	{
-		V3D_LOG_ERROR(Log_Error_MismatchSubpassColorAttachmentCount);
+		V3D_LOG_ERROR(Log_Error_MismatchSubpassColorAttachmentCount, V3D_SAFE_NAME(pDebugName), m_pRenderPass->GetDebugName(), pipelineDesc.subpass);
 		return V3D_ERROR_FAIL;
 	}
 #endif //_DEBUG
@@ -258,7 +258,7 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 	vkDepthStencilState.front.compareOp = ToVkCompareOp(pipelineDesc.depthStencil.stencilFront.compareOp);
 	vkDepthStencilState.front.compareMask = pipelineDesc.depthStencil.stencilFront.readMask;
 	vkDepthStencilState.front.writeMask = pipelineDesc.depthStencil.stencilFront.writeMask;
-	vkDepthStencilState.front.reference = pipelineDesc.depthStencil.stencilFront.reference;
+	vkDepthStencilState.front.reference = 0;
 
 	vkDepthStencilState.back.failOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilBack.failOp);
 	vkDepthStencilState.back.passOp = ToVkStencilOp(pipelineDesc.depthStencil.stencilBack.passOp);
@@ -266,7 +266,7 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 	vkDepthStencilState.back.compareOp = ToVkCompareOp(pipelineDesc.depthStencil.stencilBack.compareOp);
 	vkDepthStencilState.back.compareMask = pipelineDesc.depthStencil.stencilBack.readMask;
 	vkDepthStencilState.back.writeMask = pipelineDesc.depthStencil.stencilBack.writeMask;
-	vkDepthStencilState.back.reference = pipelineDesc.depthStencil.stencilBack.reference;
+	vkDepthStencilState.back.reference = 0;
 
 	vkDepthStencilState.minDepthBounds = pipelineDesc.depthStencil.minDepthBounds;
 	vkDepthStencilState.maxDepthBounds = pipelineDesc.depthStencil.maxDepthBounds;
@@ -320,12 +320,8 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 	{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR,
-		VK_DYNAMIC_STATE_DEPTH_BIAS,
 		VK_DYNAMIC_STATE_BLEND_CONSTANTS,
-		VK_DYNAMIC_STATE_DEPTH_BOUNDS,
-		VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK,
-		VK_DYNAMIC_STATE_STENCIL_WRITE_MASK,
-		VK_DYNAMIC_STATE_STENCIL_REFERENCE
+		VK_DYNAMIC_STATE_STENCIL_REFERENCE,
 	};
 
 	static constexpr uint32_t vkDefaultDynamicStateCount = _countof(vkDefaultDynamicStates);
@@ -368,6 +364,8 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 		return ToV3DResult(vkResult);
 	}
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipeline, pDebugName);
+
 	// ----------------------------------------------------------------------------------------------------
 
 	return V3D_OK;
@@ -380,34 +378,6 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 const IV3DPipelineBase::Source& V3DGraphicsPipeline::GetSource() const
 {
 	return m_Source;
-}
-
-void V3DGraphicsPipeline::AfterBind(VkCommandBuffer commandBuffer)
-{
-	const VkPipelineRasterizationStateCreateInfo& vkRasterizationState = m_Native.rasterizationState;
-
-	if (vkRasterizationState.depthBiasEnable == VK_TRUE)
-	{
-		vkCmdSetDepthBias(commandBuffer, vkRasterizationState.depthBiasConstantFactor, vkRasterizationState.depthBiasClamp, vkRasterizationState.depthBiasSlopeFactor);
-	}
-
-	const VkPipelineDepthStencilStateCreateInfo& vkDepthStencilState = m_Native.depthStencilState;
-
-	if (vkDepthStencilState.stencilTestEnable == VK_TRUE)
-	{
-		vkCmdSetStencilCompareMask(commandBuffer, VK_STENCIL_FACE_FRONT_BIT, vkDepthStencilState.front.compareMask);
-		vkCmdSetStencilWriteMask(commandBuffer, VK_STENCIL_FACE_FRONT_BIT, vkDepthStencilState.front.writeMask);
-		vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_BIT, vkDepthStencilState.front.reference);
-
-		vkCmdSetStencilCompareMask(commandBuffer, VK_STENCIL_FACE_BACK_BIT, vkDepthStencilState.back.compareMask);
-		vkCmdSetStencilWriteMask(commandBuffer, VK_STENCIL_FACE_BACK_BIT, vkDepthStencilState.back.writeMask);
-		vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_BACK_BIT, vkDepthStencilState.back.reference);
-	}
-
-	if (vkDepthStencilState.depthBoundsTestEnable == VK_TRUE)
-	{
-		vkCmdSetDepthBounds(commandBuffer, vkDepthStencilState.minDepthBounds, vkDepthStencilState.maxDepthBounds);
-	}
 }
 
 /**********************************/
@@ -477,6 +447,7 @@ V3DGraphicsPipeline::~V3DGraphicsPipeline()
 	if (m_Source.pipeline != VK_NULL_HANDLE)
 	{
 		vkDestroyPipeline(m_pDevice->GetSource().device, m_Source.pipeline, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipeline);
 	}
 
 	if (m_ShaderModules.empty() == false)

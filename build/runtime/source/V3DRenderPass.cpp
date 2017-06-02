@@ -14,7 +14,8 @@ V3D_RESULT V3DRenderPass::Initialize(
 	IV3DDevice* pDevice,
 	uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments,
 	uint32_t subpassCount, const V3DSubpassDesc* pSubpasses,
-	uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies)
+	uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies,
+	const wchar_t* pDebugName)
 {
 	V3D_ASSERT(attachmentCount > 0);
 	V3D_ASSERT(pAttachments != nullptr);
@@ -22,6 +23,8 @@ V3D_RESULT V3DRenderPass::Initialize(
 	V3D_ASSERT(pSubpasses != nullptr);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
+
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// アタッチメントの記述
@@ -137,6 +140,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 #ifdef _DEBUG
 	m_Source.debug.subpasses.resize(subpassCount);
 	V3DRenderPass::Subpass* pDebugSubpass = m_Source.debug.subpasses.data();
+	uint32_t debugSubpassCount = 0;
 	uint32_t debugErrorCount = 0;
 #endif //_DEBUG
 
@@ -160,7 +164,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 		{
 			if (attachmentCount <= pSrcSubpass->pInputAttachments[i].attachment)
 			{
-				V3D_LOG_ERROR(Log_Error_OutOfInputAttachment, i, pSrcSubpass->pInputAttachments[i].attachment, attachmentCount);
+				V3D_LOG_ERROR(Log_Error_OutOfInputAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pInputAttachments[i].attachment, attachmentCount);
 				debugErrorCount++;
 			}
 
@@ -176,7 +180,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 		{
 			if (attachmentCount <= pSrcSubpass->pColorAttachments[i].attachment)
 			{
-				V3D_LOG_ERROR(Log_Error_OutOfColorAttachment, i, pSrcSubpass->pColorAttachments[i].attachment, attachmentCount);
+				V3D_LOG_ERROR(Log_Error_OutOfColorAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pColorAttachments[i].attachment, attachmentCount);
 				debugErrorCount++;
 			}
 
@@ -194,7 +198,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 			{
 				if (attachmentCount <= pSrcSubpass->pResolveAttachments[i].attachment)
 				{
-					V3D_LOG_ERROR(Log_Error_OutOfResolveAttachment, i, pSrcSubpass->pResolveAttachments[i].attachment, attachmentCount);
+					V3D_LOG_ERROR(Log_Error_OutOfResolveAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pResolveAttachments[i].attachment, attachmentCount);
 					debugErrorCount++;
 				}
 
@@ -204,7 +208,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 				debugAttachment.samples = pAttachments[debugAttachment.attachment].samples;
 				if (debugAttachment.samples != V3D_SAMPLE_COUNT_1)
 				{
-					V3D_LOG_ERROR(Log_Error_MismatchResolveAttachmentSamples, i, pSrcSubpass->pResolveAttachments[i].attachment);
+					V3D_LOG_ERROR(Log_Error_MismatchResolveAttachmentSamples, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pResolveAttachments[i].attachment);
 					debugErrorCount++;
 				}
 
@@ -212,6 +216,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 			}
 		}
 
+		debugSubpassCount++;
 		pDebugSubpass++;
 #endif //_DEBUG
 
@@ -277,6 +282,8 @@ V3D_RESULT V3DRenderPass::Initialize(
 		return ToV3DResult(vkResult);
 	}
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderPass, pDebugName);
+
 	return V3D_OK;
 }
 
@@ -284,6 +291,15 @@ const V3DRenderPass::Source& V3DRenderPass::GetSource() const
 {
 	return m_Source;
 }
+
+#ifdef _DEBUG
+
+const wchar_t* V3DRenderPass::GetDebugName() const
+{
+	return m_DebugName.c_str();
+}
+
+#endif //_DEBUG
 
 /*************************************/
 /* public override - IV3DDeviceChild */
@@ -334,6 +350,7 @@ V3DRenderPass::~V3DRenderPass()
 	if (m_Source.renderPass != VK_NULL_HANDLE)
 	{
 		vkDestroyRenderPass(m_pDevice->GetSource().device, m_Source.renderPass, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderPass);
 	}
 
 	V3D_RELEASE(m_pDevice);

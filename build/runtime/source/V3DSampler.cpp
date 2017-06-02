@@ -11,7 +11,7 @@ V3DSampler* V3DSampler::Create()
 	return V3D_NEW_T(V3DSampler);
 }
 
-V3D_RESULT V3DSampler::Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& desc)
+V3D_RESULT V3DSampler::Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& desc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 
@@ -45,6 +45,8 @@ V3D_RESULT V3DSampler::Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& des
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.sampler, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -119,6 +121,7 @@ V3DSampler::~V3DSampler()
 	if (m_Source.sampler != VK_NULL_HANDLE)
 	{
 		vkDestroySampler(m_pDevice->GetSource().device, m_Source.sampler, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.sampler);
 	}
 
 	V3D_RELEASE(m_pDevice);

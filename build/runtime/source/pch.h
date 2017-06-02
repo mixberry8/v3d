@@ -4,13 +4,10 @@
 #include "stringResources.h"
 #include <vulkan\vulkan.h>
 #include <vector>
+#include <map>
+#include <set>
 #include <atomic>
 #include <algorithm>
-
-#ifdef _DEBUG
-#include <cassert>
-#include <sstream>
-#endif //_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // 定数
@@ -51,9 +48,21 @@ private:
 // ----------------------------------------------------------------------------------------------------
 
 #ifdef _DEBUG
+
 #define V3D_ASSERT(expression) assert(expression)
+
+#define V3D_ADD_DEBUG_OBJECT(instance, object, name) instance->AddDebugObject(object, name)
+#define V3D_REMOVE_DEBUG_OBJECT(instance, object) instance->RemoveDebugObject(object)
+#define V3D_DEBUG_CODE(code) code
+
 #else //_DEBUG
+
 #define V3D_ASSERT(expression)
+
+#define V3D_ADD_DEBUG_OBJECT(instance, object, name)
+#define V3D_REMOVE_DEBUG_OBJECT(instance, object)
+#define V3D_DEBUG_CODE(code)
+
 #endif //_DEBUG
 
 template<class T>
@@ -66,6 +75,8 @@ static constexpr T* ToAddRef(T* obj)
 
 	return obj;
 }
+
+#define V3D_SAFE_NAME(namePtr) (((namePtr == nullptr) || (wcslen(namePtr) == 0))? L"unknown" : namePtr)
 
 #define V3D_ADD_REF(x) if(x != nullptr) { x->AddRef(); }
 #define V3D_TO_ADD_REF(x) ToAddRef(x)
@@ -239,6 +250,12 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #endif //_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
+// 全般
+// ----------------------------------------------------------------------------------------------------
+
+void ToMultibyteString(const wchar_t* pSrc, std::string& dst);
+
+// ----------------------------------------------------------------------------------------------------
 // コレクション
 // ----------------------------------------------------------------------------------------------------
 
@@ -280,6 +297,15 @@ public:
 
 template<typename T>
 using STLVector = std::vector<T, STLAllocator<T>>;
+
+template<typename Key, typename T>
+using STLMap = std::map<Key, T, std::less<Key>, STLAllocator<T>>;
+
+template<typename Key>
+using STLSet = std::set<Key, std::less<Key>, STLAllocator<Key>>;
+
+typedef std::basic_string<char, std::char_traits<char>, STLAllocator<char>> STLStringA;
+typedef std::basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> STLStringW;
 
 // ----------------------------------------------------------------------------------------------------
 // Vulkan -> v3d の変換
@@ -337,3 +363,10 @@ VkFormatFeatureFlags ToVkBufferFormatFeatureFlags(V3DFlags value);
 VkFormatFeatureFlags ToVkImageFormatFeatureFlags(V3DFlags value);
 VkStencilOp ToVkStencilOp(V3D_STENCIL_OP value);
 VkStencilFaceFlags ToVkStencilFaceFlags(V3DFlags value);
+
+
+#ifdef _DEBUG
+#include <cassert>
+#include <sstream>
+#include "V3DInstance.h"
+#endif //_DEBUG

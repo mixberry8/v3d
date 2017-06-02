@@ -144,6 +144,26 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...)
 #endif //_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
+// ‘S”Ê
+// ----------------------------------------------------------------------------------------------------
+
+void ToMultibyteString(const wchar_t* pSrc, std::string& dst)
+{
+	size_t bufferSize = 0;
+
+	wcstombs_s(&bufferSize, nullptr, 0, pSrc, _TRUNCATE);
+
+	char* pBuffer = static_cast<char*>(V3D_MALLOC(sizeof(char) * (bufferSize + 1)));
+
+	wcstombs_s(&bufferSize, pBuffer, bufferSize + 1, pSrc, _TRUNCATE);
+	pBuffer[bufferSize] = L'\0';
+
+	dst = pBuffer;
+
+	V3D_FREE(pBuffer);
+}
+
+// ----------------------------------------------------------------------------------------------------
 // Vulkan -> v3d ‚Ö‚Ì•ÏŠ·
 // ----------------------------------------------------------------------------------------------------
 

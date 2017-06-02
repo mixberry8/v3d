@@ -31,7 +31,7 @@ V3DDevice* V3DDevice::Create()
 	return V3D_NEW_T(V3DDevice);
 }
 
-V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter)
+V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pAdapter != nullptr);
 
@@ -171,6 +171,8 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter)
 	{
 		return V3D_ERROR_FAIL;
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pInstance, m_Source.device, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// ƒLƒ…[‚ðŽæ“¾
@@ -518,7 +520,7 @@ V3D_RESULT V3DDevice::CheckImageFormatFeature(V3D_FORMAT format, V3D_IMAGE_TILIN
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateCommandPool(const V3DCommandPoolDesc& desc, IV3DCommandPool** ppCommandPool)
+V3D_RESULT V3DDevice::CreateCommandPool(const V3DCommandPoolDesc& desc, IV3DCommandPool** ppCommandPool, const wchar_t* pDebugName)
 {
 	V3DCommandPool* pCommandPool = V3DCommandPool::Create();
 	if (pCommandPool == nullptr)
@@ -526,7 +528,7 @@ V3D_RESULT V3DDevice::CreateCommandPool(const V3DCommandPoolDesc& desc, IV3DComm
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pCommandPool->Initialize(this, desc);
+	V3D_RESULT result = pCommandPool->Initialize(this, desc, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pCommandPool);
@@ -538,7 +540,7 @@ V3D_RESULT V3DDevice::CreateCommandPool(const V3DCommandPoolDesc& desc, IV3DComm
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateCommandBuffer(IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType, IV3DCommandBuffer** ppCommandBuffer)
+V3D_RESULT V3DDevice::CreateCommandBuffer(IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType, IV3DCommandBuffer** ppCommandBuffer, const wchar_t* pDebugName)
 {
 	if (pCommandPool == nullptr)
 	{
@@ -551,7 +553,7 @@ V3D_RESULT V3DDevice::CreateCommandBuffer(IV3DCommandPool* pCommandPool, V3D_COM
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pCommandBuffer->Initialize(this, pCommandPool, commandBufferType);
+	V3D_RESULT result = pCommandBuffer->Initialize(this, pCommandPool, commandBufferType, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pCommandBuffer);
@@ -563,7 +565,7 @@ V3D_RESULT V3DDevice::CreateCommandBuffer(IV3DCommandPool* pCommandPool, V3D_COM
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer)
+V3D_RESULT V3DDevice::CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer, const wchar_t* pDebugName)
 {
 	V3DCommandPool* pCommandPool = V3DCommandPool::Create();
 	if (pCommandPool == nullptr)
@@ -571,7 +573,7 @@ V3D_RESULT V3DDevice::CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pCommandPool->Initialize(this, poolDesc);
+	V3D_RESULT result = pCommandPool->Initialize(this, poolDesc, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pCommandPool);
@@ -585,7 +587,7 @@ V3D_RESULT V3DDevice::CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	result = pCommandBuffer->Initialize(this, pCommandPool, bufferType);
+	result = pCommandBuffer->Initialize(this, pCommandPool, bufferType, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pCommandBuffer);
@@ -600,7 +602,7 @@ V3D_RESULT V3DDevice::CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, IV3DSwapChain** ppSwapChain)
+V3D_RESULT V3DDevice::CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, IV3DSwapChain** ppSwapChain, const wchar_t* pDebugName)
 {
 	if ((swapChainDesc.windowHandle == nullptr) ||
 		(swapChainDesc.imageWidth == 0) || (swapChainDesc.imageHeight == 0) || (swapChainDesc.imageCount < 2) ||
@@ -615,7 +617,7 @@ V3D_RESULT V3DDevice::CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, con
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pSwapChain->Initialize(this, swapChainDesc, swapChainCallbacks);
+	V3D_RESULT result = pSwapChain->Initialize(this, swapChainDesc, swapChainCallbacks, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pSwapChain);
@@ -627,7 +629,7 @@ V3D_RESULT V3DDevice::CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, con
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence)
+V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence, const wchar_t* pDebugName)
 {
 	V3DFence* pFence = V3DFence::Create();
 	if (pFence == nullptr)
@@ -635,7 +637,7 @@ V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence)
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pFence->Initialize(this);
+	V3D_RESULT result = pFence->Initialize(this, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pFence);
@@ -647,7 +649,7 @@ V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence)
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPool** ppQueryPool)
+V3D_RESULT V3DDevice::CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPool** ppQueryPool, const wchar_t* pDebugName)
 {
 	if (desc.queryCount == 0)
 	{
@@ -660,7 +662,7 @@ V3D_RESULT V3DDevice::CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPoo
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pQueryPool->Initialize(this, desc);
+	V3D_RESULT result = pQueryPool->Initialize(this, desc, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pQueryPool);
@@ -672,7 +674,7 @@ V3D_RESULT V3DDevice::CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPoo
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** ppSampler)
+V3D_RESULT V3DDevice::CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** ppSampler, const wchar_t* pDebugName)
 {
 	V3DSampler* pSampler = V3DSampler::Create();
 	if (pSampler == nullptr)
@@ -680,7 +682,7 @@ V3D_RESULT V3DDevice::CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** pp
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pSampler->Initialize(this, desc);
+	V3D_RESULT result = pSampler->Initialize(this, desc, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -694,7 +696,7 @@ V3D_RESULT V3DDevice::CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** pp
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateShaderModule(size_t codeSize, const void* pCode, IV3DShaderModule** ppShaderModule)
+V3D_RESULT V3DDevice::CreateShaderModule(size_t codeSize, const void* pCode, IV3DShaderModule** ppShaderModule, const wchar_t* pDebugName)
 {
 	if ((codeSize == 0) || ((codeSize % 4) != 0) || (pCode == nullptr))
 	{
@@ -707,7 +709,7 @@ V3D_RESULT V3DDevice::CreateShaderModule(size_t codeSize, const void* pCode, IV3
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pShaderModule->Initialize(this, codeSize, pCode);
+	V3D_RESULT result = pShaderModule->Initialize(this, codeSize, pCode, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pShaderModule);
@@ -784,7 +786,7 @@ V3D_RESULT V3DDevice::CheckResourceMemoryProperty(V3DFlags memoryPropertyFlags, 
 	return V3D_ERROR_NOT_SUPPORTED;
 }
 
-V3D_RESULT V3DDevice::AllocateResourceMemory(V3DFlags propertyFlags, uint64_t size, IV3DResourceMemory** ppResourceMemory)
+V3D_RESULT V3DDevice::AllocateResourceMemory(V3DFlags propertyFlags, uint64_t size, IV3DResourceMemory** ppResourceMemory, const wchar_t* pDebugName)
 {
 	if ((propertyFlags == 0) || (size == 0))
 	{
@@ -797,7 +799,7 @@ V3D_RESULT V3DDevice::AllocateResourceMemory(V3DFlags propertyFlags, uint64_t si
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, size);
+	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, size, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -834,7 +836,7 @@ V3D_RESULT V3DDevice::BindResourceMemory(IV3DResourceMemory* pResourceMemory, IV
 	return result;
 }
 
-V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, IV3DResource* pResource)
+V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, IV3DResource* pResource, const wchar_t* pDebugName)
 {
 	if ((propertyFlags == 0) || (pResource == nullptr))
 	{
@@ -849,7 +851,7 @@ V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, IV3D
 
 	const V3DResourceDesc& resourceDesc = pResource->GetResourceDesc();
 
-	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, resourceDesc.memorySize);
+	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, resourceDesc.memorySize, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pResourceMemory);
@@ -877,7 +879,7 @@ V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, IV3D
 	return result;
 }
 
-V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources)
+V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources, const wchar_t* pDebugName)
 {
 	if ((propertyFlags == 0) || (resourceCount == 0) || (ppResources == nullptr))
 	{
@@ -890,7 +892,7 @@ V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, uint
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, resourceCount, ppResources);
+	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, resourceCount, ppResources, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pResourceMemory);
@@ -908,7 +910,7 @@ V3D_RESULT V3DDevice::AllocateResourceMemoryAndBind(V3DFlags propertyFlags, uint
 	return result;
 }
 
-V3D_RESULT V3DDevice::CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer)
+V3D_RESULT V3DDevice::CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuffer, const wchar_t* pDebugName)
 {
 	if ((desc.usageFlags == 0) || (desc.size == 0))
 	{
@@ -921,7 +923,7 @@ V3D_RESULT V3DDevice::CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuf
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pBuffer->Initialize(this, desc);
+	V3D_RESULT result = pBuffer->Initialize(this, desc, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -932,7 +934,7 @@ V3D_RESULT V3DDevice::CreateBuffer(const V3DBufferDesc& desc, IV3DBuffer** ppBuf
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, IV3DImage** ppImage)
+V3D_RESULT V3DDevice::CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, IV3DImage** ppImage, const wchar_t* pDebugName)
 {
 	if ((initialLayout != V3D_IMAGE_LAYOUT_UNDEFINED) && (initialLayout != V3D_IMAGE_LAYOUT_PREINITIALIZED))
 	{
@@ -945,7 +947,7 @@ V3D_RESULT V3DDevice::CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOU
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pImage->Initialize(this, imageDesc, initialLayout);
+	V3D_RESULT result = pImage->Initialize(this, imageDesc, initialLayout, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pImage);
@@ -957,7 +959,7 @@ V3D_RESULT V3DDevice::CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOU
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView)
+V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView, const wchar_t* pDebugName)
 {
 	if ((pBuffer == nullptr) ||	(desc.format == V3D_FORMAT_UNDEFINED))
 	{
@@ -978,7 +980,7 @@ V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewD
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pBufferView->Initialize(this, pBuffer, desc);
+	V3D_RESULT result = pBufferView->Initialize(this, pBuffer, desc, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -989,7 +991,7 @@ V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewD
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView)
+V3D_RESULT V3DDevice::CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView, const wchar_t* pDebugName)
 {
 	if ((pImage == nullptr) || (desc.levelCount == 0) || (desc.layerCount == 0))
 	{
@@ -1008,7 +1010,7 @@ V3D_RESULT V3DDevice::CreateImageView(IV3DImage* pImage, const V3DImageViewDesc&
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pImageView->Initialize(this, pImage, desc);
+	V3D_RESULT result = pImageView->Initialize(this, pImage, desc, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -1019,7 +1021,7 @@ V3D_RESULT V3DDevice::CreateImageView(IV3DImage* pImage, const V3DImageViewDesc&
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateRenderPass(uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, IV3DRenderPass** ppRenderPass)
+V3D_RESULT V3DDevice::CreateRenderPass(uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, IV3DRenderPass** ppRenderPass, const wchar_t* pDebugName)
 {
 	if ((attachmentCount == 0) || (pAttachments == nullptr) ||
 		(subpassCount == 0) || (pSubpasses == nullptr) ||
@@ -1035,7 +1037,7 @@ V3D_RESULT V3DDevice::CreateRenderPass(uint32_t attachmentCount, const V3DAttach
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pRenderPass->Initialize(this, attachmentCount, pAttachments, subpassCount, pSubpasses, subpassDependencyCount, pSubpassDependencies);
+	V3D_RESULT result = pRenderPass->Initialize(this, attachmentCount, pAttachments, subpassCount, pSubpasses, subpassDependencyCount, pSubpassDependencies, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pRenderPass);
@@ -1047,7 +1049,7 @@ V3D_RESULT V3DDevice::CreateRenderPass(uint32_t attachmentCount, const V3DAttach
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer)
+V3D_RESULT V3DDevice::CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer, const wchar_t* pDebugName)
 {
 	if ((pRenderPass == nullptr) || (attachmentCount == 0) || (ppAttachments == nullptr))
 	{
@@ -1060,7 +1062,7 @@ V3D_RESULT V3DDevice::CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t at
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pFrameBuffer->Initialize(this, pRenderPass, attachmentCount, ppAttachments);
+	V3D_RESULT result = pFrameBuffer->Initialize(this, pRenderPass, attachmentCount, ppAttachments, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pFrameBuffer);
@@ -1072,7 +1074,7 @@ V3D_RESULT V3DDevice::CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t at
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout)
+V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout, const wchar_t* pDebugName)
 {
 	if ((descriptorCount == 0) || (descriptors == nullptr))
 	{
@@ -1085,7 +1087,7 @@ V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const 
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pDescriptorSetLayout->Initialize(this, descriptorCount, descriptors, poolSize, poolResizeStep);
+	V3D_RESULT result = pDescriptorSetLayout->Initialize(this, descriptorCount, descriptors, poolSize, poolResizeStep, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -1096,7 +1098,7 @@ V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const 
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet)
+V3D_RESULT V3DDevice::CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet, const wchar_t* pDebugName)
 {
 	if (pLayout == nullptr)
 	{
@@ -1109,7 +1111,7 @@ V3D_RESULT V3DDevice::CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3D
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pDescriptorSet->Initialize(this, pLayout);
+	V3D_RESULT result = pDescriptorSet->Initialize(this, pLayout, pDebugName);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -1120,7 +1122,7 @@ V3D_RESULT V3DDevice::CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3D
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreatePipelineLayout(uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts, IV3DPipelineLayout** ppPipelineLayout)
+V3D_RESULT V3DDevice::CreatePipelineLayout(uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts, IV3DPipelineLayout** ppPipelineLayout, const wchar_t* pDebugName)
 {
 	if (((constantCount > 0) && (pConstants == nullptr)) || ((descriptorSetLayoutCount > 0) && (ppDescriptorSetLayouts == nullptr)))
 	{
@@ -1133,7 +1135,7 @@ V3D_RESULT V3DDevice::CreatePipelineLayout(uint32_t constantCount, V3DConstantDe
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pPipelineLayout->Initialize(this, constantCount, pConstants, descriptorSetLayoutCount, ppDescriptorSetLayouts);
+	V3D_RESULT result = pPipelineLayout->Initialize(this, constantCount, pConstants, descriptorSetLayoutCount, ppDescriptorSetLayouts, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pPipelineLayout);
@@ -1145,7 +1147,7 @@ V3D_RESULT V3DDevice::CreatePipelineLayout(uint32_t constantCount, V3DConstantDe
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline)
+V3D_RESULT V3DDevice::CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline, const wchar_t* pDebugName)
 {
 	if ((pPipelineLayout == nullptr) || (pipelineDesc.pRenderPass == nullptr))
 	{
@@ -1158,7 +1160,7 @@ V3D_RESULT V3DDevice::CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pPipeline->Initialize(this, pPipelineLayout, pipelineDesc);
+	V3D_RESULT result = pPipeline->Initialize(this, pPipelineLayout, pipelineDesc, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pPipeline);
@@ -1170,7 +1172,7 @@ V3D_RESULT V3DDevice::CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateComputePipeline(IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline)
+V3D_RESULT V3DDevice::CreateComputePipeline(IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline, const wchar_t* pDebugName)
 {
 	if ((pPipelineLayout == nullptr) || (pipelineDesc.computeShader.pModule == nullptr) || (pipelineDesc.computeShader.pEntryPointName == nullptr))
 	{
@@ -1183,7 +1185,7 @@ V3D_RESULT V3DDevice::CreateComputePipeline(IV3DPipelineLayout* pPipelineLayout,
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pPipeline->Initialize(this, pPipelineLayout, pipelineDesc);
+	V3D_RESULT result = pPipeline->Initialize(this, pPipelineLayout, pipelineDesc, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pPipeline);
@@ -1255,6 +1257,7 @@ V3DDevice::~V3DDevice()
 	if (m_Source.device != VK_NULL_HANDLE)
 	{
 		vkDestroyDevice(m_Source.device, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pInstance, m_Source.device);
 	}
 
 	V3D_RELEASE(m_pAdapter);

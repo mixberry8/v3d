@@ -14,11 +14,15 @@ public:
 	};
 
 	static V3DBuffer* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc, const wchar_t* pDebugName);
 	const V3DBuffer::Source& GetSource() const;
 
 	bool CheckBindMemory() const;
 	V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset);
+
+#ifdef _DEBUG
+	const wchar_t* GetDebugName() const;
+#endif //_DEBUG
 
 	/**************/
 	/* IV3DBuffer */
@@ -57,6 +61,10 @@ private:
 	V3DResourceDesc m_ResourceDesc;
 	V3DBufferDesc m_Desc;
 	V3DBuffer::Source m_Source;
+
+#ifdef _DEBUG
+	STLStringW m_DebugName;
+#endif //_DEBUG
 
 	V3DBuffer();
 	virtual ~V3DBuffer();

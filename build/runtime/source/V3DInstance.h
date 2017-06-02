@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _DEBUG
+#include "CriticalSection.h"
+#endif //_DEBUG
+
 class V3DAdapter;
 class V3DSwapChain;
 
@@ -21,13 +25,20 @@ public:
 	void RemoveWindow(V3DSwapChain* pSwapChain);
 	bool ExistsFulscreenWindow(V3DSwapChain* pSwapChain);
 
+#ifdef _DEBUG
+	void AddDebugObject(void* pVulkanObject, const wchar_t* pName);
+	void AddDebugObject(uint64_t vulkanObject, const wchar_t* pName);
+	void RemoveDebugObject(void* pVulkanObject);
+	void RemoveDebugObject(uint64_t vulkanObject);
+#endif //_DEBUG
+
 	/*************************/
 	/* override IV3DInstance */
 	/*************************/
 	virtual V3D_LAYER_TYPE GetLayerType() const override;
 	virtual uint32_t GetAdapterCount() const override;
 	virtual void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) override;
-	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice) override;
+	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName) override;
 
 	/***********************/
 	/* override IV3DObject */
@@ -52,9 +63,6 @@ private:
 	V3DInstance::Source m_Source;
 	STLVector<V3DAdapter*> m_Adapters;
 	STLVector<V3DInstance::Window> m_Windows;
-#ifdef _DEBUG
-	VkDebugReportCallbackEXT m_DebugReportCallbackEXT;
-#endif //_DEBUG
 
 	V3DInstance();
 	virtual ~V3DInstance();
@@ -66,6 +74,24 @@ private:
 	static VKAPI_ATTR void VKAPI_CALL Free(void* pUserData, void* pMemory);
 
 	static LRESULT CALLBACK WindowProc(HWND windowHandle, UINT message, WPARAM eparam, LPARAM lparam);
+
+#ifdef _DEBUG
+	VkDebugReportCallbackEXT m_DebugReportCallbackEXT;
+
+	STLMap<std::string, std::string> m_DebugFunctionNameMap;
+	STLMap<std::string, std::string> m_DebugConstantNameMap;
+
+	typedef STLMap<uint64_t, std::string> DebugObjectNameMap;
+	V3DInstance::DebugObjectNameMap m_DebugObjectNameMap;
+
+	CriticalSection m_DebugSync;
+	std::stringstream m_DebugStringStream;
+	std::string m_DebugString;
+
+	const char* GetDebugObjectName(uint64_t objectAddr);
+	const char* ConvertDebugMessage(const char* pMessage);
+	const char* ConvertDebugString(const char* pString);
+#endif //_DEBUG
 
 #ifdef _DEBUG
 	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallbackEXT(

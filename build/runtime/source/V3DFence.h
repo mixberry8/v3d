@@ -11,7 +11,7 @@ public:
 	};
 
 	static V3DFence* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName);
 	const V3DFence::Source& GetSource() const;
 
 	/************************/

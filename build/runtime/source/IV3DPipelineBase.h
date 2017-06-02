@@ -10,7 +10,6 @@ public:
 	};
 
 	virtual const IV3DPipelineBase::Source& GetSource() const = 0;
-	virtual void AfterBind(VkCommandBuffer commandBuffer) = 0;
 
 protected:
 	virtual ~IV3DPipelineBase() {}

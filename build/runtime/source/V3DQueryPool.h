@@ -12,7 +12,7 @@ public:
 	};
 
 	static V3DQueryPool* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DQueryPoolDesc& desc);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DQueryPoolDesc& desc, const wchar_t* pDebugName);
 
 	/*****************/
 	/* IV3DImageBase */

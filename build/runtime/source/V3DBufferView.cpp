@@ -11,7 +11,7 @@ V3DBufferView* V3DBufferView::Create()
 	return V3D_NEW_T(V3DBufferView);
 }
 
-V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc)
+V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(pBuffer != nullptr);
@@ -37,6 +37,8 @@ V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, c
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.bufferView, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -123,6 +125,7 @@ V3DBufferView::~V3DBufferView()
 	if (m_Source.bufferView != VK_NULL_HANDLE)
 	{
 		vkDestroyBufferView(m_pDevice->GetSource().device, m_Source.bufferView, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.bufferView);
 	}
 
 	V3D_RELEASE(m_pBuffer);

@@ -36,8 +36,12 @@ public:
 	};
 
 	static V3DRenderPass* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, const wchar_t* pDebugName);
 	const V3DRenderPass::Source& GetSource() const;
+
+#ifdef _DEBUG
+	const wchar_t* GetDebugName() const;
+#endif //_DEBUG
 
 	/*******************/
 	/* IV3DDeviceChild */
@@ -56,6 +60,10 @@ private:
 	V3DDevice* m_pDevice;
 	STLVector<VkClearValue> m_ClearValues;
 	V3DRenderPass::Source m_Source;
+
+#ifdef _DEBUG
+	STLStringW m_DebugName;
+#endif //_DEBUG
 
 	V3DRenderPass();
 	virtual ~V3DRenderPass();

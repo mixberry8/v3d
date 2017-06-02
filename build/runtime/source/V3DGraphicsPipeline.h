@@ -11,13 +11,12 @@ class V3DGraphicsPipeline : public IV3DPipelineBase
 {
 public:
 	static V3DGraphicsPipeline* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, const wchar_t* pDebugName);
 
 	/********************/
 	/* IV3DPipelineBase */
 	/********************/
 	virtual const IV3DPipelineBase::Source& GetSource() const override;
-	virtual void AfterBind(VkCommandBuffer commandBuffer) override;
 
 	/****************/
 	/* IV3DPipeline */

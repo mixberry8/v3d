@@ -16,7 +16,7 @@ public:
 	};
 
 	static V3DImageView* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DImage* pImage, const V3DImageViewDesc& desc);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DImage* pImage, const V3DImageViewDesc& desc, const wchar_t* pDebugName);
 	IV3DImageBase* GetInternalImagePtr() const;
 	const V3DImageView::Source& GetSource() const;
 

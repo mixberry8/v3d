@@ -12,7 +12,7 @@ V3DComputePipeline* V3DComputePipeline::Create()
 	return V3D_NEW_T(V3DComputePipeline);
 }
 
-V3D_RESULT V3DComputePipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc)
+V3D_RESULT V3DComputePipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayout* pPipelineLayout, const V3DComputePipelineDesc& pipelineDesc, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(pipelineDesc.computeShader.pModule != nullptr);
@@ -43,6 +43,8 @@ V3D_RESULT V3DComputePipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayou
 		return ToV3DResult(vkResult);
 	}
 
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipeline, pDebugName);
+
 	return V3D_OK;
 }
 
@@ -53,10 +55,6 @@ V3D_RESULT V3DComputePipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayou
 const IV3DPipelineBase::Source& V3DComputePipeline::GetSource() const
 {
 	return m_Source;
-}
-
-void V3DComputePipeline::AfterBind(VkCommandBuffer commandBuffer)
-{
 }
 
 /**********************************/
@@ -125,6 +123,7 @@ V3DComputePipeline::~V3DComputePipeline()
 	if (m_Source.pipeline != VK_NULL_HANDLE)
 	{
 		vkDestroyPipeline(m_pDevice->GetSource().device, m_Source.pipeline, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipeline);
 	}
 
 	V3D_RELEASE(m_pShaderModule);

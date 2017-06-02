@@ -22,7 +22,7 @@ V3DCommandBuffer* V3DCommandBuffer::Create()
 	return V3D_NEW_T(V3DCommandBuffer);
 }
 
-V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType)
+V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 	V3D_ASSERT(pCommandPool != nullptr);
@@ -60,6 +60,8 @@ V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pC
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -1537,8 +1539,6 @@ void V3DCommandBuffer::BindPipeline(IV3DPipeline* pPipeline)
 	const IV3DPipelineBase::Source& source = pPipelineBase->GetSource();
 
 	vkCmdBindPipeline(m_Source.commandBuffer, source.pipelineBindPoint, source.pipeline);
-
-	pPipelineBase->AfterBind(m_Source.commandBuffer);
 }
 
 void V3DCommandBuffer::BindDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets)
@@ -1790,18 +1790,6 @@ void V3DCommandBuffer::SetScissor(uint32_t firstScissor, uint32_t scissorCount, 
 	vkCmdSetScissor(m_Source.commandBuffer, firstScissor, scissorCount, m_Temp.scissors.data());
 }
 
-void V3DCommandBuffer::SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor)
-{
-#ifdef _DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-#endif //_DEBUG
-
-	vkCmdSetDepthBias(m_Source.commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
-}
-
 void V3DCommandBuffer::SetBlendConstants(const float blendConstants[4])
 {
 #ifdef _DEBUG
@@ -1821,48 +1809,6 @@ void V3DCommandBuffer::SetBlendConstants(const float blendConstants[4])
 #endif //_DEBUG
 
 	vkCmdSetBlendConstants(m_Source.commandBuffer, blendConstants);
-}
-
-void V3DCommandBuffer::SetDepthBounds(float minDepthBounds, float maxDepthBounds)
-{
-#ifdef _DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-
-	if ((V3D_CHECK_RANGE_EQUAL(minDepthBounds, 0.0f, 1.0f) == false) || (V3D_CHECK_RANGE_EQUAL(maxDepthBounds, 0.0f, 1.0f) == false) || (minDepthBounds > maxDepthBounds))
-	{
-		V3D_LOG_S_ERROR(L"IV3DCommandBuffer::SetDepthBounds" << Log_Error_InvalidArgument << V3D_LOG_S_RANGE_EQUAL(minDepthBounds, 0.0f, 1.0f) << V3D_LOG_S_RANGE_EQUAL(maxDepthBounds, 0.0f, 1.0f));
-		return;
-	}
-#endif //_DEBUG
-
-	vkCmdSetDepthBounds(m_Source.commandBuffer, minDepthBounds, maxDepthBounds);
-}
-
-void V3DCommandBuffer::SetStencilReadMask(V3DFlags faceMask, uint32_t readMask)
-{
-#ifdef _DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-#endif //_DEBUG
-
-	vkCmdSetStencilCompareMask(m_Source.commandBuffer, ToVkStencilFaceFlags(faceMask), readMask);
-}
-
-void V3DCommandBuffer::SetStencilWriteMask(V3DFlags faceMask, uint32_t writeMask)
-{
-#ifdef _DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-#endif //_DEBUG
-
-	vkCmdSetStencilWriteMask(m_Source.commandBuffer, ToVkStencilFaceFlags(faceMask), writeMask);
 }
 
 void V3DCommandBuffer::SetStencilReference(V3DFlags faceMask, uint32_t reference)
@@ -2155,6 +2101,7 @@ V3DCommandBuffer::~V3DCommandBuffer()
 		if (m_Source.commandBuffer != VK_NULL_HANDLE)
 		{
 			vkFreeCommandBuffers(m_pDevice->GetSource().device, m_pCommandPool->GetSource().commandPool, 1, &m_Source.commandBuffer);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer);
 		}
 	}
 

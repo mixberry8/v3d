@@ -45,7 +45,7 @@ public:
 	};
 
 	static V3DDescriptorSetLayout* Create();
-	V3D_RESULT Initialize(V3DDevice* pDevice, uint32_t descriptorCountconst, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep);
+	V3D_RESULT Initialize(V3DDevice* pDevice, uint32_t descriptorCountconst, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, const wchar_t* pDebugName);
 	const V3DDescriptorSetLayout::Source& GetSource() const;
 	const V3DDescriptorSetLayout::Descriptor* GetDescriptor(uint32_t binding, V3DFlags resourceFlags) const;
 
@@ -97,6 +97,10 @@ private:
 	V3DDescriptorSetLayout::Source m_Source;
 	STLVector<V3DDescriptorSetLayout::HandleT*> m_Handles;
 	CriticalSection m_CriticalSection;
+
+#ifdef _DEBUG
+	std::wstring m_DebugName;
+#endif //_DEBUG
 
 	V3DDescriptorSetLayout();
 	virtual ~V3DDescriptorSetLayout();

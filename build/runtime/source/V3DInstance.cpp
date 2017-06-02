@@ -4,6 +4,10 @@
 #include "V3DSwapChain.h"
 #include <algorithm>
 
+#ifdef _DEBUG
+#include "ScopedLock.h"
+#endif //_DEBUG
+
 V3DInstance* V3DInstance::s_pThis = nullptr;
 
 /**********************/
@@ -29,6 +33,57 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	// ----------------------------------------------------------------------------------------------------
 
 	V3D_LOG_INIT(instanceDesc.log.flags, instanceDesc.log.pFunction, instanceDesc.log.pUserData);
+
+#ifdef _DEBUG
+	// 定数
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_UNDEFINED"] = "V3D_IMAGE_LAYOUT_UNDEFINED";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_GENERAL"] = "V3D_IMAGE_LAYOUT_GENERAL";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL"] = "V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL"] = "V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL"] = "V3D_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL"] = "V3D_IMAGE_LAYOUT_SHADER_READ_ONLY";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL"] = "V3D_IMAGE_LAYOUT_TRANSFER_SRC";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL"] = "V3D_IMAGE_LAYOUT_TRANSFER_DST";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_PREINITIALIZED"] = "V3D_IMAGE_LAYOUT_PREINITIALIZED";
+	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_PRESENT_SRC_KHR"] = "V3D_IMAGE_LAYOUT_PRESENT_SRC";
+
+	// 関数 : デスクリプタセット
+	m_DebugFunctionNameMap["vkUpdateDescriptorSets"] = "IV3DDescriptorSet::Update";
+
+	// 関数 : コマンドバッファー
+	m_DebugFunctionNameMap["vkBeginCommandBuffer"] = "IV3DCommandBuffer::Begin";
+	m_DebugFunctionNameMap["vkEndCommandBuffer"] = "IV3DCommandBuffer::End";
+	m_DebugFunctionNameMap["vkCmdPipelineBarrier"] = "IV3DCommandBuffer::Barrier???";
+	m_DebugFunctionNameMap["vkCmdCopyBuffer"] = "IV3DCommandBuffer::CopyBuffer";
+	m_DebugFunctionNameMap["vkCmdCopyImage"] = "IV3DCommandBuffer::CopyImage";
+	m_DebugFunctionNameMap["vkCmdCopyBufferToImage"] = "IV3DCommandBuffer::CopyBufferToImage";
+	m_DebugFunctionNameMap["vkCmdCopyImageToBuffer"] = "IV3DCommandBuffer::CopyImageToBuffer";
+	m_DebugFunctionNameMap["vkCmdBlitImage"] = "IV3DCommandBuffer::BlitImage";
+	m_DebugFunctionNameMap["vkCmdResolveImage"] = "IV3DCommandBuffer::ResolveImage???";
+	m_DebugFunctionNameMap["vkCmdBeginRenderPass"] = "IV3DCommandBuffer::BeginRenderPass";
+	m_DebugFunctionNameMap["vkCmdEndRenderPass"] = "IV3DCommandBuffer::EndRenderPass";
+	m_DebugFunctionNameMap["vkCmdNextSubpass"] = "IV3DCommandBuffer::EndRenderPass";
+	m_DebugFunctionNameMap["vkCmdClearColorImage"] = "IV3DCommandBuffer::ClearImage???(Color)";
+	m_DebugFunctionNameMap["vkCmdClearDepthStencilImage"] = "IV3DCommandBuffer::ClearImage???(DepthStencil)";
+	m_DebugFunctionNameMap["vkCmdClearAttachments"] = "IV3DCommandBuffer::ClearAttachments";
+	m_DebugFunctionNameMap["vkCmdBindPipeline"] = "IV3DCommandBuffer::BindPipeline";
+	m_DebugFunctionNameMap["vkCmdBindDescriptorSets"] = "IV3DCommandBuffer::BindDescriptorSets";
+	m_DebugFunctionNameMap["vkCmdBindVertexBuffers"] = "IV3DCommandBuffer::BindVertexBuffers";
+	m_DebugFunctionNameMap["vkCmdBindIndexBuffer"] = "IV3DCommandBuffer::BindIndexBuffer";
+	m_DebugFunctionNameMap["vkCmdPushConstants"] = "IV3DCommandBuffer::PushConstant";
+	m_DebugFunctionNameMap["vkCmdSetViewport"] = "IV3DCommandBuffer::SetViewport";
+	m_DebugFunctionNameMap["vkCmdSetScissor"] = "IV3DCommandBuffer::SetScissor";
+	m_DebugFunctionNameMap["vkCmdSetBlendConstants"] = "IV3DCommandBuffer::SetBlendConstants";
+	m_DebugFunctionNameMap["vkCmdSetStencilReference"] = "IV3DCommandBuffer::SetStencilReference";
+	m_DebugFunctionNameMap["vkCmdResetQueryPool"] = "IV3DCommandBuffer::ResetQueryPool";
+	m_DebugFunctionNameMap["vkCmdBeginQuery"] = "IV3DCommandBuffer::BeginQuery";
+	m_DebugFunctionNameMap["vkCmdEndQuery"] = "IV3DCommandBuffer::EndQuery";
+	m_DebugFunctionNameMap["vkCmdWriteTimestamp"] = "IV3DCommandBuffer::WriteTimestamp";
+	m_DebugFunctionNameMap["vkCmdDraw"] = "IV3DCommandBuffer::Draw";
+	m_DebugFunctionNameMap["vkCmdDrawIndexed"] = "IV3DCommandBuffer::DrawIndexed";
+	m_DebugFunctionNameMap["vkCmdDispatch"] = "IV3DCommandBuffer::Dispatch";
+	m_DebugFunctionNameMap["vkCmdExecuteCommands"] = "IV3DCommandBuffer::ExecuteCommandBuffers";
+#endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// アロケーター
@@ -127,6 +182,8 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 		return V3D_ERROR_FAIL;
 	}
 
+	V3D_ADD_DEBUG_OBJECT(this, m_Source.instance, L"instance");
+
 	// ----------------------------------------------------------------------------------------------------
 	// デバッグレポート用のコールバックを登録
 	// ----------------------------------------------------------------------------------------------------
@@ -142,9 +199,15 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = {};
 	dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
 	dbgCreateInfo.pNext = nullptr;
-	dbgCreateInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+	dbgCreateInfo.flags = 0;
 	dbgCreateInfo.pfnCallback = V3DInstance::DebugReportCallbackEXT;
-	dbgCreateInfo.pUserData = nullptr;
+	dbgCreateInfo.pUserData = this;
+
+	if (instanceDesc.log.flags & V3D_LOG_INFORMATION) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT; }
+	if (instanceDesc.log.flags & V3D_LOG_WARNING) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT; }
+	if (instanceDesc.log.flags & V3D_LOG_PERFORMANCE_WARNING) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT; }
+	if (instanceDesc.log.flags & V3D_LOG_ERROR) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT; }
+	if (instanceDesc.log.flags & V3D_LOG_DEBUG) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT; }
 
 	result = dbgCreateDebugReportCallback(m_Source.instance, &dbgCreateInfo, nullptr, &m_DebugReportCallbackEXT);
 	if (result != VK_SUCCESS)
@@ -257,6 +320,42 @@ bool V3DInstance::ExistsFulscreenWindow(V3DSwapChain* pSwapChain)
 	return (it_window != m_Windows.end());
 }
 
+#ifdef _DEBUG
+
+void V3DInstance::AddDebugObject(void* pVulkanObject, const wchar_t* pName)
+{
+	AddDebugObject(reinterpret_cast<uint64_t>(pVulkanObject), pName);
+}
+
+void V3DInstance::AddDebugObject(uint64_t vulkanObject, const wchar_t* pName)
+{
+	ScopedLock lock(m_DebugSync);
+
+	std::string debugName;
+	ToMultibyteString(V3D_SAFE_NAME(pName), debugName);
+
+	m_DebugObjectNameMap[vulkanObject] = debugName;
+}
+
+void V3DInstance::RemoveDebugObject(void* pVulkanObject)
+{
+	RemoveDebugObject(reinterpret_cast<uint64_t>(pVulkanObject));
+}
+
+void V3DInstance::RemoveDebugObject(uint64_t vulkanObject)
+{
+	ScopedLock lock(m_DebugSync);
+
+	V3DInstance::DebugObjectNameMap::iterator it = m_DebugObjectNameMap.find(vulkanObject);
+
+	if (it != m_DebugObjectNameMap.end())
+	{
+		m_DebugObjectNameMap.erase(it);
+	}
+}
+
+#endif //_DEBUG
+
 /********************************/
 /* public override IV3DInstance */
 /********************************/
@@ -276,7 +375,7 @@ void V3DInstance::GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter)
 	(*ppAdapter) = V3D_TO_ADD_REF(static_cast<IV3DAdapter*>(m_Adapters[adapterIndex]));
 }
 
-V3D_RESULT V3DInstance::CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice)
+V3D_RESULT V3DInstance::CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName)
 {
 	if (pAdapter == nullptr)
 	{
@@ -289,7 +388,8 @@ V3D_RESULT V3DInstance::CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevic
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pDevice->Initialize(this, pAdapter);
+
+	V3D_RESULT result = pDevice->Initialize(this, pAdapter, pDebugName);
 	if (result != V3D_OK)
 	{
 		pDevice->Release();
@@ -358,7 +458,11 @@ V3DInstance::~V3DInstance()
 #endif //_DEBUG
 
 		vkDestroyInstance(m_Source.instance, &m_AllocationCallbacks);
+
+		V3D_REMOVE_DEBUG_OBJECT(this, m_Source.instance);
 	}
+
+	V3D_ASSERT(m_DebugObjectNameMap.size() == 0);
 
 	V3D_LOG_FIN();
 }
@@ -395,7 +499,7 @@ LRESULT CALLBACK V3DInstance::WindowProc(HWND windowHandle, UINT message, WPARAM
 	{
 	case WM_DESTROY:
 		V3DInstance::s_pThis->RemoveWindow(pSwapChain);
-		break;
+break;
 
 	case WM_SYSCOMMAND:
 		if (wparam == SC_MAXIMIZE)
@@ -463,6 +567,98 @@ LRESULT CALLBACK V3DInstance::WindowProc(HWND windowHandle, UINT message, WPARAM
 
 #ifdef _DEBUG
 
+const char* V3DInstance::GetDebugObjectName(uint64_t objectAddr)
+{
+	static constexpr char* unknownDebugName = "unknown";
+
+	V3DInstance::DebugObjectNameMap::iterator it = m_DebugObjectNameMap.find(objectAddr);
+	if (it != m_DebugObjectNameMap.end())
+	{
+		return it->second.c_str();
+	}
+
+	return unknownDebugName;
+}
+
+const char* V3DInstance::ConvertDebugMessage(const char* pMessage)
+{
+	const char* pSrc = pMessage;
+	char temp[4096] = {};
+	uint32_t tempCount = 0;
+
+	m_DebugStringStream.str("");
+
+	do
+	{
+		char code = *pSrc++;
+
+		if ((code == ' ') || (code == '\t') || (code == '.') || (code == '[') || (code == ']') || (code == '(') || (code == ')'))
+		{
+			if (tempCount > 0)
+			{
+				m_DebugStringStream << ConvertDebugString(temp);
+				memset(temp, 0, sizeof(temp));
+				tempCount = 0;
+			}
+
+			m_DebugStringStream << code;
+		}
+		else
+		{
+			V3D_ASSERT(tempCount < sizeof(temp));
+			temp[tempCount++] = code;
+		}
+
+	} while (*pSrc != '\0');
+
+	if (tempCount > 0)
+	{
+		m_DebugStringStream << ConvertDebugString(temp);
+		memset(temp, 0, sizeof(temp));
+		tempCount = 0;
+	}
+
+	m_DebugString = m_DebugStringStream.str();
+
+	return m_DebugString.c_str();
+}
+
+const char* V3DInstance::ConvertDebugString(const char* pString)
+{
+	size_t count = strlen(pString);
+
+	if ((count > 2) && (pString[0] == '0') && (pString[1] == 'x'))
+	{
+		// オブジェクト
+		char* endPtr;
+		uint64_t objectAddr = strtoll(pString, &endPtr, 0);
+		if (objectAddr != 0)
+		{
+			return GetDebugObjectName(objectAddr);
+		}
+	}
+	else if ((count > 2) && (pString[0] == 'v') && (pString[1] == 'k'))
+	{
+		// 関数名
+		auto it_name = m_DebugFunctionNameMap.find(pString);
+		if (it_name != m_DebugFunctionNameMap.end())
+		{
+			return it_name->second.c_str();
+		}
+	}
+	else if ((count > 3) && (pString[0] == 'V') && (pString[1] == 'K') && (pString[2] == '_'))
+	{
+		// 定数
+		auto it_name = m_DebugConstantNameMap.find(pString);
+		if (it_name != m_DebugConstantNameMap.end())
+		{
+			return it_name->second.c_str();
+		}
+	}
+
+	return pString;
+}
+
 VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 	VkDebugReportFlagsEXT flags,
 	VkDebugReportObjectTypeEXT objectType,
@@ -473,44 +669,46 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 	const char* pMessage,
 	void* pUserData)
 {
-	static constexpr char* objectNameTable[] = 
+	V3DInstance* pInstance = static_cast<V3DInstance*>(pUserData);
+
+	static constexpr char* objectNameTable[] =
 	{
-		"UNKNOWN",
-		"INSTANCE",
-		"PHYSICAL_DEVICE",
-		"DEVICE",
-		"QUEUE",
-		"SEMAPHORE",
-		"COMMAND_BUFFER",
-		"FENCE",
-		"DEVICE_MEMORY",
-		"BUFFER",
-		"IMAGE",
+		"Unknown",
+		"IV3DInstance",
+		"IV3DAdapter",
+		"IV3DDevice",
+		"IV3DQueue",
+		"IV3DSwapChain(Semaphore)",
+		"IV3DCommandBuffer",
+		"IV3DFence",
+		"IV3DResourceMemory",
+		"IV3DBuffer",
+		"IV3DImage",
 		"EVENT",
-		"QUERY_POOL",
-		"BUFFER_VIEW",
-		"IMAGE_VIEW",
-		"SHADER_MODULE",
+		"IV3DQueryPool",
+		"IV3DBufferView",
+		"IV3DImageView",
+		"IV3DShaderModule",
 		"PIPELINE_CACHE",
-		"PIPELINE_LAYOUT",
-		"RENDER_PASS",
-		"PIPELINE",
-		"DESCRIPTOR_SET_LAYOUT",
-		"SAMPLER",
-		"DESCRIPTOR_POOL",
-		"DESCRIPTOR_SET",
-		"FRAMEBUFFER",
-		"COMMAND_POOL",
-		"SURFACE_KHR",
-		"SWAPCHAIN_KHR",
-		"DEBUG_REPORT",
+		"IV3DPipelineLayout",
+		"IV3DRenderPass",
+		"IV3DPipeline",
+		"IV3DDescriptorSetLayout",
+		"IV3DSampler",
+		"IV3DDescriptorSetLayout(Pool)",
+		"IV3DDescriptorSet",
+		"IV3DFrameBuffer",
+		"IV3DCommandPool",
+		"IV3DSwapChain(Sureface)",
+		"IV3DSwapChain",
+		"IV3DInstance(DebugReport)",
 		"DISPLAY_KHR",
 		"DISPLAY_MODE_KHR",
 		"OBJECT_TABLE_NVX",
 		"INDIRECT_COMMANDS_LAYOUT_NVX",
 	};
 
-	static auto constexpr objectNameCount = sizeof(objectNameTable) / sizeof(char*);
+	static auto constexpr objectNameCount = _countof(objectNameTable);
 
 	V3D_LOG_FLAG logType;
 	switch (flags)
@@ -534,21 +732,28 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 	default:
 		logType = V3D_LOG_ERROR;
 	}
+
+	// 解放時のデバッグレポート ( Destroy うんちゃら ) のオブジェクトタイプ (objectType) が一個ずれているような気がする、、、バグ?
 	
-	char* pObjectName;
+	char* pObjectType;
 	if (objectNameCount > objectType)
 	{
-		pObjectName = objectNameTable[objectType];
+		pObjectType = objectNameTable[objectType];
 	}
 	else
 	{
-		pObjectName = objectNameTable[0];
+		pObjectType = objectNameTable[0];
 	}
 
+	ScopedLock lock(pInstance->m_DebugSync); // GetDebugObjectName 用
+
+	const char* pObjectName = pInstance->GetDebugObjectName(object);
+	const char* pConvertedMessage = pInstance->ConvertDebugMessage(pMessage);
+
 #ifdef _WIN64
-	V3D_LOG_A(logType, "object[%s] location[%I64u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectName, location, messageCode, pLayerPrefix, pMessage);
+	V3D_LOG_A(logType, "%s : %s : location[%I64u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectType, pObjectName, location, messageCode, pLayerPrefix, pConvertedMessage);
 #else //_WIN64
-	V3D_LOG_A(logType, "object[%s] location[%u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectName, location, messageCode, pLayerPrefix, pMessage);
+	V3D_LOG_A(logType, "%s : %s : location[%u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectType, pObjectName, location, messageCode, pLayerPrefix, pConvertedMessage);
 #endif //_WIN64
 
 	return VK_FALSE;

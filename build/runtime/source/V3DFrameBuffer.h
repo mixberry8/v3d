@@ -14,7 +14,7 @@ public:
 	};
 
 	static V3DFrameBuffer* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, const wchar_t* pDebugName);
 
 	const V3DFrameBuffer::Source& GetSource() const;
 

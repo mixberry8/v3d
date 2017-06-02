@@ -11,11 +11,13 @@ V3DImage* V3DImage::Create()
 	return V3D_NEW_T(V3DImage);
 }
 
-V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout)
+V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
+
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -45,6 +47,8 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 	{
 		return ToV3DResult(vkResult);
 	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// ãLèqÇê›íË
@@ -115,15 +119,11 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 
 	// ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
-
 #ifdef _WIN64
-	m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image);
+	V3D_DEBUG_CODE(m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image));
 #else //_WIN64
-	m_DebugImageAddr = static_cast<uint32_t>(m_Source.image);
+	V3D_DEBUG_CODE(m_DebugImageAddr = static_cast<uint32_t>(m_Source.image));
 #endif //_WIN64
-
-#endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -166,6 +166,15 @@ V3D_RESULT V3DImage::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffse
 
 	return V3D_OK;
 }
+
+#ifdef _DEBUG
+
+const wchar_t* V3DImage::GetDebugName() const
+{
+	return m_DebugName.c_str();
+}
+
+#endif //_DEBUG
 
 /*******************************/
 /* public override - IV3DImage */
@@ -279,6 +288,7 @@ V3DImage::~V3DImage()
 	if (m_Source.image != VK_NULL_HANDLE)
 	{
 		vkDestroyImage(m_pDevice->GetSource().device, m_Source.image, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image);
 	}
 
 	V3D_RELEASE(m_pMemory);

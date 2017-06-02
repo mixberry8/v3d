@@ -14,8 +14,8 @@ public:
 	};
 
 	static V3DResourceMemory* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint64_t size);
-	V3D_RESULT Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint64_t size, const wchar_t* pDebugName);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, V3DFlags propertyFlags, uint32_t resourceCount, IV3DResource** ppResources, const wchar_t* pDebugName);
 	const V3DResourceMemory::Source& GetSource() const;
 
 	V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory);

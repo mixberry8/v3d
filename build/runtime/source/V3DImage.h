@@ -9,7 +9,7 @@ class V3DImage : public IV3DImageBase
 {
 public:
 	static V3DImage* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, const wchar_t* pDebugName);
 
 	/*****************/
 	/* IV3DImageBase */
@@ -17,6 +17,10 @@ public:
 	virtual const IV3DImageBase::Source& GetSource() const override;
 	virtual bool CheckBindMemory() const override;
 	virtual V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset) override;
+
+#ifdef _DEBUG
+	virtual const wchar_t* GetDebugName() const override;
+#endif //_DEBUG
 
 	/*************/
 	/* IV3DImage */
@@ -47,11 +51,17 @@ public:
 private:
 	static constexpr V3DImageSubresourceLayout DummySubresource = V3DImageSubresourceLayout{};
 
+#ifdef _DEBUG
+
+	STLStringW m_DebugName;
+
 #ifdef _WIN64
 	uint64_t m_DebugImageAddr;
 #else //_WIN64
 	uint32_t m_DebugImageAddr;
 #endif //_WIN64
+
+#endif //_DEBUG
 
 	ReferenceCounter m_RefCounter;
 	V3DDevice* m_pDevice;

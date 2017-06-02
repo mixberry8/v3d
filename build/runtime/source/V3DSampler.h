@@ -11,7 +11,7 @@ public:
 	};
 
 	static V3DSampler* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& desc);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& desc, const wchar_t* pDebugName);
 	const V3DSampler::Source& GetSource() const;
 
 	/***************/
