@@ -87,11 +87,22 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 		return V3D_ERROR_FAIL;
 	}
 
-	STLVector<char*> vkEnableExtensions;
-	vkEnableExtensions.resize(vkExtensionCount);
+	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(V3D_DEVICE_EXTENSION_swapchain)) == vkExtensionProps.end())
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	STLVector<const char*> vkEnableExtensions;
+	vkEnableExtensions.reserve(vkExtensionCount);
 	for (uint32_t i = 0; i < vkExtensionCount; i++)
 	{
-		vkEnableExtensions[i] = vkExtensionProps[i].extensionName;
+		vkEnableExtensions.push_back(vkExtensionProps[i].extensionName);
+	}
+
+	V3DFlags extensionFlags = 0;
+	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(V3D_DEVICE_EXTENSION_push_descriptor)) != vkExtensionProps.end())
+	{
+		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET;
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -194,7 +205,17 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 				return V3D_ERROR_OUT_OF_HOST_MEMORY;
 			}
 
-			V3D_RESULT result = pQueue->Initialize(this, i, srcQueue);
+#ifdef _DEBUG
+			STLStringStreamW debugStringStream;
+			debugStringStream << V3D_SAFE_NAME(pDebugName) << L"_Queue_F" << i << L"_I" << j;
+
+			STLStringW debugString = debugStringStream.str();
+
+			V3D_RESULT result = pQueue->Initialize(this, i, srcQueue, debugString.c_str());
+#else //_DEBUG
+			V3D_RESULT result = pQueue->Initialize(this, i, srcQueue, nullptr);
+#endif //_DEBUG
+
 			if (result != V3D_OK)
 			{
 				pQueue->Release();
@@ -261,6 +282,8 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	if (vkPDFeatures.independentBlend == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_INDEPENDENT; }
 	if (vkPDFeatures.dualSrcBlend == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_DUAL_SRC; }
 	if (vkPDFeatures.logicOp == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_LOGIC_OP; }
+
+	m_Caps.extensionFlags = extensionFlags;
 
 	const VkPhysicalDeviceLimits& vkPDLimits = m_Source.deviceProps.limits;
 
@@ -1242,6 +1265,12 @@ V3DDevice::V3DDevice() :
 
 V3DDevice::~V3DDevice()
 {
+	if (m_Source.device != VK_NULL_HANDLE)
+	{
+		vkDestroyDevice(m_Source.device, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pInstance, m_Source.device);
+	}
+
 	for (size_t i = 0; i < m_QueueFamilies.size(); i++)
 	{
 		V3DDevice::QueueFamily& queueFamily = m_QueueFamilies[i];
@@ -1252,12 +1281,6 @@ V3DDevice::~V3DDevice()
 			queue->Dispose();
 			V3D_RELEASE(queue);
 		}
-	}
-
-	if (m_Source.device != VK_NULL_HANDLE)
-	{
-		vkDestroyDevice(m_Source.device, nullptr);
-		V3D_REMOVE_DEBUG_OBJECT(m_pInstance, m_Source.device);
 	}
 
 	V3D_RELEASE(m_pAdapter);
