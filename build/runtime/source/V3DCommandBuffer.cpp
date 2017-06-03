@@ -64,6 +64,19 @@ V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pC
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
+	// 拡張機能を取得
+	// ----------------------------------------------------------------------------------------------------
+
+	const V3DDeviceCaps& deviceCaps = m_pDevice->GetCaps();
+
+	if (deviceCaps.extensionFlags & V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET)
+	{
+		m_pPushDescriptorSetFunction = (PFN_vkCmdPushDescriptorSetKHR)vkGetDeviceProcAddr(m_pDevice->GetSource().device, "vkCmdPushDescriptorSetKHR");
+	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// 記述の初期化
+	// ----------------------------------------------------------------------------------------------------
 
 	m_Type = commandBufferType;
 
@@ -1716,6 +1729,47 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 #endif //_DEBUG
 
 	vkCmdPushConstants(m_Source.commandBuffer, static_cast<V3DPipelineLayout*>(pPipelineLayout)->GetSource().pipelineLayout, ToVkShaderStageFlags(constantDesc.shaderStageFlags), constantDesc.offset + offset, size, pData);
+}
+
+void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if (m_pPushDescriptorSetFunction == nullptr)
+	{
+		V3D_LOG_ERROR(Log_Error_UnavailablePushDescriptorSets);
+		return;
+	}
+
+	if ((pPipelineLayout == nullptr) || (descriptorSetCount == 0) || (ppDescriptorSets == nullptr))
+	{
+		V3D_LOG_S_ERROR(L"IV3DCommandBuffer::PushDescriptorSets" << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM_GREATER(descriptorSetCount, 0) <<  V3D_LOG_S_PTR(ppDescriptorSets));
+		return;
+	}
+
+#endif //_DEBUG
+
+	V3DDescriptorSet** pSrc = reinterpret_cast<V3DDescriptorSet**>(ppDescriptorSets);
+	V3DDescriptorSet** pSrcEnd = pSrc + descriptorSetCount;
+
+	VkPipelineBindPoint vkPipelineBindPoint = ToVkPipelineBindPoint(pipelineType);
+	VkPipelineLayout vkPipelineLayout = static_cast<V3DPipelineLayout*>(pPipelineLayout)->GetSource().pipelineLayout;
+
+	while (pSrc != pSrcEnd)
+	{
+		const V3DDescriptorSet::Source& source = (*pSrc)->GetSource();
+
+		m_pPushDescriptorSetFunction(
+			m_Source.commandBuffer,
+			vkPipelineBindPoint, vkPipelineLayout,
+			firstSet, source.descriptorCount, source.pWriteDescriptors);
+
+		pSrc++;
+	}
 }
 
 void V3DCommandBuffer::SetViewport(uint32_t firstViewport, uint32_t viewportCount, const V3DViewport* pViewports)
