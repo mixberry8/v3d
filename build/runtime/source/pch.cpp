@@ -147,7 +147,7 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...)
 // ‘S”Ê
 // ----------------------------------------------------------------------------------------------------
 
-void ToMultibyteString(const wchar_t* pSrc, std::string& dst)
+void ToMultibyteString(const wchar_t* pSrc, STLStringA& dst)
 {
 	size_t bufferSize = 0;
 

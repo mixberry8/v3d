@@ -5,9 +5,13 @@
 #include <vulkan\vulkan.h>
 #include <vector>
 #include <map>
-#include <set>
 #include <atomic>
 #include <algorithm>
+
+#ifdef _DEBUG
+#include <cassert>
+#include <sstream>
+#endif //_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // 定数
@@ -17,17 +21,14 @@
 #define V3D_COMPUTE_SHADER_STAGE_MAX 1 // コンピュートシェーダーステージの数
 #define V3D_INSTANCE_LAYER_COUNT 2 // インスタンスのレイヤー数
 
-// ----------------------------------------------------------------------------------------------------
-// 定義
-// ----------------------------------------------------------------------------------------------------
-
-typedef std::atomic<int64_t> ReferenceCounter;
-
-#define V3D_REF_INC(counter) std::atomic_fetch_add_explicit(&counter, 1, std::memory_order_relaxed)
-#define V3D_REF_DEC(counter) (std::atomic_fetch_sub_explicit(&counter, 1, std::memory_order_release) == 1)
-#define V3D_REF_FENCE() std::_Atomic_thread_fence(std::memory_order_acquire)
-
 static const char* V3D_LAYER_LUNARG_standard_validation = "VK_LAYER_LUNARG_standard_validation";
+
+static const char* V3D_INSTANCE_EXTENSION_surface = "VK_KHR_surface";
+static const char* V3D_INSTANCE_EXTENSION_win32_surface = "VK_KHR_win32_surface";
+static const char* V3D_INSTANCE_EXTENSION_debug_report = "VK_EXT_debug_report";
+
+static const char* V3D_DEVICE_EXTENSION_swapchain = "VK_KHR_swapchain";
+static const char* V3D_DEVICE_EXTENSION_push_descriptor = "VK_KHR_push_descriptor";
 
 struct V3DFindLayer
 {
@@ -42,6 +43,30 @@ public:
 private:
 	const char* m_pLayerName;
 };
+
+struct V3DFindExtension
+{
+public:
+	V3DFindExtension(const char* pExtensionName) : m_pExtensionName(pExtensionName) {}
+
+	bool operator()(const VkExtensionProperties& props) const
+	{
+		return (strcmp(props.extensionName, m_pExtensionName) == 0);
+	}
+
+private:
+	const char* m_pExtensionName;
+};
+
+// ----------------------------------------------------------------------------------------------------
+// 定義
+// ----------------------------------------------------------------------------------------------------
+
+typedef std::atomic<int64_t> ReferenceCounter;
+
+#define V3D_REF_INC(counter) std::atomic_fetch_add_explicit(&counter, 1, std::memory_order_relaxed)
+#define V3D_REF_DEC(counter) (std::atomic_fetch_sub_explicit(&counter, 1, std::memory_order_release) == 1)
+#define V3D_REF_FENCE() std::_Atomic_thread_fence(std::memory_order_acquire)
 
 // ----------------------------------------------------------------------------------------------------
 // マクロ
@@ -124,6 +149,73 @@ void FreeMemory(void* pMemory);
 #define V3D_DELETE_THIS_T(ptr, T) ptr->~T(); FreeMemory(ptr);
 
 // ----------------------------------------------------------------------------------------------------
+// STL
+// ----------------------------------------------------------------------------------------------------
+
+template<typename T>
+class STLAllocator
+{
+public:
+	typedef T value_type;
+	typedef T *pointer;
+	typedef const T *const_pointer;
+	typedef T &reference;
+	typedef const T &const_reference;
+	typedef size_t size_type;
+	typedef ptrdiff_t difference_type;
+
+	template <class U>
+	struct rebind { typedef STLAllocator<U> other; };
+
+public:
+	STLAllocator(void) {}
+	STLAllocator(const STLAllocator&) {}
+
+	template <class U>
+	STLAllocator(const STLAllocator<U>&) {}
+
+	~STLAllocator(void) {}
+
+	pointer allocate(size_type num, void *hint = 0) { (void)hint; return (pointer)(V3D_MALLOC(sizeof(T) * num)); }
+	void deallocate(pointer p, size_type num) { (void)num; V3D_FREE(p); }
+
+	void construct(pointer p, const T& value) { new(p) T(value); }
+	void destroy(pointer p) { p->~T(); }
+
+	pointer address(reference value) const { return &value; }
+	const_pointer address(const_reference value) const { return &value; }
+
+	size_type max_size() const { return (std::numeric_limits<size_t>::max)() / sizeof(T); }
+};
+
+template <class T, class U>
+bool operator == (const STLAllocator<T>&, const STLAllocator<U>&)
+{
+	return true;
+}
+
+template <class T, class U>
+bool operator != (const STLAllocator<T>&, const STLAllocator<U>&)
+{
+	return false;
+}
+
+// コレクション
+template<typename T>
+using STLVector = std::vector<T, STLAllocator<T>>;
+
+template<typename Key, typename T>
+using STLMap = std::map<Key, T, std::less<Key>, STLAllocator<T>>;
+
+// 文字列
+typedef std::basic_string<char, std::char_traits<char>, STLAllocator<char>> STLStringA;
+typedef std::basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> STLStringW;
+
+// 文字列ストリーム
+typedef std::basic_stringstream<char, std::char_traits<char>, STLAllocator<char>> STLStringStreamA;
+typedef std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> STLStringStreamW;
+
+// ----------------------------------------------------------------------------------------------------
 // ログ
 // ----------------------------------------------------------------------------------------------------
 
@@ -183,14 +275,14 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 
 #define V3D_LOG_S_ERROR_A(stream) \
 	{ \
-		std::stringstream message; \
+		STLStringStreamA message; \
 		message << stream; \
 		PrintLogA(V3D_LOG_ERROR, message.str().c_str()); \
 	}
 
 #define V3D_LOG_S_ERROR_W(stream) \
 	{ \
-		std::wstringstream message; \
+		STLStringStreamW message; \
 		message << stream; \
 		PrintLogW(V3D_LOG_ERROR, message.str().c_str()); \
 	}
@@ -250,67 +342,13 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #endif //_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
+// グローバル関数
+// ----------------------------------------------------------------------------------------------------
+
 // 全般
-// ----------------------------------------------------------------------------------------------------
+void ToMultibyteString(const wchar_t* pSrc, STLStringA& dst);
 
-void ToMultibyteString(const wchar_t* pSrc, std::string& dst);
-
-// ----------------------------------------------------------------------------------------------------
-// コレクション
-// ----------------------------------------------------------------------------------------------------
-
-template<typename T>
-class STLAllocator
-{
-public:
-	typedef T value_type;
-	typedef T *pointer;
-	typedef const T *const_pointer;
-	typedef T &reference;
-	typedef const T &const_reference;
-	typedef size_t size_type;
-	typedef ptrdiff_t difference_type;
-
-	template <class U>
-	struct rebind { typedef STLAllocator<U> other; };
-
-public:
-	STLAllocator(void) {}
-	STLAllocator(const STLAllocator&) {}
-
-	template <class U>
-	STLAllocator(const STLAllocator<U>&) {}
-
-	~STLAllocator(void) {}
-
-	pointer allocate(size_type num, void *hint = 0) { (void)hint; return (pointer)(V3D_MALLOC(sizeof(T) * num)); }
-	void deallocate(pointer p, size_type num) { (void)num; V3D_FREE(p); }
-
-	void construct(pointer p, const T& value) { new(p) T(value); }
-	void destroy(pointer p) { p->~T(); }
-
-	pointer address(reference value) const { return &value; }
-	const_pointer address(const_reference value) const { return &value; }
-
-	size_type max_size() const { return (std::numeric_limits<size_t>::max)() / sizeof(T); }
-};
-
-template<typename T>
-using STLVector = std::vector<T, STLAllocator<T>>;
-
-template<typename Key, typename T>
-using STLMap = std::map<Key, T, std::less<Key>, STLAllocator<T>>;
-
-template<typename Key>
-using STLSet = std::set<Key, std::less<Key>, STLAllocator<Key>>;
-
-typedef std::basic_string<char, std::char_traits<char>, STLAllocator<char>> STLStringA;
-typedef std::basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> STLStringW;
-
-// ----------------------------------------------------------------------------------------------------
 // Vulkan -> v3d の変換
-// ----------------------------------------------------------------------------------------------------
-
 static constexpr bool ToV3DBool(VkBool32 value) { return (value == VK_TRUE) ? true : false; }
 V3D_RESULT ToV3DResult(VkResult value);
 V3D_FORMAT ToV3DFormat(VkFormat value);
@@ -318,10 +356,7 @@ V3DFlags ToV3DQueueFlags(VkQueueFlags value);
 V3D_IMAGE_LAYOUT ToV3DImageLayout(VkImageLayout value);
 V3DFlags ToV3DMemoryPropertyFlags(VkMemoryPropertyFlags value);
 
-// ----------------------------------------------------------------------------------------------------
 // v3d -> Vulkan の変換
-// ----------------------------------------------------------------------------------------------------
-
 static constexpr VkBool32 ToVkBool32(bool value) { return (value == true) ? VK_TRUE : VK_FALSE; }
 VkFormat ToVkFormat(V3D_FORMAT value);
 VkCommandBufferUsageFlags ToVkCommandBufferUsageFlags(V3DFlags value);
@@ -364,9 +399,10 @@ VkFormatFeatureFlags ToVkImageFormatFeatureFlags(V3DFlags value);
 VkStencilOp ToVkStencilOp(V3D_STENCIL_OP value);
 VkStencilFaceFlags ToVkStencilFaceFlags(V3DFlags value);
 
+// ----------------------------------------------------------------------------------------------------
+// 定義に依存するインクルード
+// ----------------------------------------------------------------------------------------------------
 
 #ifdef _DEBUG
-#include <cassert>
-#include <sstream>
 #include "V3DInstance.h"
 #endif //_DEBUG
