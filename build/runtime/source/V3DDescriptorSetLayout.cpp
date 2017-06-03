@@ -9,6 +9,7 @@ struct V3DDescriptorSetLayout::HandleT
 	uint32_t count;
 
 	VkDescriptorPool pool;
+	STLVector<VkDescriptorSet> sets;
 
 #ifdef _DEBUG
 	void* pDebugPtr;
@@ -164,7 +165,7 @@ V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descr
 	VkDescriptorPoolCreateInfo& poolCreateInfo = m_Source.poolCreateInfo;
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolCreateInfo.pNext = nullptr;
-	poolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	poolCreateInfo.flags = 0;
 	poolCreateInfo.maxSets = poolSize;
 	poolCreateInfo.poolSizeCount = vkPoolSizeCount;
 	poolCreateInfo.pPoolSizes = m_Source.poolSizes.data();
@@ -232,18 +233,27 @@ V3D_RESULT V3DDescriptorSetLayout::Vulkan_CreateDescriptorSet(V3DDescriptorSetLa
 	// デスクリプタセットを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	VkDescriptorSetAllocateInfo descSetAllocInfo{};
-	descSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	descSetAllocInfo.pNext = nullptr;
-	descSetAllocInfo.descriptorPool = pHandleT->pool;
-	descSetAllocInfo.descriptorSetCount = 1;
-	descSetAllocInfo.pSetLayouts = &m_Source.descriptorSetLayout;
-
 	VkDescriptorSet descriptorSet;
-	VkResult vkResult = vkAllocateDescriptorSets(m_pDevice->GetSource().device, &descSetAllocInfo, &descriptorSet);
-	if (vkResult != VK_SUCCESS)
+
+	if (pHandleT->sets.empty() == false)
 	{
-		return ToV3DResult(vkResult);
+		descriptorSet = pHandleT->sets.back();
+		pHandleT->sets.pop_back();
+	}
+	else
+	{
+		VkDescriptorSetAllocateInfo descSetAllocInfo{};
+		descSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		descSetAllocInfo.pNext = nullptr;
+		descSetAllocInfo.descriptorPool = pHandleT->pool;
+		descSetAllocInfo.descriptorSetCount = 1;
+		descSetAllocInfo.pSetLayouts = &m_Source.descriptorSetLayout;
+
+		VkResult vkResult = vkAllocateDescriptorSets(m_pDevice->GetSource().device, &descSetAllocInfo, &descriptorSet);
+		if (vkResult != VK_SUCCESS)
+		{
+			return ToV3DResult(vkResult);
+		}
 	}
 
 	pHandleT->count++;
@@ -274,9 +284,9 @@ void V3DDescriptorSetLayout::Vulkan_DestroyDescriptorSet(V3DDescriptorSetLayout:
 
 	ScopedLock lock(m_CriticalSection);
 
-	vkFreeDescriptorSets(m_pDevice->GetSource().device, handle->pool, 1, &descriptorSet);
-
+	handle->sets.push_back(descriptorSet);
 	handle->count--;
+
 	if ((handle->count == 0) || (m_Statistics.setCount == m_Statistics.setCapacity))
 	{
 		// からっぽになった、前回までいっぱいだったが空きができたのでソート
