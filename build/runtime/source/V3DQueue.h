@@ -1,5 +1,7 @@
 #pragma once
 
+class V3DDevice;
+
 class V3DQueue : public IV3DQueue
 {
 public:
@@ -9,7 +11,7 @@ public:
 	};
 
 	static V3DQueue* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue queue);
+	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue queue, const wchar_t* pDebugName);
 	void Dispose();
 
 	const V3DQueue::Source& GetSource() const;
@@ -42,7 +44,7 @@ private:
 	};
 
 	ReferenceCounter m_RefCounter;
-	IV3DDevice* m_pDevice;
+	V3DDevice* m_pDevice;
 	uint32_t m_Family;
 	V3DQueue::Source m_Source;
 	V3DQueue::Temp m_Temp;

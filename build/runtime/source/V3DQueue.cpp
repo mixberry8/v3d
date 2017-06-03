@@ -1,7 +1,7 @@
 #include "V3DQueue.h"
+#include "V3DDevice.h"
 #include "V3DCommandBuffer.h"
 #include "V3DFence.h"
-
 #include "V3DSwapChain.h"
 
 /****************************/
@@ -13,21 +13,28 @@ V3DQueue* V3DQueue::Create()
 	return V3D_NEW_T(V3DQueue);
 }
 
-V3D_RESULT V3DQueue::Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue queue)
+V3D_RESULT V3DQueue::Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue queue, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 
-	m_pDevice = pDevice; // 循環参照になるので参照カウンタはインクリメントしない
+	m_pDevice = static_cast<V3DDevice*>(pDevice); // 循環参照になるので参照カウンタはインクリメントしない
 	m_Family = family;
 	m_Source.queue = queue;
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue, pDebugName);
 
 	return V3D_OK;
 }
 
 void V3DQueue::Dispose()
 {
+	if (m_Source.queue != VK_NULL_HANDLE)
+	{
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue);
+		m_Source.queue = VK_NULL_HANDLE;
+	}
+
 	m_pDevice = nullptr;
-	m_Source.queue = VK_NULL_HANDLE;
 }
 
 const V3DQueue::Source& V3DQueue::GetSource() const
