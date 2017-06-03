@@ -163,8 +163,8 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, Textur
 	clearValue.color.float32[3] = 1.0f;
 	pCommandBuffer->ClearImage(pDummyMaskImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
 
-	clearValue.color.float32[0] = 1.0f;
-	clearValue.color.float32[1] = 0.0f;
+	clearValue.color.float32[0] = 0.5f;
+	clearValue.color.float32[1] = 0.5f;
 	clearValue.color.float32[2] = 1.0f;
 	clearValue.color.float32[3] = 0.0f;
 	pCommandBuffer->ClearImage(pDummyNormalImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
