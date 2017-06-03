@@ -99,7 +99,7 @@ private:
 	CriticalSection m_CriticalSection;
 
 #ifdef _DEBUG
-	std::wstring m_DebugName;
+	STLStringW m_DebugName;
 #endif //_DEBUG
 
 	V3DDescriptorSetLayout();

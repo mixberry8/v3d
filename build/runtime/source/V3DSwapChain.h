@@ -67,7 +67,7 @@ private:
 	V3DSwapChain::WindowedInfo m_WindowedInfo;
 
 #ifdef _DEBUG
-	std::wstring m_DebugName;
+	STLStringW m_DebugName;
 #endif //_DEBUG
 
 	V3DSwapChain();
