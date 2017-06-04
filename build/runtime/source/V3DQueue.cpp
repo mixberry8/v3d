@@ -21,6 +21,8 @@ V3D_RESULT V3DQueue::Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue qu
 	m_Family = family;
 	m_Source.queue = queue;
 
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
+
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue, pDebugName);
 
 	return V3D_OK;
@@ -64,13 +66,13 @@ V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppC
 	{
 		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_PRIMARY)
 		{
-			V3D_LOG_ERROR(Log_Error_NotPrimaryCommandBuffer, V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_ERROR(Log_Error_NotPrimaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 
 		if (static_cast<V3DCommandBuffer*>(ppCommandBuffers[i])->GetDebug().isBegin == true)
 		{
-			V3D_LOG_ERROR(Log_Error_PrimaryCommandBufferNotEnd, V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_ERROR(Log_Error_PrimaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
