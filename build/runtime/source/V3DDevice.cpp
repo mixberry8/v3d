@@ -102,7 +102,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	V3DFlags extensionFlags = 0;
 	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(V3D_DEVICE_EXTENSION_push_descriptor)) != vkExtensionProps.end())
 	{
-		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET;
+		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS;
 	}
 
 	// ----------------------------------------------------------------------------------------------------
