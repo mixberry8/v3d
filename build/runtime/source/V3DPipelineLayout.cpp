@@ -63,6 +63,25 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	}
 
 	// ----------------------------------------------------------------------------------------------------
+	// パイプラインキャッシュを作成
+	// ----------------------------------------------------------------------------------------------------
+
+	VkPipelineCacheCreateInfo pipelineCacheCreateInfo{};
+	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	pipelineCacheCreateInfo.pNext = nullptr;
+	pipelineCacheCreateInfo.flags = 0;
+	pipelineCacheCreateInfo.initialDataSize = 0;
+	pipelineCacheCreateInfo.pInitialData = nullptr;
+
+	VkResult vkResult = vkCreatePipelineCache(m_pDevice->GetSource().device, &pipelineCacheCreateInfo, nullptr, &m_Source.pipelineCache);
+	if (vkResult != VK_SUCCESS)
+	{
+		return ToV3DResult(vkResult);
+	}
+
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineCache, pDebugName);
+
+	// ----------------------------------------------------------------------------------------------------
 	// パイプラインレイアウトを作成
 	// ----------------------------------------------------------------------------------------------------
 
@@ -74,7 +93,7 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
 	pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
 
-	VkResult vkResult = vkCreatePipelineLayout(m_pDevice->GetSource().device, &pipelineLayoutCreateInfo, nullptr, &m_Source.pipelineLayout);
+	vkResult = vkCreatePipelineLayout(m_pDevice->GetSource().device, &pipelineLayoutCreateInfo, nullptr, &m_Source.pipelineLayout);
 	if (vkResult != VK_SUCCESS)
 	{
 		return ToV3DResult(vkResult);
@@ -154,11 +173,18 @@ V3DPipelineLayout::V3DPipelineLayout() :
 	m_RefCounter(1),
 	m_pDevice(nullptr)
 {
+	m_Source.pipelineCache = VK_NULL_HANDLE;
 	m_Source.pipelineLayout = VK_NULL_HANDLE;
 }
 
 V3DPipelineLayout::~V3DPipelineLayout()
 {
+	if (m_Source.pipelineCache != VK_NULL_HANDLE)
+	{
+		vkDestroyPipelineCache(m_pDevice->GetSource().device, m_Source.pipelineCache, nullptr);
+		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineCache);
+	}
+
 	if (m_Source.pipelineLayout != VK_NULL_HANDLE)
 	{
 		vkDestroyPipelineLayout(m_pDevice->GetSource().device, m_Source.pipelineLayout, nullptr);

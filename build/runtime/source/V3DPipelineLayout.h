@@ -7,6 +7,7 @@ class V3DPipelineLayout : public IV3DPipelineLayout
 public:
 	struct Source
 	{
+		VkPipelineCache pipelineCache;
 		VkPipelineLayout pipelineLayout;
 	};
 
