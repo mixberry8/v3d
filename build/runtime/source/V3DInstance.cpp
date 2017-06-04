@@ -47,6 +47,18 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_PREINITIALIZED"] = "V3D_IMAGE_LAYOUT_PREINITIALIZED";
 	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_PRESENT_SRC_KHR"] = "V3D_IMAGE_LAYOUT_PRESENT_SRC";
 
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_SAMPLER"] = "V3D_DESCRIPTOR_TYPE_SAMPLER";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER"] = "V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE"] = "V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_STORAGE_IMAGE"] = "V3D_DESCRIPTOR_TYPE_STORAGE_IMAGE";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER"] = "V3D_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER"] = "V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER"] = "V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_STORAGE_BUFFER"] = "V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC"] = "V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC"] = "V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC";
+	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT"] = "V3D_DESCRIPTOR_TYPE_INPUT_ATTACHMENT";
+
 	// 関数 : デスクリプタセット
 	m_DebugFunctionNameMap["vkUpdateDescriptorSets"] = "IV3DDescriptorSet::Update";
 
@@ -145,12 +157,35 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 		return V3D_ERROR_FAIL;
 	}
 
-	STLVector<char*> enabledExtensions;
+	STLVector<const char*> enabledExtensions;
 	enabledExtensions.reserve(extensionPropCount);
-	for (uint32_t i = 0; i < extensionPropCount; i++)
+
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(V3D_INSTANCE_EXTENSION_surface)) != extensionProps.end())
 	{
-		enabledExtensions.push_back(extensionProps[i].extensionName);
+		enabledExtensions.push_back(V3D_INSTANCE_EXTENSION_surface);
 	}
+	else
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(V3D_INSTANCE_EXTENSION_win32_surface)) != extensionProps.end())
+	{
+		enabledExtensions.push_back(V3D_INSTANCE_EXTENSION_win32_surface);
+	}
+	else
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+#ifdef _DEBUG
+	bool debugReportEnable = false;
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(V3D_INSTANCE_EXTENSION_debug_report)) != extensionProps.end())
+	{
+		enabledExtensions.push_back(V3D_INSTANCE_EXTENSION_debug_report);
+		debugReportEnable = true;
+	}
+#endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// インスタンスを作成
@@ -189,32 +224,33 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	// ----------------------------------------------------------------------------------------------------
 
 #ifdef _DEBUG
-
-	PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Source.instance, "vkCreateDebugReportCallbackEXT");
-	if (dbgCreateDebugReportCallback == nullptr)
+	if (debugReportEnable == true)
 	{
-		return V3D_ERROR_FAIL;
+		PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Source.instance, "vkCreateDebugReportCallbackEXT");
+		if (dbgCreateDebugReportCallback == nullptr)
+		{
+			return V3D_ERROR_FAIL;
+		}
+
+		VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = {};
+		dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
+		dbgCreateInfo.pNext = nullptr;
+		dbgCreateInfo.flags = 0;
+		dbgCreateInfo.pfnCallback = V3DInstance::DebugReportCallbackEXT;
+		dbgCreateInfo.pUserData = this;
+
+		if (instanceDesc.log.flags & V3D_LOG_INFORMATION) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT; }
+		if (instanceDesc.log.flags & V3D_LOG_WARNING) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT; }
+		if (instanceDesc.log.flags & V3D_LOG_PERFORMANCE_WARNING) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT; }
+		if (instanceDesc.log.flags & V3D_LOG_ERROR) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT; }
+		if (instanceDesc.log.flags & V3D_LOG_DEBUG) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT; }
+
+		result = dbgCreateDebugReportCallback(m_Source.instance, &dbgCreateInfo, nullptr, &m_DebugReportCallbackEXT);
+		if (result != VK_SUCCESS)
+		{
+			return V3D_ERROR_FAIL;
+		}
 	}
-
-	VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = {};
-	dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
-	dbgCreateInfo.pNext = nullptr;
-	dbgCreateInfo.flags = 0;
-	dbgCreateInfo.pfnCallback = V3DInstance::DebugReportCallbackEXT;
-	dbgCreateInfo.pUserData = this;
-
-	if (instanceDesc.log.flags & V3D_LOG_INFORMATION) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT; }
-	if (instanceDesc.log.flags & V3D_LOG_WARNING) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT; }
-	if (instanceDesc.log.flags & V3D_LOG_PERFORMANCE_WARNING) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT; }
-	if (instanceDesc.log.flags & V3D_LOG_ERROR) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT; }
-	if (instanceDesc.log.flags & V3D_LOG_DEBUG) { dbgCreateInfo.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT; }
-
-	result = dbgCreateDebugReportCallback(m_Source.instance, &dbgCreateInfo, nullptr, &m_DebugReportCallbackEXT);
-	if (result != VK_SUCCESS)
-	{
-		return V3D_ERROR_FAIL;
-	}
-
 #endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
@@ -331,7 +367,7 @@ void V3DInstance::AddDebugObject(uint64_t vulkanObject, const wchar_t* pName)
 {
 	ScopedLock lock(m_DebugSync);
 
-	std::string debugName;
+	STLStringA debugName;
 	ToMultibyteString(V3D_SAFE_NAME(pName), debugName);
 
 	m_DebugObjectNameMap[vulkanObject] = debugName;
@@ -689,7 +725,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 		"IV3DBufferView",
 		"IV3DImageView",
 		"IV3DShaderModule",
-		"PIPELINE_CACHE",
+		"IV3DPipelineLayout(Cache)",
 		"IV3DPipelineLayout",
 		"IV3DRenderPass",
 		"IV3DPipeline",
@@ -702,7 +738,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 		"IV3DSwapChain(Sureface)",
 		"IV3DSwapChain",
 		"IV3DInstance(DebugReport)",
-		"DISPLAY_KHR",
+		"IV3DSwapChain(DisplayKHR)",
 		"DISPLAY_MODE_KHR",
 		"OBJECT_TABLE_NVX",
 		"INDIRECT_COMMANDS_LAYOUT_NVX",
@@ -733,7 +769,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 		logType = V3D_LOG_ERROR;
 	}
 
-	// 解放時のデバッグレポート ( Destroy うんちゃら ) のオブジェクトタイプ (objectType) が一個ずれているような気がする、、、バグ?
+	// 作成、解放時のデバッグレポート ( CREATE Destroy うんちゃら ) のオブジェクトタイプ (objectType) が一個ずれているような気がする、、、バグ?
 	
 	char* pObjectType;
 	if (objectNameCount > objectType)

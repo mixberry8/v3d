@@ -78,15 +78,15 @@ private:
 #ifdef _DEBUG
 	VkDebugReportCallbackEXT m_DebugReportCallbackEXT;
 
-	STLMap<std::string, std::string> m_DebugFunctionNameMap;
-	STLMap<std::string, std::string> m_DebugConstantNameMap;
+	STLMap<STLStringA, STLStringA> m_DebugFunctionNameMap;
+	STLMap<STLStringA, STLStringA> m_DebugConstantNameMap;
 
-	typedef STLMap<uint64_t, std::string> DebugObjectNameMap;
+	typedef STLMap<uint64_t, STLStringA> DebugObjectNameMap;
 	V3DInstance::DebugObjectNameMap m_DebugObjectNameMap;
 
 	CriticalSection m_DebugSync;
-	std::stringstream m_DebugStringStream;
-	std::string m_DebugString;
+	STLStringStreamA m_DebugStringStream;
+	STLStringA m_DebugString;
 
 	const char* GetDebugObjectName(uint64_t objectAddr);
 	const char* ConvertDebugMessage(const char* pMessage);
