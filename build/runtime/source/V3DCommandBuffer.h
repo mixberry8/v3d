@@ -130,6 +130,7 @@ private:
 	PFN_vkCmdPushDescriptorSetKHR m_pPushDescriptorSetFunction;
 
 #ifdef _DEBUG
+	STLStringW m_DebugName;
 	V3DCommandBuffer::Debug m_Debug;
 #endif //_DEBUG
 
@@ -141,7 +142,7 @@ private:
 	{
 		if (m_Debug.isBegin == false)
 		{
-			V3D_LOG_ERROR(Log_Error_CommandBufferNotBegin);
+			V3D_LOG_ERROR(Log_Error_CommandBufferNotBegin, m_DebugName.c_str());
 			return false;
 		}
 
