@@ -23,6 +23,9 @@ public:
 	void NotifyReleaseSampler();
 	void NotifyReleaseResourceMemory();
 
+	void Vulkan_SetDebugMarkerObjectName(VkDebugReportObjectTypeEXT objectType, void* pObject, const wchar_t* pName);
+	void Vulkan_SetDebugMarkerObjectName(VkDebugReportObjectTypeEXT objectType, uint64_t object, const wchar_t* pName);
+
 	/*************************/
 	/* override - IV3DDevice */
 	/*************************/
@@ -84,6 +87,8 @@ private:
 	V3DDeviceStatistics m_Statistics;
 	V3DDevice::Source m_Source;
 	STLVector<V3DDevice::QueueFamily> m_QueueFamilies;
+
+	PFN_vkDebugMarkerSetObjectNameEXT m_pDebugMarkerSetObjectNameFunction;
 
 	V3DDevice();
 	virtual ~V3DDevice();

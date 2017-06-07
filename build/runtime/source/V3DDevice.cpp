@@ -44,6 +44,8 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	// レイヤーの列挙
 	// ----------------------------------------------------------------------------------------------------
 
+	// いらなくなったらしい
+/*
 	uint32_t vkLayerCount;
 	VkResult vkResult = vkEnumerateDeviceLayerProperties(adapterSource.physicalDevice, &vkLayerCount, nullptr);
 	if (vkResult != VK_SUCCESS)
@@ -60,20 +62,28 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	}
 
 	STLVector<const char*> vkEnableLayers;
-	if (m_pInstance->GetLayerType() == V3D_LAYER_STANDARD_VALIDATION)
+	switch (m_pInstance->GetLayerType())
 	{
+	case V3D_LAYER_STANDARD:
 		if (std::find_if(vkLayerProps.begin(), vkLayerProps.end(), V3DFindLayer(V3D_LAYER_LUNARG_standard_validation)) != vkLayerProps.end())
 		{
 			vkEnableLayers.push_back(V3D_LAYER_LUNARG_standard_validation);
 		}
-	}
+		break;
 
+	case V3D_LAYER_RENDERDOC:
+		if (std::find_if(vkLayerProps.begin(), vkLayerProps.end(), V3DFindLayer(V3D_LAYER_RENDERDOC_Capture)) != vkLayerProps.end())
+		{
+			vkEnableLayers.push_back(V3D_LAYER_RENDERDOC_Capture);
+		}
+	}
+*/
 	// ----------------------------------------------------------------------------------------------------
 	// エクステンションの列挙
 	// ----------------------------------------------------------------------------------------------------
 
 	uint32_t vkExtensionCount;
-	vkResult = vkEnumerateDeviceExtensionProperties(adapterSource.physicalDevice, nullptr, &vkExtensionCount, nullptr);
+	VkResult vkResult = vkEnumerateDeviceExtensionProperties(adapterSource.physicalDevice, nullptr, &vkExtensionCount, nullptr);
 	if (vkResult != VK_SUCCESS)
 	{
 		return V3D_ERROR_FAIL;
@@ -87,7 +97,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 		return V3D_ERROR_FAIL;
 	}
 
-	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(V3D_DEVICE_EXTENSION_swapchain)) == vkExtensionProps.end())
+	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) == vkExtensionProps.end())
 	{
 		return V3D_ERROR_FAIL;
 	}
@@ -100,9 +110,18 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	}
 
 	V3DFlags extensionFlags = 0;
-	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(V3D_DEVICE_EXTENSION_push_descriptor)) != vkExtensionProps.end())
+	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) != vkExtensionProps.end())
 	{
 		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS;
+	}
+
+	V3D_LAYER layer = m_pInstance->GetLayer();
+	if ((layer == V3D_LAYER_NSIGHT) || (layer == V3D_LAYER_RENDERDOC))
+	{
+		if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) != vkExtensionProps.end())
+		{
+			extensionFlags |= V3D_DEVICE_EXTENSION_DEBUG_MARKER;
+		}
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -171,8 +190,8 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	devInfo.flags = 0;
 	devInfo.queueCreateInfoCount = static_cast<uint32_t>(vkQueueCreateInfos.size());
 	devInfo.pQueueCreateInfos = vkQueueCreateInfos.data();
-	devInfo.enabledLayerCount = static_cast<uint32_t>(vkEnableLayers.size());
-	devInfo.ppEnabledLayerNames = vkEnableLayers.data();
+	devInfo.enabledLayerCount = 0;// static_cast<uint32_t>(vkEnableLayers.size());
+	devInfo.ppEnabledLayerNames = nullptr;// vkEnableLayers.data();
 	devInfo.enabledExtensionCount = static_cast<uint32_t>(vkEnableExtensions.size());
 	devInfo.ppEnabledExtensionNames = vkEnableExtensions.data();
 	devInfo.pEnabledFeatures = &m_Source.deviceFeatures;
@@ -184,6 +203,15 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	}
 
 	V3D_ADD_DEBUG_OBJECT(m_pInstance, m_Source.device, pDebugName);
+
+	// ----------------------------------------------------------------------------------------------------
+	// 拡張機能を取得
+	// ----------------------------------------------------------------------------------------------------
+
+	if (extensionFlags & V3D_DEVICE_EXTENSION_DEBUG_MARKER)
+	{
+		m_pDebugMarkerSetObjectNameFunction = reinterpret_cast<PFN_vkDebugMarkerSetObjectNameEXT>(vkGetDeviceProcAddr(m_Source.device, "vkDebugMarkerSetObjectNameEXT"));
+	}
 
 	// ----------------------------------------------------------------------------------------------------
 	// キューを取得
@@ -425,6 +453,31 @@ void V3DDevice::NotifyReleaseResourceMemory()
 {
 	V3D_ASSERT(m_Statistics.resourceMemoryCount > 0);
 	--m_Statistics.resourceMemoryCount;
+}
+
+void V3DDevice::Vulkan_SetDebugMarkerObjectName(VkDebugReportObjectTypeEXT objectType, void* pObject, const wchar_t* pName)
+{
+	Vulkan_SetDebugMarkerObjectName(objectType, reinterpret_cast<uint64_t>(pObject), pName);
+}
+
+void V3DDevice::Vulkan_SetDebugMarkerObjectName(VkDebugReportObjectTypeEXT objectType, uint64_t object, const wchar_t* pName)
+{
+	if (m_pDebugMarkerSetObjectNameFunction == nullptr)
+	{
+		return;
+	}
+
+	STLStringA debugName;
+	ToMultibyteString(V3D_SAFE_NAME(pName), debugName);
+
+	VkDebugMarkerObjectNameInfoEXT nameInfo;
+	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT;
+	nameInfo.pNext = nullptr;
+	nameInfo.objectType = VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT;
+	nameInfo.object = object;
+	nameInfo.pObjectName = debugName.c_str();
+
+	m_pDebugMarkerSetObjectNameFunction(m_Source.device, &nameInfo);
 }
 
 /********************************/
@@ -1258,7 +1311,8 @@ V3DDevice::V3DDevice() :
 	m_pInstance(nullptr),
 	m_pAdapter(nullptr),
 	m_Caps({}),
-	m_Statistics({})
+	m_Statistics({}),
+	m_pDebugMarkerSetObjectNameFunction(nullptr)
 {
 	m_Source.device = VK_NULL_HANDLE;
 }
