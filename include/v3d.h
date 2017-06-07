@@ -1093,14 +1093,14 @@ public:
 
 	//! @brief リソースの指定されたメモリのポインタ有効にし、取得します。
 	//! @param[in] offset 有効にするメモリのオフセットをバイト単位で指定します。
-	//! @param[in] size 有効にするメモリのサイズをバイト単位で指定します。
+	//! @param[in] size 有効にするメモリのサイズをバイト単位で指定します。<br>
+	//! また、0 を指定することで offset からメモリの最後までをマップします。
 	//! @param[out] ppMemory 取得したメモリのポインタを渡す void ポインタのアドレスです。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note size に V3D_WHOLE_SIZE を指定することで offset からメモリの終端までをマップします。
 	virtual V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory) = 0;
 	//! @brief リソースの指定されたメモリのポインタを無効にします。
 	//! @retval V3D_OK
