@@ -33,6 +33,7 @@ V3D_RESULT V3DShaderModule::Initialize(IV3DDevice* pDevice, size_t codeSize, con
 	}
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.shaderModule, pDebugName);
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_SHADER_MODULE_EXT, m_Source.shaderModule, pDebugName);
 
 	return V3D_OK;
 }

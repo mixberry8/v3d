@@ -49,6 +49,7 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 	}
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, pDebugName);
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT, m_Source.image, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// ãLèqÇê›íË

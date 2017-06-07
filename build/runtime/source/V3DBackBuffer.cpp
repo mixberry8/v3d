@@ -38,6 +38,7 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	m_ResourceDesc.memoryAlignment = vkMemReq.alignment;
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, pDebugName);
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT, m_Source.image, pDebugName);
 
 #ifdef _WIN64
 	V3D_DEBUG_CODE(m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image));

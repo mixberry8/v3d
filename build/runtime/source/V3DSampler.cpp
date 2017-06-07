@@ -47,6 +47,7 @@ V3D_RESULT V3DSampler::Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& des
 	}
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.sampler, pDebugName);
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_EXT, m_Source.sampler, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 

@@ -44,6 +44,7 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc,
 	}
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.buffer, pDebugName);
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT, m_Source.buffer, pDebugName);
 
 	// ----------------------------------------------------------------------------------------------------
 	// ãLèqÇê›íË
