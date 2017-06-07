@@ -35,7 +35,7 @@ public:
 	/*************************/
 	/* override IV3DInstance */
 	/*************************/
-	virtual V3D_LAYER_TYPE GetLayerType() const override;
+	virtual V3D_LAYER GetLayer() const override;
 	virtual uint32_t GetAdapterCount() const override;
 	virtual void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) override;
 	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName) override;
@@ -58,7 +58,7 @@ private:
 	static V3DInstance* s_pThis;
 
 	ReferenceCounter m_RefCounter;
-	V3D_LAYER_TYPE m_LayerType;
+	V3D_LAYER m_Layer;
 	VkAllocationCallbacks m_AllocationCallbacks;
 	V3DInstance::Source m_Source;
 	STLVector<V3DAdapter*> m_Adapters;

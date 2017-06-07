@@ -26,7 +26,7 @@ V3DInstance* V3DInstance::Create()
 
 V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 {
-	m_LayerType = instanceDesc.layerType;
+	m_Layer = instanceDesc.layer;
 
 	// ----------------------------------------------------------------------------------------------------
 	// ログの初期化
@@ -47,6 +47,9 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_PREINITIALIZED"] = "V3D_IMAGE_LAYOUT_PREINITIALIZED";
 	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_PRESENT_SRC_KHR"] = "V3D_IMAGE_LAYOUT_PRESENT_SRC";
 
+	m_DebugConstantNameMap["VK_PIPELINE_BIND_POINT_GRAPHICS"] = "V3D_PIPELINE_TYPE_GRAPHICS";
+	m_DebugConstantNameMap["VK_PIPELINE_BIND_POINT_COMPUTE"] = "V3D_PIPELINE_TYPE_COMPUTE";
+
 	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_SAMPLER"] = "V3D_DESCRIPTOR_TYPE_SAMPLER";
 	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER"] = "V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER";
 	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE"] = "V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE";
@@ -63,38 +66,38 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	m_DebugFunctionNameMap["vkUpdateDescriptorSets"] = "IV3DDescriptorSet::Update";
 
 	// 関数 : コマンドバッファー
-	m_DebugFunctionNameMap["vkBeginCommandBuffer"] = "IV3DCommandBuffer::Begin";
-	m_DebugFunctionNameMap["vkEndCommandBuffer"] = "IV3DCommandBuffer::End";
-	m_DebugFunctionNameMap["vkCmdPipelineBarrier"] = "IV3DCommandBuffer::Barrier???";
-	m_DebugFunctionNameMap["vkCmdCopyBuffer"] = "IV3DCommandBuffer::CopyBuffer";
-	m_DebugFunctionNameMap["vkCmdCopyImage"] = "IV3DCommandBuffer::CopyImage";
-	m_DebugFunctionNameMap["vkCmdCopyBufferToImage"] = "IV3DCommandBuffer::CopyBufferToImage";
-	m_DebugFunctionNameMap["vkCmdCopyImageToBuffer"] = "IV3DCommandBuffer::CopyImageToBuffer";
-	m_DebugFunctionNameMap["vkCmdBlitImage"] = "IV3DCommandBuffer::BlitImage";
-	m_DebugFunctionNameMap["vkCmdResolveImage"] = "IV3DCommandBuffer::ResolveImage???";
-	m_DebugFunctionNameMap["vkCmdBeginRenderPass"] = "IV3DCommandBuffer::BeginRenderPass";
-	m_DebugFunctionNameMap["vkCmdEndRenderPass"] = "IV3DCommandBuffer::EndRenderPass";
-	m_DebugFunctionNameMap["vkCmdNextSubpass"] = "IV3DCommandBuffer::EndRenderPass";
-	m_DebugFunctionNameMap["vkCmdClearColorImage"] = "IV3DCommandBuffer::ClearImage???(Color)";
-	m_DebugFunctionNameMap["vkCmdClearDepthStencilImage"] = "IV3DCommandBuffer::ClearImage???(DepthStencil)";
-	m_DebugFunctionNameMap["vkCmdClearAttachments"] = "IV3DCommandBuffer::ClearAttachments";
-	m_DebugFunctionNameMap["vkCmdBindPipeline"] = "IV3DCommandBuffer::BindPipeline";
-	m_DebugFunctionNameMap["vkCmdBindDescriptorSets"] = "IV3DCommandBuffer::BindDescriptorSets";
-	m_DebugFunctionNameMap["vkCmdBindVertexBuffers"] = "IV3DCommandBuffer::BindVertexBuffers";
-	m_DebugFunctionNameMap["vkCmdBindIndexBuffer"] = "IV3DCommandBuffer::BindIndexBuffer";
-	m_DebugFunctionNameMap["vkCmdPushConstants"] = "IV3DCommandBuffer::PushConstant";
-	m_DebugFunctionNameMap["vkCmdSetViewport"] = "IV3DCommandBuffer::SetViewport";
-	m_DebugFunctionNameMap["vkCmdSetScissor"] = "IV3DCommandBuffer::SetScissor";
-	m_DebugFunctionNameMap["vkCmdSetBlendConstants"] = "IV3DCommandBuffer::SetBlendConstants";
-	m_DebugFunctionNameMap["vkCmdSetStencilReference"] = "IV3DCommandBuffer::SetStencilReference";
-	m_DebugFunctionNameMap["vkCmdResetQueryPool"] = "IV3DCommandBuffer::ResetQueryPool";
-	m_DebugFunctionNameMap["vkCmdBeginQuery"] = "IV3DCommandBuffer::BeginQuery";
-	m_DebugFunctionNameMap["vkCmdEndQuery"] = "IV3DCommandBuffer::EndQuery";
-	m_DebugFunctionNameMap["vkCmdWriteTimestamp"] = "IV3DCommandBuffer::WriteTimestamp";
-	m_DebugFunctionNameMap["vkCmdDraw"] = "IV3DCommandBuffer::Draw";
-	m_DebugFunctionNameMap["vkCmdDrawIndexed"] = "IV3DCommandBuffer::DrawIndexed";
-	m_DebugFunctionNameMap["vkCmdDispatch"] = "IV3DCommandBuffer::Dispatch";
-	m_DebugFunctionNameMap["vkCmdExecuteCommands"] = "IV3DCommandBuffer::ExecuteCommandBuffers";
+	m_DebugFunctionNameMap["vkBeginCommandBuffer"] = "IV3DCommandBuffer::Begin ( vkBeginCommandBuffer )";
+	m_DebugFunctionNameMap["vkEndCommandBuffer"] = "IV3DCommandBuffer::End ( vkEndCommandBuffer )";
+	m_DebugFunctionNameMap["vkCmdPipelineBarrier"] = "IV3DCommandBuffer::Barrier??? ( vkCmdPipelineBarrier )";
+	m_DebugFunctionNameMap["vkCmdCopyBuffer"] = "IV3DCommandBuffer::CopyBuffer ( vkCmdCopyBuffer )";
+	m_DebugFunctionNameMap["vkCmdCopyImage"] = "IV3DCommandBuffer::CopyImage ( vkCmdCopyImage )";
+	m_DebugFunctionNameMap["vkCmdCopyBufferToImage"] = "IV3DCommandBuffer::CopyBufferToImage ( vkCmdCopyBufferToImage )";
+	m_DebugFunctionNameMap["vkCmdCopyImageToBuffer"] = "IV3DCommandBuffer::CopyImageToBuffer ( vkCmdCopyImageToBuffer )";
+	m_DebugFunctionNameMap["vkCmdBlitImage"] = "IV3DCommandBuffer::BlitImage ( vkCmdBlitImage )";
+	m_DebugFunctionNameMap["vkCmdResolveImage"] = "IV3DCommandBuffer::ResolveImage??? ( vkCmdResolveImage )";
+	m_DebugFunctionNameMap["vkCmdBeginRenderPass"] = "IV3DCommandBuffer::BeginRenderPass ( vkCmdBeginRenderPass )";
+	m_DebugFunctionNameMap["vkCmdEndRenderPass"] = "IV3DCommandBuffer::EndRenderPass ( vkCmdEndRenderPass )";
+	m_DebugFunctionNameMap["vkCmdNextSubpass"] = "IV3DCommandBuffer::EndRenderPass ( vkCmdNextSubpass )";
+	m_DebugFunctionNameMap["vkCmdClearColorImage"] = "IV3DCommandBuffer::ClearImage ( vkCmdClearColorImage )";
+	m_DebugFunctionNameMap["vkCmdClearDepthStencilImage"] = "IV3DCommandBuffer::ClearImage ( vkCmdClearDepthStencilImage )";
+	m_DebugFunctionNameMap["vkCmdClearAttachments"] = "IV3DCommandBuffer::ClearAttachments ( vkCmdClearAttachments )";
+	m_DebugFunctionNameMap["vkCmdBindPipeline"] = "IV3DCommandBuffer::BindPipeline ( vkCmdBindPipeline )";
+	m_DebugFunctionNameMap["vkCmdBindDescriptorSets"] = "IV3DCommandBuffer::BindDescriptorSets ( vkCmdBindDescriptorSets )";
+	m_DebugFunctionNameMap["vkCmdBindVertexBuffers"] = "IV3DCommandBuffer::BindVertexBuffers ( vkCmdBindVertexBuffers )";
+	m_DebugFunctionNameMap["vkCmdBindIndexBuffer"] = "IV3DCommandBuffer::BindIndexBuffer ( vkCmdBindIndexBuffer )";
+	m_DebugFunctionNameMap["vkCmdPushConstants"] = "IV3DCommandBuffer::PushConstant ( vkCmdPushConstants )";
+	m_DebugFunctionNameMap["vkCmdSetViewport"] = "IV3DCommandBuffer::SetViewport ( vkCmdSetViewport )";
+	m_DebugFunctionNameMap["vkCmdSetScissor"] = "IV3DCommandBuffer::SetScissor ( vkCmdSetScissor )";
+	m_DebugFunctionNameMap["vkCmdSetBlendConstants"] = "IV3DCommandBuffer::SetBlendConstants ( vkCmdSetBlendConstants )";
+	m_DebugFunctionNameMap["vkCmdSetStencilReference"] = "IV3DCommandBuffer::SetStencilReference ( vkCmdSetStencilReference )";
+	m_DebugFunctionNameMap["vkCmdResetQueryPool"] = "IV3DCommandBuffer::ResetQueryPool ( vkCmdResetQueryPool )";
+	m_DebugFunctionNameMap["vkCmdBeginQuery"] = "IV3DCommandBuffer::BeginQuery ( vkCmdBeginQuery )";
+	m_DebugFunctionNameMap["vkCmdEndQuery"] = "IV3DCommandBuffer::EndQuery ( vkCmdEndQuery )";
+	m_DebugFunctionNameMap["vkCmdWriteTimestamp"] = "IV3DCommandBuffer::WriteTimestamp ( vkCmdWriteTimestamp )";
+	m_DebugFunctionNameMap["vkCmdDraw"] = "IV3DCommandBuffer::Draw ( vkCmdDraw )";
+	m_DebugFunctionNameMap["vkCmdDrawIndexed"] = "IV3DCommandBuffer::DrawIndexed ( vkCmdDrawIndexed )";
+	m_DebugFunctionNameMap["vkCmdDispatch"] = "IV3DCommandBuffer::Dispatch ( vkCmdDispatch )";
+	m_DebugFunctionNameMap["vkCmdExecuteCommands"] = "IV3DCommandBuffer::ExecuteCommandBuffers ( vkCmdExecuteCommands )";
 #endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
@@ -127,18 +130,49 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	}
 
 	STLVector<const char*> enableLayers;
-
-	if (m_LayerType == V3D_LAYER_STANDARD_VALIDATION)
+	switch (m_Layer)
 	{
+	case V3D_LAYER_STANDARD:
 		if (std::find_if(layerProps.begin(), layerProps.end(), V3DFindLayer(V3D_LAYER_LUNARG_standard_validation)) != layerProps.end())
 		{
 			enableLayers.push_back(V3D_LAYER_LUNARG_standard_validation);
 		}
-	}
+		break;
 
+	case V3D_LAYER_NSIGHT:
+//		if (std::find_if(layerProps.begin(), layerProps.end(), V3DFindLayer(V3D_LAYER_NV_nsight)) != layerProps.end())
+//		{
+//			enableLayers.push_back(V3D_LAYER_NV_nsight);
+//		}
+		break;
+
+	case V3D_LAYER_RENDERDOC:
+		if (std::find_if(layerProps.begin(), layerProps.end(), V3DFindLayer(V3D_LAYER_RENDERDOC_Capture)) != layerProps.end())
+		{
+			enableLayers.push_back(V3D_LAYER_RENDERDOC_Capture);
+		}
+		break;
+	}
+/*
+	for (size_t i = 0; i < layerProps.size(); i++)
+	{
+		const VkLayerProperties& prop = layerProps[i];
+		uint32_t spMajor = VK_VERSION_MAJOR(prop.specVersion);
+		uint32_t spMinor = VK_VERSION_MINOR(prop.specVersion);
+		uint32_t spPatch = VK_VERSION_PATCH(prop.specVersion);
+
+		V3D_LOG_INFO_A("%s sp %u.%u.%u : %s", prop.layerName, spMajor, spMinor, spPatch, prop.description);
+	}
+*/
 	// ----------------------------------------------------------------------------------------------------
 	// 有効にするエクステンションを列挙
 	// ----------------------------------------------------------------------------------------------------
+
+	const char* EXTENSION_surface = VK_KHR_SURFACE_EXTENSION_NAME;
+	const char* EXTENSION_win32_surface = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+#ifdef _DEBUG
+	const char* EXTENSION_debug_report = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+#endif //_DEBUG
 
 	uint32_t extensionPropCount;
 	STLVector<VkExtensionProperties> extensionProps;
@@ -160,18 +194,18 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	STLVector<const char*> enabledExtensions;
 	enabledExtensions.reserve(extensionPropCount);
 
-	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(V3D_INSTANCE_EXTENSION_surface)) != extensionProps.end())
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(EXTENSION_surface)) != extensionProps.end())
 	{
-		enabledExtensions.push_back(V3D_INSTANCE_EXTENSION_surface);
+		enabledExtensions.push_back(EXTENSION_surface);
 	}
 	else
 	{
 		return V3D_ERROR_FAIL;
 	}
 
-	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(V3D_INSTANCE_EXTENSION_win32_surface)) != extensionProps.end())
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(EXTENSION_win32_surface)) != extensionProps.end())
 	{
-		enabledExtensions.push_back(V3D_INSTANCE_EXTENSION_win32_surface);
+		enabledExtensions.push_back(EXTENSION_win32_surface);
 	}
 	else
 	{
@@ -180,9 +214,9 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 
 #ifdef _DEBUG
 	bool debugReportEnable = false;
-	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(V3D_INSTANCE_EXTENSION_debug_report)) != extensionProps.end())
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(EXTENSION_debug_report)) != extensionProps.end())
 	{
-		enabledExtensions.push_back(V3D_INSTANCE_EXTENSION_debug_report);
+		enabledExtensions.push_back(EXTENSION_debug_report);
 		debugReportEnable = true;
 	}
 #endif //_DEBUG
@@ -197,9 +231,9 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
 	appInfo.pApplicationName = "v3d";
-	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 4);
 	appInfo.pEngineName = "v3d";
-	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 4);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
 	instInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -396,9 +430,9 @@ void V3DInstance::RemoveDebugObject(uint64_t vulkanObject)
 /* public override IV3DInstance */
 /********************************/
 
-V3D_LAYER_TYPE V3DInstance::GetLayerType() const
+V3D_LAYER V3DInstance::GetLayer() const
 {
-	return m_LayerType;
+	return m_Layer;
 }
 
 uint32_t V3DInstance::GetAdapterCount() const
@@ -769,7 +803,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 		logType = V3D_LOG_ERROR;
 	}
 
-	// 作成、解放時のデバッグレポート ( CREATE Destroy うんちゃら ) のオブジェクトタイプ (objectType) が一個ずれているような気がする、、、バグ?
+	// 作成、解放時のデバッグレポート ( CREATE Destroy うんちゃら ) のオブジェクトタイプ (objectType) が一個ずれているような気がする、、、
 	
 	char* pObjectType;
 	if (objectNameCount > objectType)
