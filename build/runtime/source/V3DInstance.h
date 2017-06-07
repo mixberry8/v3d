@@ -88,6 +88,8 @@ private:
 	STLStringStreamA m_DebugStringStream;
 	STLStringA m_DebugString;
 
+	char m_DebugObjectAddr[32];
+
 	const char* GetDebugObjectName(uint64_t objectAddr);
 	const char* ConvertDebugMessage(const char* pMessage);
 	const char* ConvertDebugString(const char* pString);

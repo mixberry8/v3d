@@ -22,7 +22,7 @@ V3D_RESULT V3DDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLa
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 	m_pLayout = V3D_TO_ADD_REF(static_cast<V3DDescriptorSetLayout*>(pLayout));
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットを作成
@@ -34,7 +34,7 @@ V3D_RESULT V3DDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLa
 		return result;
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSet, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSet, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットの書き込み情報を作成

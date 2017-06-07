@@ -202,7 +202,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 		return V3D_ERROR_FAIL;
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pInstance, m_Source.device, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pInstance, m_Source.device, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// Šg’£‹@”\‚ðŽæ“¾
@@ -235,7 +235,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 
 #ifdef _DEBUG
 			STLStringStreamW debugStringStream;
-			debugStringStream << V3D_SAFE_NAME(pDebugName) << L"_Queue_F" << i << L"_I" << j;
+			debugStringStream << V3D_DEBUG_SAFE_NAME(this, pDebugName) << L"_Queue_F" << i << L"_I" << j;
 
 			STLStringW debugString = debugStringStream.str();
 
@@ -467,8 +467,10 @@ void V3DDevice::Vulkan_SetDebugMarkerObjectName(VkDebugReportObjectTypeEXT objec
 		return;
 	}
 
+	V3D_ASSERT(pName != nullptr);
+
 	STLStringA debugName;
-	ToMultibyteString(V3D_SAFE_NAME(pName), debugName);
+	ToMultibyteString(pName, debugName);
 
 	VkDebugMarkerObjectNameInfoEXT nameInfo;
 	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT;

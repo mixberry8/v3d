@@ -32,7 +32,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 #ifdef _DEBUG
 	if (renderPassSource.debug.attachments.size() != attachmentCount)
 	{
-		V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentCount, V3D_SAFE_NAME(pDebugName), m_pRenderPass->GetDebugName());
+		V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentCount, V3D_DEBUG_SAFE_NAME(this, pDebugName), m_pRenderPass->GetDebugName());
 		return V3D_ERROR_FAIL;
 	}
 
@@ -60,7 +60,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 		{
 			if (debugSizeError == false)
 			{
-				V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentSize, V3D_SAFE_NAME(pDebugName));
+				V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentSize, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 				debugSizeError = true;
 				debugErrorCount++;
 			}
@@ -70,7 +70,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 		if ((renderPassSource.debug.attachments[i].format != debugImageDesc.format) ||
 			(renderPassSource.debug.attachments[i].samples != debugImageDesc.samples))
 		{
-			V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentFormatOrSamples, V3D_SAFE_NAME(pDebugName), i);
+			V3D_LOG_ERROR(Log_Error_MismatchFrameBufferAttachmentFormatOrSamples, V3D_DEBUG_SAFE_NAME(this, pDebugName), i);
 			debugErrorCount++;
 		}
 #endif //_DEBUG
@@ -124,7 +124,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 	m_Source.extent.height = imageViewSource.extent.height;
 	m_Source.layerCount = imageViewSource.imageSubresourceRange.layerCount;
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.framebuffer, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.framebuffer, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }

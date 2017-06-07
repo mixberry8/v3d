@@ -17,7 +17,7 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -48,8 +48,8 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, pDebugName);
-	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT, m_Source.image, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, m_DebugName.c_str());
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT, m_Source.image, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 	// ãLèqÇê›íË

@@ -27,7 +27,7 @@ V3D_RESULT V3DFence::Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName)
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), &m_Source.fence, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.fence, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }
@@ -110,7 +110,7 @@ V3DFence::~V3DFence()
 		if (m_Source.fence != VK_NULL_HANDLE)
 		{
 			vkDestroyFence(m_pDevice->GetSource().device, m_Source.fence, nullptr);
-			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), &m_Source.fence);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.fence);
 		}
 	}
 

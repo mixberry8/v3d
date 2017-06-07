@@ -46,7 +46,7 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.imageView, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.imageView, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 

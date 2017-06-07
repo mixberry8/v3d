@@ -401,10 +401,23 @@ void V3DInstance::AddDebugObject(uint64_t vulkanObject, const wchar_t* pName)
 {
 	ScopedLock lock(m_DebugSync);
 
-	STLStringA debugName;
-	ToMultibyteString(V3D_SAFE_NAME(pName), debugName);
+	V3D_ASSERT(pName != nullptr);
 
-	m_DebugObjectNameMap[vulkanObject] = debugName;
+	STLStringA nameA;
+	ToMultibyteString(pName, nameA);
+
+	char addrStrA[19];
+#ifdef _WIN64
+	sprintf_s(addrStrA, "0x%.16I64x", vulkanObject);
+#else //_WIN64
+	uint32_t vulkanObject32 = static_cast<uint32_t>(vulkanObject);
+	sprintf_s(addrStrA, "0x%.8x", vulkanObject32);
+#endif //_WIN64
+
+	STLStringStreamA compNameA;
+	compNameA << nameA << "[" << addrStrA << "]";
+
+	m_DebugObjectNameMap[vulkanObject] = compNameA.str();
 }
 
 void V3DInstance::RemoveDebugObject(void* pVulkanObject)
@@ -639,15 +652,20 @@ break;
 
 const char* V3DInstance::GetDebugObjectName(uint64_t objectAddr)
 {
-	static constexpr char* unknownDebugName = "unknown";
-
 	V3DInstance::DebugObjectNameMap::iterator it = m_DebugObjectNameMap.find(objectAddr);
 	if (it != m_DebugObjectNameMap.end())
 	{
 		return it->second.c_str();
 	}
 
-	return unknownDebugName;
+#ifdef _WIN64
+	sprintf_s(m_DebugObjectAddr, "Unknown[0x%.16I64x]", objectAddr);
+#else //_WIN64
+	uint32_t objectAddr32 = static_cast<uint32_t>(objectAddr);
+	sprintf_s(m_DebugObjectAddr, "Unknown[0x%.8x]", objectAddr32);
+#endif //_WIN64
+
+	return m_DebugObjectAddr;
 }
 
 const char* V3DInstance::ConvertDebugMessage(const char* pMessage)

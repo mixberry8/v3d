@@ -21,9 +21,9 @@ V3D_RESULT V3DQueue::Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue qu
 	m_Family = family;
 	m_Source.queue = queue;
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue, m_DebugName.c_str());
 
 	return V3D_OK;
 }

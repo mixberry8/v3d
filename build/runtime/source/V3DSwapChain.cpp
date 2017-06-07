@@ -29,7 +29,7 @@ V3D_RESULT V3DSwapChain::Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc&
 	m_Source.waitDstStageMask = ToVkPipelineStageFlags(swapChainDesc.queueWaitDstStageMask);
 	m_InitialDesc = m_Desc = swapChainDesc;
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// ウィンドウ情報を初期化

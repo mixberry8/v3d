@@ -40,7 +40,7 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 
 	m_Source.memoryMappedRange.memory = m_Source.deviceMemory;
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// 記述を設定
@@ -78,14 +78,14 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 		case V3D_RESOURCE_TYPE_BUFFER:
 			if (static_cast<V3DBuffer*>(ppResources[i])->CheckBindMemory() == true)
 			{
-				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_SAFE_NAME(pDebugName), V3D_LOG_TYPE(ppResources), i, static_cast<V3DBuffer*>(ppResources[i])->GetDebugName());
+				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_DEBUG_SAFE_NAME(this, pDebugName), V3D_LOG_TYPE(ppResources), i, static_cast<V3DBuffer*>(ppResources[i])->GetDebugName());
 				return V3D_ERROR_FAIL;
 			}
 			break;
 		case V3D_RESOURCE_TYPE_IMAGE:
 			if (static_cast<IV3DImageBase*>(ppResources[i])->CheckBindMemory() == true)
 			{
-				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_SAFE_NAME(pDebugName), V3D_LOG_TYPE(ppResources), i, static_cast<IV3DImageBase*>(ppResources[i])->GetDebugName());
+				V3D_LOG_ERROR(Log_Error_AlreadyBindResourceMemory, V3D_DEBUG_SAFE_NAME(this, pDebugName), V3D_LOG_TYPE(ppResources), i, static_cast<IV3DImageBase*>(ppResources[i])->GetDebugName());
 				return V3D_ERROR_FAIL;
 			}
 			break;
@@ -141,7 +141,7 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 
 	m_Source.memoryMappedRange.memory = m_Source.deviceMemory;
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// 記述を設定

@@ -61,7 +61,7 @@ V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pC
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// Šg’£‹@”\‚ðŽæ“¾

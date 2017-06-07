@@ -36,7 +36,7 @@ V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descr
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットレイアウトの作成に必要な情報を収集
@@ -158,7 +158,7 @@ V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descr
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSetLayout, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSetLayout, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタプールを作成

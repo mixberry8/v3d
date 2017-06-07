@@ -54,18 +54,12 @@ private:
 };
 
 // ----------------------------------------------------------------------------------------------------
-// 定義
-// ----------------------------------------------------------------------------------------------------
-
-typedef std::atomic<int64_t> ReferenceCounter;
-
-#define V3D_REF_INC(counter) std::atomic_fetch_add_explicit(&counter, 1, std::memory_order_relaxed)
-#define V3D_REF_DEC(counter) (std::atomic_fetch_sub_explicit(&counter, 1, std::memory_order_release) == 1)
-#define V3D_REF_FENCE() std::_Atomic_thread_fence(std::memory_order_acquire)
-
-// ----------------------------------------------------------------------------------------------------
 // マクロ
 // ----------------------------------------------------------------------------------------------------
+
+/************/
+/* デバッグ */
+/************/
 
 #ifdef _DEBUG
 
@@ -74,6 +68,31 @@ typedef std::atomic<int64_t> ReferenceCounter;
 #define V3D_ADD_DEBUG_OBJECT(instance, object, name) instance->AddDebugObject(object, name)
 #define V3D_REMOVE_DEBUG_OBJECT(instance, object) instance->RemoveDebugObject(object)
 #define V3D_DEBUG_CODE(code) code
+
+struct V3D_PTR_TO_STR_STRUCT
+{
+public:
+	V3D_PTR_TO_STR_STRUCT(void* ptr)
+	{
+#ifdef _WIN64
+		uint64_t addr = reinterpret_cast<uint64_t>(ptr);
+		::wsprintf(m_Addr, L"0x%.16I64x", addr);
+#else //_WIN64
+		uint32_t addr32 = reinterpret_cast<uint32_t>(ptr);
+		::wsprintf(m_Addr, L"0x%.8x", addr32);
+#endif //_WIN64
+	}
+
+	operator const wchar_t* () const
+	{
+		return m_Addr;
+	}
+
+private:
+	wchar_t m_Addr[32];
+};
+
+#define V3D_DEBUG_SAFE_NAME(owner, name) ((name != nullptr)? name : V3D_PTR_TO_STR_STRUCT(owner))
 
 #else //_DEBUG
 
@@ -87,6 +106,16 @@ typedef std::atomic<int64_t> ReferenceCounter;
 
 #define V3D_SET_DEBUG_MARKER_OBJECT_NAME(device, objectType, object, name) device->Vulkan_SetDebugMarkerObjectName(objectType, object, name)
 
+/****************/
+/* 参照カウンタ */
+/****************/
+
+typedef std::atomic<int64_t> ReferenceCounter;
+
+#define V3D_REF_INC(counter) std::atomic_fetch_add_explicit(&counter, 1, std::memory_order_relaxed)
+#define V3D_REF_DEC(counter) (std::atomic_fetch_sub_explicit(&counter, 1, std::memory_order_release) == 1)
+#define V3D_REF_FENCE() std::_Atomic_thread_fence(std::memory_order_acquire)
+
 template<class T>
 static constexpr T* ToAddRef(T* obj)
 {
@@ -98,11 +127,13 @@ static constexpr T* ToAddRef(T* obj)
 	return obj;
 }
 
-#define V3D_SAFE_NAME(namePtr) (((namePtr == nullptr) || (wcslen(namePtr) == 0))? L"unknown" : namePtr)
-
 #define V3D_ADD_REF(x) if(x != nullptr) { x->AddRef(); }
 #define V3D_TO_ADD_REF(x) ToAddRef(x)
 #define V3D_RELEASE(x) if(x != nullptr) { x->Release(); x = nullptr; }
+
+/**********/
+/* その他 */
+/**********/
 
 #define V3D_MAX(a, b) ((a) < (b))? (b) : (a)
 

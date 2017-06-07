@@ -79,7 +79,7 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineCache, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineCache, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// パイプラインレイアウトを作成
@@ -99,7 +99,7 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineLayout, pDebugName);
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineLayout, V3D_DEBUG_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }
