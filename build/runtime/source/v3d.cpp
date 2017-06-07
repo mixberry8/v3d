@@ -1,5 +1,48 @@
 #include "V3DInstance.h"
 
+V3D_RESULT V3DCheckLayer(V3D_LAYER layer)
+{
+	uint32_t vLayerPropCount;
+	std::vector<VkLayerProperties> vLayerProps;
+
+	VkResult vResult = vkEnumerateInstanceLayerProperties(&vLayerPropCount, nullptr);
+	if (vResult != VK_SUCCESS)
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	vLayerProps.resize(vLayerPropCount);
+	vResult = vkEnumerateInstanceLayerProperties(&vLayerPropCount, vLayerProps.data());
+	if (vResult != VK_SUCCESS)
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	const char* pLayerName = nullptr;
+
+	switch (layer)
+	{
+	case V3D_LAYER_STANDARD:
+		pLayerName = V3D_LAYER_LUNARG_standard_validation;
+		break;
+
+	case V3D_LAYER_NSIGHT:
+		pLayerName = V3D_LAYER_NV_nsight;
+		break;
+
+	case V3D_LAYER_RENDERDOC:
+		pLayerName = V3D_LAYER_RENDERDOC_Capture;
+		break;
+	}
+
+	if ((pLayerName == nullptr) || (std::find_if(vLayerProps.begin(), vLayerProps.end(), V3DFindLayer(pLayerName)) == vLayerProps.end()))
+	{
+		return V3D_ERROR_NOT_SUPPORTED;
+	}
+
+	return V3D_OK;
+}
+
 V3D_RESULT V3DCreateInstance(const V3DInstanceDesc& instanceDesc, IV3DInstance** ppInstance)
 {
 	if (V3DInstance::IsCreated() == true)
