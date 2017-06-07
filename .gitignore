@@ -17,6 +17,15 @@ build/runtime/solutions/vs2015/obj/
 build/runtime/solutions/vs2015/projects/test/data/
 build/runtime/solutions/vs2015/projects/test/screenshot.bmp
 
+build/runtime/solutions/vs2017/.vs/
+build/runtime/solutions/vs2017/bin/
+build/runtime/solutions/vs2017/ipch/
+build/runtime/solutions/vs2017/obj/
+build/runtime/solutions/vs2017/projects/test/data/
+build/runtime/solutions/vs2017/projects/test/screenshot.bmp
+
+build/test/data/
+
 build/resource/
 
 example/solutions/vs2015/.vs/
