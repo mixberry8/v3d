@@ -43,13 +43,12 @@ public:
 	virtual V3D_RESULT Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderPass, uint32_t subpass, IV3DFrameBuffer* pFrameBuffer) override;
 	virtual V3D_RESULT End() override;
 
-	virtual void BarrierMemory(const V3DBarrierMemoryDesc& barrier) override;
 	virtual void BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBufferDesc& barrier) override;
 	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) override;
 	virtual void BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferView** ppBufferViews, const V3DBarrierBufferViewDesc& barrier) override;
 	virtual void BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc& barrier) override;
-	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageDesc& barrier) override;
-	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageDesc& barrier) override;
+	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageViewDesc& desc) override;
+	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageViewDesc& barrier) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, IV3DBuffer* pSrcBuffer, uint32_t rangeCount, const V3DCopyBufferRange* pRanges) override;
 	virtual void CopyImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout) override;
@@ -87,6 +86,9 @@ public:
 	virtual void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t firstInstance, int32_t vertexOffset) override;
 	virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 	virtual void ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) override;
+	virtual void BeginDebugMarker(const char* pName, const float color[4]) override;
+	virtual void EndDebugMarker() override;
+	virtual void InsertDebugMarker(const char* pName, const float color[4]) override;
 
 	/******************************/
 	/* override - IV3DDeviceChild */
@@ -128,6 +130,9 @@ private:
 	V3DCommandBuffer::Temp m_Temp;
 
 	PFN_vkCmdPushDescriptorSetKHR m_pPushDescriptorSetFunction;
+	PFN_vkCmdDebugMarkerBeginEXT m_pDebugMarkerBeginFunction;
+	PFN_vkCmdDebugMarkerEndEXT m_pDebugMarkerEndFunction;
+	PFN_vkCmdDebugMarkerInsertEXT m_pDebugMarkerInsertFunction;
 
 #ifdef _DEBUG
 	STLStringW m_DebugName;

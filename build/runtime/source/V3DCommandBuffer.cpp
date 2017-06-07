@@ -74,6 +74,13 @@ V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pC
 		m_pPushDescriptorSetFunction = reinterpret_cast<PFN_vkCmdPushDescriptorSetKHR>(vkGetDeviceProcAddr(m_pDevice->GetSource().device, "vkCmdPushDescriptorSetKHR"));
 	}
 
+	if (deviceCaps.extensionFlags & V3D_DEVICE_EXTENSION_DEBUG_MARKER)
+	{
+		m_pDebugMarkerBeginFunction = reinterpret_cast<PFN_vkCmdDebugMarkerBeginEXT>(vkGetDeviceProcAddr(m_pDevice->GetSource().device, "vkCmdDebugMarkerBeginEXT"));
+		m_pDebugMarkerEndFunction = reinterpret_cast<PFN_vkCmdDebugMarkerEndEXT>(vkGetDeviceProcAddr(m_pDevice->GetSource().device, "vkCmdDebugMarkerEndEXT"));
+		m_pDebugMarkerInsertFunction = reinterpret_cast<PFN_vkCmdDebugMarkerInsertEXT>(vkGetDeviceProcAddr(m_pDevice->GetSource().device, "vkCmdDebugMarkerInsertEXT"));
+	}
+
 	// ----------------------------------------------------------------------------------------------------
 	// ãLèqÇÃèâä˙âª
 	// ----------------------------------------------------------------------------------------------------
@@ -255,31 +262,6 @@ V3D_RESULT V3DCommandBuffer::End()
 	return V3D_OK;
 }
 
-void V3DCommandBuffer::BarrierMemory(const V3DBarrierMemoryDesc& barrier)
-{
-#ifdef _DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-#endif //_DEBUG
-
-	VkMemoryBarrier vkBarrier;
-	vkBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
-	vkBarrier.pNext = nullptr;
-	vkBarrier.srcAccessMask = ToVkAccessFlags(barrier.srcAccessMask);
-	vkBarrier.dstAccessMask = ToVkAccessFlags(barrier.dstAccessMask);
-
-	vkCmdPipelineBarrier(
-		m_Source.commandBuffer,
-		ToVkPipelineStageFlags(barrier.srcStageMask),
-		ToVkPipelineStageFlags(barrier.dstStageMask),
-		ToVkDependencyFlags(barrier.dependencyFlags),
-		1, &vkBarrier,
-		0, nullptr,
-		0, nullptr);
-}
-
 void V3DCommandBuffer::BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBufferDesc& barrier)
 {
 #ifdef _DEBUG
@@ -434,10 +416,10 @@ void V3DCommandBuffer::BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc
 	vkBarrier.dstQueueFamilyIndex = barrier.dstQueueFamily;
 	vkBarrier.image = source.image;
 	vkBarrier.subresourceRange.aspectMask = source.aspectFlags;
-	vkBarrier.subresourceRange.baseMipLevel = 0;
-	vkBarrier.subresourceRange.levelCount = desc.levelCount;
-	vkBarrier.subresourceRange.baseArrayLayer = 0;
-	vkBarrier.subresourceRange.layerCount = desc.layerCount;
+	vkBarrier.subresourceRange.baseMipLevel = barrier.baseLevel;
+	vkBarrier.subresourceRange.levelCount = (barrier.levelCount == 0)? (desc.levelCount - barrier.baseLevel) : barrier.levelCount;
+	vkBarrier.subresourceRange.baseArrayLayer = barrier.baseLayer;
+	vkBarrier.subresourceRange.layerCount = (barrier.layerCount == 0)? (desc.layerCount - barrier.baseLayer) : barrier.layerCount;
 
 	vkCmdPipelineBarrier(
 		m_Source.commandBuffer,
@@ -449,7 +431,7 @@ void V3DCommandBuffer::BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc
 		1, &vkBarrier);
 }
 
-void V3DCommandBuffer::BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageDesc& barrier)
+void V3DCommandBuffer::BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageViewDesc& barrier)
 {
 #ifdef _DEBUG
 	if (Debug_Command_FirstCheck() == false)
@@ -488,7 +470,7 @@ void V3DCommandBuffer::BarrierImageView(IV3DImageView* pImageView, const V3DBarr
 		1, &vkBarrier);
 }
 
-void V3DCommandBuffer::BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageDesc& barrier)
+void V3DCommandBuffer::BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageViewDesc& barrier)
 {
 #ifdef _DEBUG
 	if (Debug_Command_FirstCheck() == false)
@@ -734,6 +716,8 @@ void V3DCommandBuffer::CopyBufferToImage(
 
 	VkBufferImageCopy range;
 	range.bufferOffset = srcBufferOffset;
+	range.bufferRowLength = 0;
+	range.bufferImageHeight = 0;
 	range.imageSubresource.aspectMask = dstImageSource.aspectFlags;
 	range.imageSubresource.mipLevel = dstLevel;
 	range.imageSubresource.baseArrayLayer = dstBaseLayer;
@@ -1506,15 +1490,15 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 
 void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets)
 {
-#ifdef _DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-
 	if (m_pPushDescriptorSetFunction == nullptr)
 	{
 		V3D_LOG_ERROR(Log_Error_UnavailablePushDescriptorSets, m_DebugName.c_str());
+		return;
+	}
+
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
 		return;
 	}
 
@@ -1856,6 +1840,90 @@ void V3DCommandBuffer::ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCo
 	vkCmdExecuteCommands(m_Source.commandBuffer, commandBufferCount, m_Temp.commandBuffers.data());
 }
 
+void V3DCommandBuffer::BeginDebugMarker(const char* pName, const float color[4])
+{
+	if (m_pDebugMarkerBeginFunction == nullptr)
+	{
+		V3D_LOG_ERROR(Log_Error_UnavailableBeginDebugMarker, m_DebugName.c_str());
+		return;
+	}
+
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if (pName == nullptr)
+	{
+		V3D_LOG_S_ERROR(L"IV3DCommandBuffer::BeginDebugMarker" << V3D_LOG_S_PTR(pName));
+		return;
+	}
+#endif //_DEBUG
+
+	VkDebugMarkerMarkerInfoEXT info;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+	info.pNext = nullptr;
+	info.pMarkerName = pName;
+	info.color[0] = color[0];
+	info.color[1] = color[1];
+	info.color[2] = color[2];
+	info.color[3] = color[3];
+
+	m_pDebugMarkerBeginFunction(m_Source.commandBuffer, &info);
+}
+
+void V3DCommandBuffer::EndDebugMarker()
+{
+	if (m_pDebugMarkerEndFunction == nullptr)
+	{
+		V3D_LOG_ERROR(Log_Error_UnavailableEndDebugMarker, m_DebugName.c_str());
+		return;
+	}
+
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+#endif //_DEBUG
+
+	m_pDebugMarkerEndFunction(m_Source.commandBuffer);
+}
+
+void V3DCommandBuffer::InsertDebugMarker(const char* pName, const float color[4])
+{
+	if (m_pDebugMarkerInsertFunction == nullptr)
+	{
+		V3D_LOG_ERROR(Log_Error_UnavailableInsertDebugMarker, m_DebugName.c_str());
+		return;
+	}
+
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if (pName == nullptr)
+	{
+		V3D_LOG_S_ERROR(L"IV3DCommandBuffer::InsertDebugMarker" << V3D_LOG_S_PTR(pName));
+		return;
+	}
+#endif //_DEBUG
+
+	VkDebugMarkerMarkerInfoEXT info;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+	info.pNext = nullptr;
+	info.pMarkerName = pName;
+	info.color[0] = color[0];
+	info.color[1] = color[1];
+	info.color[2] = color[2];
+	info.color[3] = color[3];
+
+	m_pDebugMarkerInsertFunction(m_Source.commandBuffer, &info);
+}
+
 /*************************************/
 /* public override - IV3DDeviceChild */
 /*************************************/
@@ -1896,7 +1964,11 @@ V3DCommandBuffer::V3DCommandBuffer() :
 	m_RefCounter(1),
 	m_pDevice(nullptr),
 	m_Type(V3D_COMMAND_BUFFER_TYPE_PRIMARY),
-	m_pCommandPool(nullptr)
+	m_pCommandPool(nullptr),
+	m_pPushDescriptorSetFunction(nullptr),
+	m_pDebugMarkerBeginFunction(nullptr),
+	m_pDebugMarkerEndFunction(nullptr),
+	m_pDebugMarkerInsertFunction(nullptr)
 {
 	m_Source.commandBuffer = VK_NULL_HANDLE;
 	m_Temp.clearRects.resize(1);
