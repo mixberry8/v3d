@@ -35,6 +35,9 @@ static constexpr wchar_t* Log_Error_NotSecondaryCommandBuffer = L"IV3DCommandBuf
 static constexpr wchar_t* Log_Error_SecondaryCommandBufferNotEnd = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : コマンドバッファ %s[%u] は IV3DCommandBuffer::End で終了されていません";
 static constexpr wchar_t* Log_Error_CommandBuffersSimultaneousUse = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : プライマリコマンドバッファーの使用法に V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE が指定されている場合は、セカンダリコマンドバッファーも同様にこの使用法を指定する必要があります。";
 static constexpr wchar_t* Log_Error_UnavailablePushDescriptorSets = L"IV3DCommandBuffer::PushDescriptorSets : %s : 拡張機能が有効でないため PushDescriptorSets は使用できません。";
+static constexpr wchar_t* Log_Error_UnavailableBeginDebugMarker = L"IV3DCommandBuffer::BeginDebugMarker : %s : 拡張機能が有効でないため BeginDebugMarker は使用できません。";
+static constexpr wchar_t* Log_Error_UnavailableEndDebugMarker = L"IV3DCommandBuffer::EndDebugMarker : %s : 拡張機能が有効でないため EndDebugMarker は使用できません。";
+static constexpr wchar_t* Log_Error_UnavailableInsertDebugMarker = L"IV3DCommandBuffer::InsertDebugMarker : %s : 拡張機能が有効でないため InsertDebugMarker は使用できません。";
 
 // ----------------------------------------------------------------------------------------------------
 // IV3DCommandQueue
