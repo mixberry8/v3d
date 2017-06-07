@@ -633,7 +633,7 @@ enum V3D_IMAGE_LAYOUT
 
 //! @enum V3D_SAMPLE_COUNT_FLAG
 //! @brief サンプルカウントのフラグ
-enum V3D_SAMPLE_COUNT_FLAG
+enum V3D_SAMPLE_COUNT_FLAG : V3DFlags
 {
 	V3D_SAMPLE_COUNT_1 = 0x00000001, //!< 1 サンプル
 	V3D_SAMPLE_COUNT_2 = 0x00000002, //!< 2 サンプル
@@ -649,7 +649,7 @@ enum V3D_SAMPLE_COUNT_FLAG
 //! @sa V3DSamplerDesc::compareOp
 //! @sa V3DPipelineStencilOpDesc::compareOp
 //! @sa V3DPipelineDepthStencilDesc::depthCompareOp
-enum V3D_COMPARE_OP
+enum V3D_COMPARE_OP : uint8_t
 {
 	V3D_COMPARE_OP_NEVER = 0, //!< テストは絶対に通過しません。
 	V3D_COMPARE_OP_LESS = 1, //!< R<S のときにテストに合格します。
@@ -663,7 +663,7 @@ enum V3D_COMPARE_OP
 
 //! @enum V3D_INDEX_TYPE
 //! @brief インデックスのタイプ
-enum V3D_INDEX_TYPE
+enum V3D_INDEX_TYPE : uint8_t
 {
 	V3D_INDEX_TYPE_UINT16 = 0, //!< 符号無し 16Bit 整数のインデックスです。
 	V3D_INDEX_TYPE_UINT32 = 1, //!< 符号無し 32Bit 整数のインデックスです。
@@ -859,7 +859,7 @@ protected:
 
 //! @enum V3D_QUERY_TYPE
 //! @brief クエリのタイプ
-enum V3D_QUERY_TYPE
+enum V3D_QUERY_TYPE : uint8_t
 {
 	V3D_QUERY_TYPE_OCCLUSION = 0, //!< オクルージョンクエリです。
 	V3D_QUERY_TYPE_PIPELINE_STATISTICS = 1, //!< パイプラインの統計クエリです。
@@ -868,7 +868,7 @@ enum V3D_QUERY_TYPE
 
 //! @enum V3D_QUERY_RESULT_FLAG
 //! @brief クエリの結果フラグ
-enum V3D_QUERY_RESULT_FLAG
+enum V3D_QUERY_RESULT_FLAG : uint8_t
 {
 	V3D_QUERY_RESULT_WAIT = 0x00000001, //!< 指定したすべてのクエリの結果が取得できるまで待機します。
 	V3D_QUERY_RESULT_WITH_AVAILABILITY = 0x00000002, //!< 結果が出ているクエリがあるかどうかを確認できるようにします。
@@ -877,7 +877,7 @@ enum V3D_QUERY_RESULT_FLAG
 
 //! @enum V3D_QUERY_PIPELINE_STATISTIC_TYPE
 //! @brief クエリのパイプラインの統計タイプ
-enum V3D_QUERY_PIPELINE_STATISTIC_TYPE
+enum V3D_QUERY_PIPELINE_STATISTIC_TYPE : uint8_t
 {
 	V3D_QUERY_PIPELINE_STATISTIC_TYPE_VERTICES = 0, //!< 入力された頂点の数です。
 	V3D_QUERY_PIPELINE_STATISTIC_TYPE_PRIMITIVES = 1, //!< 入力されたプリミティブの数です。
@@ -890,6 +890,8 @@ enum V3D_QUERY_PIPELINE_STATISTIC_TYPE
 	V3D_QUERY_PIPELINE_STATISTIC_TYPE_TESSELLATION_CONTROL_SHADER_PATCHES = 8, //!< テッセレーション制御シェーダーのよって処理されるパッチ数です。
 	V3D_QUERY_PIPELINE_STATISTIC_TYPE_TESSELLATION_EVALUATION_SHADER_INVOCATIONS = 9, //!< テッセレーション評価シェーダーの呼び出し回数です。
 	V3D_QUERY_PIPELINE_STATISTIC_TYPE_COMPUTE_SHADER_INVOCATIONS = 10, //!< コンピュートシェーダーの呼び出し回数です。
+
+	V3D_QUERY_PIPELINE_STATISTIC_TYPE_COUNT = 11, //!< クエリのパイプラインの統計タイプの数です。
 };
 
 //! @}
@@ -1044,7 +1046,7 @@ protected:
 
 //! @enum V3D_RESOURCE_TYPE
 //! @brief リソースタイプ
-enum V3D_RESOURCE_TYPE
+enum V3D_RESOURCE_TYPE : uint8_t
 {
 	V3D_RESOURCE_TYPE_BUFFER = 0, //!< バッファーとして使用します。
 	V3D_RESOURCE_TYPE_IMAGE = 1, //!< イメージとして使用します。
@@ -1195,7 +1197,7 @@ protected:
 
 //! @enum V3D_IMAGE_TYPE
 //! @brief イメージのタイプ
-enum V3D_IMAGE_TYPE
+enum V3D_IMAGE_TYPE : uint8_t
 {
 	V3D_IMAGE_TYPE_1D = 0, //!< 1D ( width ) イメージです。
 	V3D_IMAGE_TYPE_2D = 1, //!< 2D ( width height ) イメージです。
@@ -1204,7 +1206,7 @@ enum V3D_IMAGE_TYPE
 
 //! @enum V3D_IMAGE_TILING
 //! @brief イメージのタイリング
-enum V3D_IMAGE_TILING
+enum V3D_IMAGE_TILING : uint8_t
 {
 	//! @brief 最適なタイリングを指定します。<br>
 	//! テクセルの配置は実装に依存することになるため、サブリソースにアクセスすることはできません。
@@ -1366,7 +1368,7 @@ protected:
 
 //! @enum V3D_IMAGE_VIEW_TYPE
 //! @brief イメージビューのタイプ
-enum V3D_IMAGE_VIEW_TYPE
+enum V3D_IMAGE_VIEW_TYPE : uint8_t
 {
 	V3D_IMAGE_VIEW_TYPE_1D = 0, //!< 1D イメージビューとして使用します。
 	V3D_IMAGE_VIEW_TYPE_2D = 1, //!< 2D イメージビューとして使用します。
@@ -1431,7 +1433,7 @@ protected:
 
 //! @enum V3D_FILTER
 //! @brief フィルター
-enum V3D_FILTER
+enum V3D_FILTER : uint8_t
 {
 	//! @brief 最も近い座標のテクセルを使用します。
 	V3D_FILTER_NEAREST = 0,
@@ -1446,7 +1448,7 @@ enum V3D_FILTER
 
 //! @enum V3D_MIPMAP_MODE
 //! @brief ミップマップモード
-enum V3D_MIPMAP_MODE
+enum V3D_MIPMAP_MODE : uint8_t
 {
 	//! @brief 最も近い座標のテクセルを使用します。
 	V3D_MIPMAP_MODE_NEAREST = 0,
@@ -1456,7 +1458,7 @@ enum V3D_MIPMAP_MODE
 
 //! @enum V3D_ADDRESS_MODE
 //! @brief アドレスモード
-enum V3D_ADDRESS_MODE
+enum V3D_ADDRESS_MODE : uint8_t
 {
 	//! @brief リピートします。
 	V3D_ADDRESS_MODE_REPEAT = 0,
@@ -1471,7 +1473,7 @@ enum V3D_ADDRESS_MODE
 
 //! @enum V3D_BORDER_COLOR
 //! @brief ボーダーカラー
-enum V3D_BORDER_COLOR
+enum V3D_BORDER_COLOR : uint8_t
 {
 	V3D_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0, //!< RGBA(0.0f, 0.0f, 0.0f, 0.0f)
 	V3D_BORDER_COLOR_INT_TRANSPARENT_BLACK = 1, //!< RGBA(0, 0, 0, 0)
@@ -1561,7 +1563,7 @@ protected:
 
 //! @enum V3D_ATTACHMENT_LOAD_OP
 //! @brief レンダリングパスのロードオペレーター
-enum V3D_ATTACHMENT_LOAD_OP
+enum V3D_ATTACHMENT_LOAD_OP : uint8_t
 {
 	//! @brief レンダリングパスの開始時にアタッチメントの以前の内容が保持されている必要がないことを表します。<br>
 	//! またアタッチメントのアクセスには、\link V3D_ACCESS_COLOR_ATTACHMENT_WRITE \endlink もしくわ \link V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE \endlink が含まれている必要があります。
@@ -1576,7 +1578,7 @@ enum V3D_ATTACHMENT_LOAD_OP
 
 //! @enum V3D_ATTACHMENT_STORE_OP
 //! @brief レンダリングパスのストアオペレーター
-enum V3D_ATTACHMENT_STORE_OP
+enum V3D_ATTACHMENT_STORE_OP : uint8_t
 {
 	//! @brief レンダリングパスの終了時にアタッチメントの内容が保存されず、破棄される可能性があることを表します。<br>
 	//! またアタッチメントのアクセスには、\link V3D_ACCESS_COLOR_ATTACHMENT_WRITE \endlink もしくわ \link V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE \endlink が含まれている必要があります。
@@ -2078,7 +2080,7 @@ protected:
 
 //! @enum V3D_PIPELINE_TYPE
 //! @brief パイプラインのタイプ
-enum V3D_PIPELINE_TYPE
+enum V3D_PIPELINE_TYPE : uint8_t
 {
 	V3D_PIPELINE_TYPE_GRAPHICS = 0, //!< グラフィックスパイプラインとして使用します。
 	V3D_PIPELINE_TYPE_COMPUTE = 1, //!< コンピュートパイプラインとして使用します。
@@ -2086,7 +2088,7 @@ enum V3D_PIPELINE_TYPE
 
 //! @enum V3D_PRIMITIVE_TOPOLOGY
 //! @brief プリミティブトポロジ
-enum V3D_PRIMITIVE_TOPOLOGY
+enum V3D_PRIMITIVE_TOPOLOGY : uint8_t
 {
 	V3D_PRIMITIVE_TOPOLOGY_POINT_LIST = 0, //!< ポイントのリストです。
 	V3D_PRIMITIVE_TOPOLOGY_LINE_LIST = 1, //!< ラインのリストです。
@@ -2103,7 +2105,7 @@ enum V3D_PRIMITIVE_TOPOLOGY
 
 //! @enum V3D_POLYGON_MODE
 //! @brief ポリゴンモード
-enum V3D_POLYGON_MODE
+enum V3D_POLYGON_MODE : uint8_t
 {
 	V3D_POLYGON_MODE_FILL = 0, //!< ポリゴンを塗りつぶして描画します。
 	V3D_POLYGON_MODE_LINE = 1, //!< ポリゴンをエッジを描画します。
@@ -2112,7 +2114,7 @@ enum V3D_POLYGON_MODE
 
 //! @enum V3D_CULL_MODE
 //! @brief カリングモード
-enum V3D_CULL_MODE
+enum V3D_CULL_MODE : uint8_t
 {
 	V3D_CULL_MODE_NONE = 0, //!< カリングをしません。
 	V3D_CULL_MODE_FRONT = 1, //!< 前面をカリングします。
@@ -2121,7 +2123,7 @@ enum V3D_CULL_MODE
 
 //! @enum V3D_STENCIL_OP
 //! @brief ステンシルオペレーター
-enum V3D_STENCIL_OP
+enum V3D_STENCIL_OP : uint8_t
 {
 	V3D_STENCIL_OP_KEEP = 0, //!< 現在の値を保持します。
 	V3D_STENCIL_OP_ZERO = 1, //!< 値を0に設定します。
@@ -2142,7 +2144,7 @@ enum V3D_STENCIL_OP
 //! <tr><td>Rc Gc Bc Ac</td><td></td>コマンド IV3DCommandBuffer::SetBlendConstants で設定するブレンド定数</tr>
 //! </table>
 //! <br>
-enum V3D_BLEND_FACTOR
+enum V3D_BLEND_FACTOR : uint8_t
 {
 	//! @brief
 	//! RGB (0, 0, 0)<br>
@@ -2231,7 +2233,7 @@ enum V3D_BLEND_FACTOR
 //! <tr><td>Fd</td><td>出力先のブレンド係数</td></tr>
 //! </table>
 //! @sa V3D_BLEND_FACTOR
-enum V3D_BLEND_OP
+enum V3D_BLEND_OP : uint8_t
 {
 	V3D_BLEND_OP_ADD = 0, //!< ( Cs * Fs ) + ( Cd * Fd )
 	V3D_BLEND_OP_SUBTRACT = 1, //!< ( Cs * Fs ) - ( Cd * Fd )
@@ -2258,7 +2260,7 @@ enum V3D_COLOR_COMPONENT_FLAG : V3DFlags
 //! <tr><td>d</td><td>カラーアタッチメントによって入力される RGBA 成分です。</td></tr>
 //! </table>
 //! <br>
-enum V3D_LOGIC_OP
+enum V3D_LOGIC_OP : uint8_t
 {
 	V3D_LOGIC_OP_CLEAR = 0, //!< 0
 	V3D_LOGIC_OP_AND = 1, //!< s & d
@@ -2404,11 +2406,11 @@ struct V3DPipelineRasterizationDesc
 
 	//! @brief 深度バイアスを有効にするかどうかを指定します。
 	bool depthBiasEnable;
-	//! @brief 一定の深度値を制御するスカラー因子です。
+	//! @brief 一定の深度値を制御する係数です。
 	float depthBiasConstantFactor;
 	//! @brief 最大 または 最小の深度バイアスです。
 	float depthBiasClamp;
-	//! @brief 深度バイアスの計算におけるスロープに適用されるスカラー係数です。
+	//! @brief 深度バイアスの計算におけるスロープに適用される係数です。
 	float depthBiasSlopeFactor;
 };
 
@@ -2521,7 +2523,7 @@ struct V3DPipelineDepthStencilDesc
 //! @note
 //! デフォルト値<br>
 //! <table>
-//! <tr><td>blendEnable</td><td>true</td></tr>
+//! <tr><td>blendEnable</td><td>false</td></tr>
 //! <tr><td>srcColorFactor</td><td>V3D_BLEND_FACTOR_ONE</td></tr>
 //! <tr><td>dstColorFactor</td><td>V3D_BLEND_FACTOR_ZERO</td></tr>
 //! <tr><td>colorOp</td><td>V3D_BLEND_OP_ADD</td></tr>
@@ -2810,7 +2812,7 @@ protected:
 
 //! @enum V3D_COMMAND_BUFFER_TYPE
 //! @brief コマンドバッファーのレベル
-enum V3D_COMMAND_BUFFER_TYPE
+enum V3D_COMMAND_BUFFER_TYPE : uint8_t
 {
 	//! @brief キューに送信することができる、プライマリコマンドバッファーです。
 	//! @sa IV3DQueue::Submit
@@ -2831,7 +2833,7 @@ enum V3D_COMMAND_BUFFER_RESET_FLAG : V3DFlags
 
 //! @enum V3D_COMMAND_BUFFER_USAGE
 //! @brief コマンドバッファの使用方法
-enum V3D_COMMAND_BUFFER_USAGE
+enum V3D_COMMAND_BUFFER_USAGE : V3DFlags
 {
 	//! @brief コマンドバッファーは一度だけキューに送信されることを表します。
 	V3D_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT = 0x00000001,
@@ -2844,7 +2846,7 @@ enum V3D_COMMAND_BUFFER_USAGE
 
 //! @enum V3D_STENCIL_FACE_FLAG
 //! @brief ステンシルのフェイスフラグ
-enum V3D_STENCIL_FACE_FLAG
+enum V3D_STENCIL_FACE_FLAG : V3DFlags
 {
 	V3D_STENCIL_FACE_FRONT = 0x00000001, //!< 前を指定します。
 	V3D_STENCIL_FACE_BACK = 0x00000002, //!< 後ろを指定します。
@@ -2856,24 +2858,12 @@ enum V3D_STENCIL_FACE_FLAG
 //! @addtogroup v3d_struct_group
 //! @{
 
-//! @struct V3DBarrierMemoryDesc
-//! @brief メモリバリアの記述
-struct V3DBarrierMemoryDesc
-{
-	V3DFlags srcStageMask; //!< 現在のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstStageMask; //!< 移行先のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dependencyFlags; //!< 依存性を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
-
-	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
-};
-
 //! @struct V3DBarrierBufferDesc
 //! @brief バッファーバリアの記述
 struct V3DBarrierBufferDesc
 {
-	V3DFlags srcStageMask; //!< 現在のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstStageMask; //!< 移行先のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
 
 	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
@@ -2882,16 +2872,16 @@ struct V3DBarrierBufferDesc
 	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
 	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
 
-	uint64_t offset; //!< バッファーのメモリのオフセットをバイト単位で指定します。
-	uint64_t size; //!< バッファーのメモリのオフセットからのサイズをバイト単位で指定します。
+	uint64_t offset; //!< メモリのオフセットをバイト単位で指定します。
+	uint64_t size; //!< メモリのオフセットからのサイズをバイト単位で指定します。
 };
 
 //! @struct V3DBarrierBufferViewDesc
 //! @brief バッファービューバリアの記述
 struct V3DBarrierBufferViewDesc
 {
-	V3DFlags srcStageMask; //!< 現在のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstStageMask; //!< 移行先のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
 
 	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
@@ -2905,8 +2895,31 @@ struct V3DBarrierBufferViewDesc
 //! @brief イメージバリアの記述
 struct V3DBarrierImageDesc
 {
-	V3DFlags srcStageMask; //!< 現在のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
-	V3DFlags dstStageMask; //!< 移行先のステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dependencyFlags; //!< 依存性を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
+
+	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
+
+	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
+	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
+
+	V3D_IMAGE_LAYOUT srcLayout; //!< 現在のイメージレイアウトです。
+	V3D_IMAGE_LAYOUT dstLayout; //!< 移行先のイメージレイアウトです。
+
+	uint32_t baseLevel; //!< 最初のレベルです。
+	uint32_t levelCount; //!< レベル数です。<br>0 を指定すると baseLevel から最後のレベルまでを指定したことになります。
+	uint32_t baseLayer; //!< 最初のレイヤーです。
+	uint32_t layerCount; //!< レイヤー数です。<br>0 を指定すると baseLayer から最後のレイヤーまでを指定したことになります。
+};
+
+//! @struct V3DBarrierImageViewDesc
+//! @brief イメージビューバリアの記述
+struct V3DBarrierImageViewDesc
+{
+	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す \link V3D_PIPELINE_STAGE_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す \link V3D_DEPENDENCY_FLAG \endlink 列挙定数の組み合わせです。
 
 	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す \link V3D_ACCESS_FLAG \endlink 列挙定数の組み合わせです。
@@ -3089,30 +3102,6 @@ public:
 	//! @name コマンド
 	//! @{
 
-	//! @brief メモリにバリアを張ります。
-	//! @param[in] barrier バリアを張るメモリの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
-	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
-	//!   </tr>
-	//! </table>
-	virtual void BarrierMemory(const V3DBarrierMemoryDesc& barrier) = 0;
-
 	//! @brief バッファーにバリアを張ります。
 	//! @param[in] pBuffer バリアを張るバッファーです。
 	//! @param[in] barrier バリアを張るバッファーの記述です。
@@ -3140,7 +3129,7 @@ public:
 
 	//! @brief バッファービューにバリアを張ります。
 	//! @param[in] pBufferView バリアを張るバッファビューです。
-	//! @param[in] barrier バリアを張るバッファーの記述です。
+	//! @param[in] barrier バリアを張るバッファービューの記述です。
 	//! @note
 	//! <table>
 	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
@@ -3166,7 +3155,7 @@ public:
 	//! @brief バッファービューにバリアを張ります。
 	//! @param[in] bufferViewCount バリアを張るバッファビューの数です。
 	//! @param[in] ppBufferViews バリアを張るバッファビューの配列です。
-	//! @param[in] barrier バリアを張るバッファーの記述です。
+	//! @param[in] barrier バリアを張るバッファービューの記述です。
 	//! @note
 	//! <table>
 	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
@@ -3216,7 +3205,7 @@ public:
 
 	//! @brief イメージビューにバリアを張ります。
 	//! @param[in] pImageView バリアを張るイメージビューです。
-	//! @param[in] barrier バリアを張るイメージの記述です。
+	//! @param[in] barrier バリアを張るイメージビューの記述です。
 	//! @note
 	//! <table>
 	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
@@ -3237,12 +3226,12 @@ public:
 	//!     </td>
 	//!   </tr>
 	//! </table>
-	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageDesc& barrier) = 0;
+	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageViewDesc& barrier) = 0;
 
 	//! @brief イメージビューにバリアを張ります。
 	//! @param[in] imageVewCount バリアを張るイメージビューの数です。
 	//! @param[in] ppImageViews バリアを張るイメージビューの配列です。
-	//! @param[in] barrier バリアを張るイメージの記述です。
+	//! @param[in] barrier バリアを張るイメージビューの記述です。
 	//! @note
 	//! <table>
 	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
@@ -3263,7 +3252,7 @@ public:
 	//!     </td>
 	//!   </tr>
 	//! </table>
-	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageDesc& barrier) = 0;
+	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageViewDesc& barrier) = 0;
 
 	//! @brief バッファーをコピーします。
 	//! @param[in] pDstBuffer コピー先のバッファを表す IV3DBuffer インターフェースのポインタです。
@@ -3915,7 +3904,7 @@ public:
 	virtual void BindDescriptorSets(
 		V3D_PIPELINE_TYPE pipelineType,	IV3DPipelineLayout* pPipelineLayout,
 		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
-		uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) = 0;
+		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
 
 	//! @brief バーテックスバッファーをバインドします。
 	//! @param[in] firstBinding 最初のバインディングです。
@@ -4023,6 +4012,35 @@ public:
 	//! </table>
 	//! @sa IV3DDevice::CreatePipelineLayout
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) = 0;
+
+	//! @brief デスクリプタセットをプッシュします。
+	//! @param[in] pipelineType パイプラインのタイプです。
+	//! @param[in] pPipelineLayout パイプラインのレイアウトです。
+	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。
+	//! @param[in] descriptorSetCount プッシュするデスクリプタセットの数です。
+	//! @param[in] ppDescriptorSets descriptorSetCount の値の数の要素を持つ IV3DDescriptorSet インターフェースのポインタの配列です。
+	//! @note
+	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS \endlink が含まれている場合に使用することができます。<br>
+	//! <br>
+	//! <table>
+	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
+	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!     </td>
+	//!     <td>
+	//!     有効
+	//!     </td>
+	//!   </tr>
+	//! </table>
+	virtual void PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets) = 0;
 
 	//! @brief ビューポートを設定します。
 	//! @param[in] firstViewport 設定する最初のビューポートのインデックスです。
@@ -4342,6 +4360,81 @@ public:
 	//! </table>
 	virtual void ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) = 0;
 
+	//! @brief デバッグマーカーを開始します。
+	//! @param[in] pName デバッグマーカーの名前です。
+	//! @param[in] color デバッグマーカーの色です。
+	//! @note
+	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
+	//! <br>
+	//! <table>
+	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
+	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!     </td>
+	//!     <td>
+	//!     有効
+	//!     </td>
+	//!   </tr>
+	//! </table>
+	virtual void BeginDebugMarker(const char* pName, const float color[4]) = 0;
+	//! @brief デバッグマーカーを終了します。
+	//! @note
+	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
+	//! <br>
+	//! <table>
+	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
+	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!     </td>
+	//!     <td>
+	//!     有効
+	//!     </td>
+	//!   </tr>
+	//! </table>
+	virtual void EndDebugMarker() = 0;
+
+	//! @brief デバッグマーカーを挿入します。
+	//! @param[in] pName デバッグマーカーの名前です。
+	//! @param[in] color デバッグマーカーの色です。
+	//! @note
+	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
+	//! <br>
+	//! <table>
+	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
+	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
+	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
+	//!     </td>
+	//!     <td>
+	//!     </td>
+	//!     <td>
+	//!     有効
+	//!     </td>
+	//!   </tr>
+	//! </table>
+	virtual void InsertDebugMarker(const char* pName, const float color[4]) = 0;
+
 	//! @}
 
 protected:
@@ -4442,7 +4535,7 @@ protected:
 
 //! @enum V3D_MEMORY_HEAP_TYPE
 //! @brief メモリヒープのタイプ
-enum V3D_MEMORY_HEAP_TYPE
+enum V3D_MEMORY_HEAP_TYPE : uint8_t
 {
 	V3D_MEMORY_HEAP_TYPE_HOST = 0, //!< ホストのメモリヒープです。
 	V3D_MEMORY_HEAP_TYPE_DEVICE = 1, //!< デバイスのメモリヒープです。
@@ -4450,7 +4543,7 @@ enum V3D_MEMORY_HEAP_TYPE
 
 //! @enum V3D_BUFFER_FORMAT_FEATURE_FLAG
 //! @brief バッファーフォーマットのサポートフラグ
-enum V3D_BUFFER_FORMAT_FEATURE_FLAG
+enum V3D_BUFFER_FORMAT_FEATURE_FLAG : V3DFlags
 {
 	//! @brief ユニフォームテクセルバッファとして使用できます。
 	V3D_BUFFER_FORMAT_FEATURE_UNIFORM_TEXEL = 0x00000008,
@@ -4464,7 +4557,7 @@ enum V3D_BUFFER_FORMAT_FEATURE_FLAG
 
 //! @enum V3D_IMAGE_FORMAT_FEATURE_FLAG
 //! @brief イメージフォーマットのサポートフラグ
-enum V3D_IMAGE_FORMAT_FEATURE_FLAG
+enum V3D_IMAGE_FORMAT_FEATURE_FLAG : V3DFlags
 {
 	//! @brief サンプリングできるイメージとして使用できます。
 	V3D_IMAGE_FORMAT_FEATURE_SAMPLED = 0x00000001,
@@ -4865,6 +4958,22 @@ enum V3D_COLOR_BLEND_CAP_FLAG : V3DFlags
 	V3D_COLOR_BLEND_CAP_LOGIC_OP = 0x00000004,
 };
 
+//! @enum V3D_DEVICE_EXTENSION_FLAG
+//! @brief デバイス拡張機能フラグ
+enum V3D_DEVICE_EXTENSION_FLAG : V3DFlags
+{
+	//! @brief デスクリプタセットを定数のようにプッシュすることができます。
+	//! @sa IV3DCommandBuffer::PushDescriptorSets
+	V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS = 0x00000001,
+	//! @brief デバッグマーカーを使用することができます。
+	//! @note
+	//! この拡張機能が使用できるレイヤーは \link V3D_LAYER_NSIGHT \endlink または \link V3D_LAYER_RENDERDOC \endlink のいずれかになります。
+	//! @sa IV3DCommandBuffer::BeginDebugMarker
+	//! @sa IV3DCommandBuffer::EndDebugMarker
+	//! @sa IV3DCommandBuffer::InsertDebugMarker
+	V3D_DEVICE_EXTENSION_DEBUG_MARKER = 0x00000002,
+};
+
 //! @}
 
 //! @addtogroup v3d_struct_group
@@ -4882,6 +4991,7 @@ struct V3DDeviceCaps
 	V3DFlags multisampleFlags; //!< マルチサンプルに関する能力を表す \link V3D_MULTISAMPLE_CAP_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags depthStencilFlags; //!< デプスステンシルに関する能力を表す \link V3D_DEPTH_STENCIL_CAP_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags colorBlendFlags; //!< カラーブレンドに関する能力を表す \link V3D_COLOR_BLEND_CAP_FLAG \endlink 列挙定数の組み合わせです。
+	V3DFlags extensionFlags; //!< デバイスの拡張機能を表す \link V3D_DEVICE_EXTENSION_FLAG \endlink 列挙定数の組み合わせです。
 
 	//! @brief 1Dイメージの幅の最大値です。
 	uint32_t maxImageDimension1D;
@@ -5394,7 +5504,6 @@ public:
 	//! @param[in] pResourceMemory バインド先のメモリです。
 	//! @param[in] pResource バインドするリソースです。
 	//! @param[in] memoryOffset バインドするメモリのオフセットをバイト単位で指定します。
-	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
@@ -5641,16 +5750,34 @@ protected:
 //! @addtogroup v3d_enum_group
 //! @{
 
-//! @enum V3D_LAYER_TYPE
-//! @brief レイヤーのタイプ
-enum V3D_LAYER_TYPE : uint8_t
+//! @enum V3D_LAYER
+//! @brief レイヤー
+enum V3D_LAYER : uint8_t
 {
-	//! @brief VK_LAYER_LUNARG_standard_validation を使用します。<br>
-	//! デバッグ時は通常これを使用してください。
-	V3D_LAYER_STANDARD_VALIDATION = 0,
-	//! @brief 最適なレイヤーを使用します。<br>
-	//! また NVIDIA の Nsight を使用したい場合はこのレイヤーを使用してください。
+	//! @brief 標準のレイヤーです。<br>
+	//! デバッグ時は通常これを指定してください。<br>
+	//! <br>
+	//! 使用される Vulkan レイヤー<br>
+	//! VK_LAYER_LUNARG_standard_validation
+	V3D_LAYER_STANDARD = 0,
+	//! @brief 最適なレイヤーです。<br>
+	//! リリース時は通常これを指定してください。<br>
+	//! <br>
+	//! 使用される Vulkan レイヤー<br>
+	//! N/A
 	V3D_LAYER_OPTIMUS = 1,
+	//! @brief Nsight のレイヤーです。<br>
+	//! <br>
+	//! 使用される Vulkan レイヤー<br>
+	//! N/A
+	V3D_LAYER_NSIGHT = 2,
+	//! @brief RenderDoc のレイヤーです。<br>
+	//! <br>
+	//! 使用される Vulkan レイヤー<br>
+	//! VK_LAYER_RENDERDOC_Capture
+	//! @note
+	//! 使用できるキューが一つだけになりますので注意してください。
+	V3D_LAYER_RENDERDOC = 3,
 };
 
 //! @enum V3D_LOG_FLAG
@@ -5728,7 +5855,7 @@ struct V3DInstanceLogDesc
 //! @brief インスタンスの記述
 struct V3DInstanceDesc
 {
-	V3D_LAYER_TYPE layerType; //!< レイヤーのタイプを表す \link V3D_LAYER_TYPE \endlink 列挙定数のいずれかを指定します。
+	V3D_LAYER layer; //!< レイヤーを表す \link V3D_LAYER \endlink 列挙定数のいずれかを指定します。
 	V3DInstanceMemoryDesc memory; //!< メモリの記述です。
 	V3DInstanceLogDesc log; //!< ログの記述です。
 };
@@ -5744,9 +5871,9 @@ struct V3DInstanceDesc
 class V3D_DLL_API IV3DInstance : public IV3DObject
 {
 public:
-	//! @brief レイヤーのタイプを取得します。
-	//! @return レイヤーのタイプを返します。
-	virtual V3D_LAYER_TYPE GetLayerType() const = 0;
+	//! @brief レイヤーを取得します。
+	//! @return レイヤーを返します。
+	virtual V3D_LAYER GetLayer() const = 0;
 
 	//! @brief アダプタの数を取得します。
 	//! @return アダプタの数を返します。
@@ -5778,6 +5905,13 @@ protected:
 
 //! @addtogroup v3d_func_group
 //! @{
+
+//! @brief 指定したレイヤーが使用できるかどうかを確認します。
+//! @param[in] layer 確認するレイヤーです。
+//! @retval V3D_OK
+//! @retval V3D_ERROR_FAIL
+//! @retval V3D_ERROR_NOT_SUPPORTED
+V3D_DLL_API V3D_RESULT V3DCheckLayer(V3D_LAYER layer);
 
 //! @brief インスタンスを作成します。
 //! @param[in] instanceDesc インスタンスの記述を表す V3DInstanceDesc 構造体です。
