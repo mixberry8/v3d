@@ -44,10 +44,6 @@
 //! @brief オブジェクトがシグナル状態になるのを待機する時間です。
 #define V3D_INFINITE UINT64_MAX
 
-//! @def V3D_WHOLE_SIZE
-//! @brief リソースのメモリの終端までをマップすることを表します。
-#define V3D_WHOLE_SIZE (~0ULL)
-
 //! @def V3D_QUEUE_FAMILY_IGNORED
 //! @brief キューファミリーのリソースの所有権の変更がないことを表します。
 #define V3D_QUEUE_FAMILY_IGNORED (~0U)

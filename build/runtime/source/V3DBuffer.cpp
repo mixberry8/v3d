@@ -135,7 +135,7 @@ V3D_RESULT V3DBuffer::GetResourceMemory(IV3DResourceMemory** ppMemory)
 
 V3D_RESULT V3DBuffer::Map(uint64_t offset, uint64_t size, void** ppMemory)
 {
-	if ((m_ResourceDesc.memorySize <= offset) || ((size != V3D_WHOLE_SIZE) && (m_ResourceDesc.memorySize < (offset + size))) || (ppMemory == nullptr))
+	if ((m_ResourceDesc.memorySize <= offset) || ((size != 0) && (m_ResourceDesc.memorySize < (offset + size))) || (ppMemory == nullptr))
 	{
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
@@ -145,7 +145,7 @@ V3D_RESULT V3DBuffer::Map(uint64_t offset, uint64_t size, void** ppMemory)
 		return V3D_ERROR_FAIL;
 	}
 
-	return m_pMemory->Map(m_Source.memoryOffset + offset, (size == V3D_WHOLE_SIZE)? m_ResourceDesc.memorySize : size, ppMemory);
+	return m_pMemory->Map(m_Source.memoryOffset + offset, (size == 0)? (m_ResourceDesc.memorySize - offset) : size, ppMemory);
 }
 
 V3D_RESULT V3DBuffer::Unmap()
