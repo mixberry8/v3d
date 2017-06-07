@@ -21,16 +21,9 @@
 #define V3D_COMPUTE_SHADER_STAGE_MAX 1 // コンピュートシェーダーステージの数
 #define V3D_INSTANCE_LAYER_COUNT 2 // インスタンスのレイヤー数
 
-static const char* V3D_LAYER_LUNARG_standard_validation = "VK_LAYER_LUNARG_standard_validation";
-
-static const char* V3D_INSTANCE_EXTENSION_surface = "VK_KHR_surface";
-static const char* V3D_INSTANCE_EXTENSION_win32_surface = "VK_KHR_win32_surface";
-#ifdef _DEBUG
-static const char* V3D_INSTANCE_EXTENSION_debug_report = "VK_EXT_debug_report";
-#endif //_DEBUG
-
-static const char* V3D_DEVICE_EXTENSION_swapchain = "VK_KHR_swapchain";
-static const char* V3D_DEVICE_EXTENSION_push_descriptor = "VK_KHR_push_descriptor";
+static constexpr char* V3D_LAYER_LUNARG_standard_validation = "VK_LAYER_LUNARG_standard_validation";
+static constexpr char* V3D_LAYER_NV_nsight = "VK_LAYER_NV_nsight";
+static constexpr char* V3D_LAYER_RENDERDOC_Capture = "VK_LAYER_RENDERDOC_Capture";
 
 struct V3DFindLayer
 {
@@ -91,6 +84,8 @@ typedef std::atomic<int64_t> ReferenceCounter;
 #define V3D_DEBUG_CODE(code)
 
 #endif //_DEBUG
+
+#define V3D_SET_DEBUG_MARKER_OBJECT_NAME(device, objectType, object, name) device->Vulkan_SetDebugMarkerObjectName(objectType, object, name)
 
 template<class T>
 static constexpr T* ToAddRef(T* obj)
