@@ -21,7 +21,7 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
 	VkMemoryRequirements vkMemReq;
 	vkGetImageMemoryRequirements(m_pDevice->GetSource().device, image, &vkMemReq);
@@ -38,13 +38,7 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 	m_ResourceDesc.memoryAlignment = vkMemReq.alignment;
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image, m_DebugName.c_str());
-	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT, m_Source.image, m_DebugName.c_str());
-
-#ifdef _WIN64
-	V3D_DEBUG_CODE(m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image));
-#else //_WIN64
-	V3D_DEBUG_CODE(m_DebugImageAddr = static_cast<uint32_t>(m_Source.image));
-#endif //_WIN64
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT, m_Source.image, V3D_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }
@@ -158,8 +152,6 @@ V3DBackBuffer::V3DBackBuffer() :
 	m_Desc({}),
 	m_Source({})
 {
-	V3D_DEBUG_CODE(m_DebugImageAddr = 0);
-
 	m_ResourceDesc.type = V3D_RESOURCE_TYPE_IMAGE;
 
 	m_Desc.type = V3D_IMAGE_TYPE_2D;

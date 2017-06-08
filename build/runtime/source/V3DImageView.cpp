@@ -46,7 +46,7 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.imageView, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.imageView, V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -63,18 +63,6 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 	m_Source.extent.width = m_SubresourceSize.width;
 	m_Source.extent.height = m_SubresourceSize.height;
 	m_Source.extent.depth = m_SubresourceSize.depth;
-
-	// ----------------------------------------------------------------------------------------------------
-
-#ifdef _DEBUG
-
-#ifdef _WIN64
-	m_DebugImageAddr = reinterpret_cast<uint64_t>(m_Source.image);
-#else //_WIN64
-	m_DebugImageAddr = static_cast<uint32_t>(m_Source.image);
-#endif //_WIN64
-
-#endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -156,10 +144,6 @@ V3DImageView::V3DImageView() :
 	m_Source({})
 {
 	m_Source.imageView = VK_NULL_HANDLE;
-
-#ifdef _DEBUG
-	m_DebugImageAddr = 0;
-#endif //_DEBUG
 }
 
 V3DImageView::~V3DImageView()

@@ -38,7 +38,7 @@ V3D_RESULT V3DBufferView::Initialize(IV3DDevice* pDevice, IV3DBuffer* pBuffer, c
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.bufferView, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.bufferView, V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 

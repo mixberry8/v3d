@@ -61,7 +61,7 @@ V3D_RESULT V3DQueryPool::Initialize(IV3DDevice* pDevice, const V3DQueryPoolDesc&
 		m_Source.queryControlFlags = 0;
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queryPool, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queryPool, V3D_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }

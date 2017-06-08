@@ -19,7 +19,7 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc,
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// バッファを作成
@@ -44,7 +44,7 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc,
 	}
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.buffer, m_DebugName.c_str());
-	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT, m_Source.buffer, m_DebugName.c_str());
+	V3D_SET_DEBUG_MARKER_OBJECT_NAME(m_pDevice, VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT, m_Source.buffer, V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// 記述を設定

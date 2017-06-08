@@ -24,7 +24,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_DEBUG_CODE(m_DebugName = V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// アタッチメントの記述

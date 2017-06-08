@@ -153,17 +153,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 		}
 		break;
 	}
-/*
-	for (size_t i = 0; i < layerProps.size(); i++)
-	{
-		const VkLayerProperties& prop = layerProps[i];
-		uint32_t spMajor = VK_VERSION_MAJOR(prop.specVersion);
-		uint32_t spMinor = VK_VERSION_MINOR(prop.specVersion);
-		uint32_t spPatch = VK_VERSION_PATCH(prop.specVersion);
 
-		V3D_LOG_INFO_A("%s sp %u.%u.%u : %s", prop.layerName, spMajor, spMinor, spPatch, prop.description);
-	}
-*/
 	// ----------------------------------------------------------------------------------------------------
 	// 有効にするエクステンションを列挙
 	// ----------------------------------------------------------------------------------------------------
@@ -251,14 +241,14 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 		return V3D_ERROR_FAIL;
 	}
 
-	V3D_ADD_DEBUG_OBJECT(this, m_Source.instance, L"instance");
+	V3D_ADD_DEBUG_OBJECT(this, m_Source.instance, L"Instance");
 
 	// ----------------------------------------------------------------------------------------------------
 	// デバッグレポート用のコールバックを登録
 	// ----------------------------------------------------------------------------------------------------
 
 #ifdef _DEBUG
-	if (debugReportEnable == true)
+	if ((instanceDesc.log.flags != 0) && (debugReportEnable == true))
 	{
 		PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Source.instance, "vkCreateDebugReportCallbackEXT");
 		if (dbgCreateDebugReportCallback == nullptr)
@@ -266,7 +256,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 			return V3D_ERROR_FAIL;
 		}
 
-		VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = {};
+		VkDebugReportCallbackCreateInfoEXT dbgCreateInfo{};
 		dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
 		dbgCreateInfo.pNext = nullptr;
 		dbgCreateInfo.flags = 0;
@@ -407,12 +397,12 @@ void V3DInstance::AddDebugObject(uint64_t vulkanObject, const wchar_t* pName)
 	ToMultibyteString(pName, nameA);
 
 	char addrStrA[19];
-#ifdef _WIN64
+#ifdef V3D64
 	sprintf_s(addrStrA, "0x%.16I64x", vulkanObject);
-#else //_WIN64
+#else //V3D64
 	uint32_t vulkanObject32 = static_cast<uint32_t>(vulkanObject);
 	sprintf_s(addrStrA, "0x%.8x", vulkanObject32);
-#endif //_WIN64
+#endif //V3D64
 
 	STLStringStreamA compNameA;
 	compNameA << nameA << "[" << addrStrA << "]";
@@ -519,6 +509,8 @@ V3DInstance::V3DInstance() :
 	V3DInstance::s_pThis = this;
 
 	m_Source.instance = VK_NULL_HANDLE;
+
+	V3D_DEBUG_CODE(m_DebugReportCallbackEXT = VK_NULL_HANDLE);
 }
 
 V3DInstance::~V3DInstance()
@@ -658,12 +650,12 @@ const char* V3DInstance::GetDebugObjectName(uint64_t objectAddr)
 		return it->second.c_str();
 	}
 
-#ifdef _WIN64
+#ifdef V3D64
 	sprintf_s(m_DebugObjectAddr, "Unknown[0x%.16I64x]", objectAddr);
-#else //_WIN64
+#else //V3D64
 	uint32_t objectAddr32 = static_cast<uint32_t>(objectAddr);
 	sprintf_s(m_DebugObjectAddr, "Unknown[0x%.8x]", objectAddr32);
-#endif //_WIN64
+#endif //V3D64
 
 	return m_DebugObjectAddr;
 }
@@ -838,11 +830,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 	const char* pObjectName = pInstance->GetDebugObjectName(object);
 	const char* pConvertedMessage = pInstance->ConvertDebugMessage(pMessage);
 
-#ifdef _WIN64
+#ifdef V3D64
 	V3D_LOG_A(logType, "%s : %s : location[%I64u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectType, pObjectName, location, messageCode, pLayerPrefix, pConvertedMessage);
-#else //_WIN64
+#else //V3D64
 	V3D_LOG_A(logType, "%s : %s : location[%u] messageCode[%d] layerPrefix[%s] : %s\n", pObjectType, pObjectName, location, messageCode, pLayerPrefix, pConvertedMessage);
-#endif //_WIN64
+#endif //V3D64
 
 	return VK_FALSE;
 }

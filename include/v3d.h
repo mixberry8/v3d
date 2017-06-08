@@ -36,6 +36,16 @@
 #define V3D_DLL_API
 #endif //V3D_DLL
 
+#ifdef _WIN64
+//! @def V3D64
+//! @brief v3d の 64ビット定義
+#define V3D64
+#else //_WIN64
+//! @def V3D32
+//! @brief v3d の 32ビット定義
+#define V3D32
+#endif //_WIN64
+
 //! @def V3D_CALLBACK
 //! @brief v3d のコールバック定義
 #define V3D_CALLBACK __stdcall
@@ -1433,7 +1443,7 @@ enum V3D_FILTER : uint8_t
 {
 	//! @brief 最も近い座標のテクセルを使用します。
 	V3D_FILTER_NEAREST = 0,
-	//! @brief イメージの次元数に応じたテクセルの加重平均を計算します。<br>
+	//! @brief イメージの次元数に応じたテクセルの加重平均を使用します。<br>
 	//! <table>
 	//! <tr><td>1Dイメージ</td><td>2x1</td></tr>
 	//! <tr><td>2Dイメージ<br>キューブイメージ</td><td>2x2</td></tr>
@@ -1448,7 +1458,7 @@ enum V3D_MIPMAP_MODE : uint8_t
 {
 	//! @brief 最も近い座標のテクセルを使用します。
 	V3D_MIPMAP_MODE_NEAREST = 0,
-	//! @brief イメージの次元数に応じたテクセルの加重平均を計算します。
+	//! @brief イメージの次元数に応じたテクセルの加重平均を使用します。
 	V3D_MIPMAP_MODE_LINEAR = 1,
 };
 
@@ -1517,11 +1527,7 @@ struct V3DSamplerDesc
 	bool anisotropyEnable; //!< 異方性フィルタリングを有効にするかどうかを指定します。
 	float maxAnisotropy; //!< 異方性値クランプ値です。
 	bool compareEnable; //!< 比較オペーレーターである compareOp を有効にするかどうかを指定します。
-
-	//! @brief 比較オペレーターです。<br>
-	//! \link V3D_COMPARE_OP \endlink の説明にある R はサンプラーによって入力される値であり、S はアタッチメントのテクセルの値を表します。
-	V3D_COMPARE_OP compareOp;
-
+	V3D_COMPARE_OP compareOp; //!< 比較オペレーターです。<br>\link V3D_COMPARE_OP \endlink の説明にある R はサンプラーによって入力される値であり、S はアタッチメントのテクセルの値を表します。
 	float minLod; //!< 計算されたミップレベルをクランプする最小値です。<br>通常この値は最初のミップマップを指定します。
 	float maxLod; //!< 計算されたミップレベルをクランプする最大値です。<br>通常この値はミップマップの数を指定します。
 	V3D_BORDER_COLOR borderColor; //!< 境界線の色です。
@@ -1628,7 +1634,7 @@ struct V3DAttachmentDesc
 struct V3DAttachmentReference
 {
 	uint32_t attachment; //!< IV3DDevice::CreateRenderPass で指定した V3DAttachmentDesc 構造体の配列のインデックスです。
-	V3D_IMAGE_LAYOUT layout; //!< サブパス開始時のアタッチメントのレイアウトです。
+	V3D_IMAGE_LAYOUT layout; //!< サブパス開始時のアタッチメントのイメージレイアウトです。
 };
 
 //! @struct V3DSubpassDesc
@@ -2122,11 +2128,11 @@ enum V3D_CULL_MODE : uint8_t
 enum V3D_STENCIL_OP : uint8_t
 {
 	V3D_STENCIL_OP_KEEP = 0, //!< 現在の値を保持します。
-	V3D_STENCIL_OP_ZERO = 1, //!< 値を0に設定します。
-	V3D_STENCIL_OP_REPLACE = 2, //!< 値を V3DPipelineStencilOpDesc::reference に設定します。
+	V3D_STENCIL_OP_ZERO = 1, //!< 値を 0 に設定します。
+	V3D_STENCIL_OP_REPLACE = 2, //!< IV3DCommandBuffer::SetStencilReference で設定された値に置き換えます。
 	V3D_STENCIL_OP_INCREMENT_AND_CLAMP = 3, //!< 現在の値をインクリメントし、最大値にクランプします。
 	V3D_STENCIL_OP_DECREMENT_AND_CLAMP = 4, //!< 現在の値をデクリメントして 0 にクランプします。
-	V3D_STENCIL_OP_INVERT = 5, //!< 現在の値のビット反転します。
+	V3D_STENCIL_OP_INVERT = 5, //!< 現在の値をビット反転します。
 	V3D_STENCIL_OP_INCREMENT_AND_WRAP = 6, //!< 現在の値をインクリメントし、最大値を超えた場合は 0 にラップします。
 	V3D_STENCIL_OP_DECREMENT_AND_WRAP = 7, //!< 現在の値をデクリメントし、値が 0 より小さくなると最大値にラップします。
 };
@@ -4358,7 +4364,8 @@ public:
 
 	//! @brief デバッグマーカーを開始します。
 	//! @param[in] pName デバッグマーカーの名前です。
-	//! @param[in] color デバッグマーカーの色です。
+	//! @param[in] color デバッグマーカーの色です。<br>
+	//! 配列の要素の値は先頭から RGBA になっています。
 	//! @note
 	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
 	//! <br>
@@ -4407,7 +4414,8 @@ public:
 
 	//! @brief デバッグマーカーを挿入します。
 	//! @param[in] pName デバッグマーカーの名前です。
-	//! @param[in] color デバッグマーカーの色です。
+	//! @param[in] color デバッグマーカーの色です。<br>
+	//! 配列の要素の値は先頭から RGBA になっています。
 	//! @note
 	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
 	//! <br>

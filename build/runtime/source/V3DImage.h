@@ -52,15 +52,7 @@ private:
 	static constexpr V3DImageSubresourceLayout DummySubresource = V3DImageSubresourceLayout{};
 
 #ifdef _DEBUG
-
 	STLStringW m_DebugName;
-
-#ifdef _WIN64
-	uint64_t m_DebugImageAddr;
-#else //_WIN64
-	uint32_t m_DebugImageAddr;
-#endif //_WIN64
-
 #endif //_DEBUG
 
 	ReferenceCounter m_RefCounter;

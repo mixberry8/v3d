@@ -67,20 +67,32 @@ private:
 
 #define V3D_ADD_DEBUG_OBJECT(instance, object, name) instance->AddDebugObject(object, name)
 #define V3D_REMOVE_DEBUG_OBJECT(instance, object) instance->RemoveDebugObject(object)
+
 #define V3D_DEBUG_CODE(code) code
+
+#else //_DEBUG
+
+#define V3D_ASSERT(expression)
+
+#define V3D_ADD_DEBUG_OBJECT(instance, object, name)
+#define V3D_REMOVE_DEBUG_OBJECT(instance, object)
+
+#define V3D_DEBUG_CODE(code)
+
+#endif //_DEBUG
 
 struct V3D_PTR_TO_STR_STRUCT
 {
 public:
 	V3D_PTR_TO_STR_STRUCT(void* ptr)
 	{
-#ifdef _WIN64
+#ifdef V3D64
 		uint64_t addr = reinterpret_cast<uint64_t>(ptr);
 		::wsprintf(m_Addr, L"0x%.16I64x", addr);
-#else //_WIN64
+#else //V3D64
 		uint32_t addr32 = reinterpret_cast<uint32_t>(ptr);
 		::wsprintf(m_Addr, L"0x%.8x", addr32);
-#endif //_WIN64
+#endif //V3D64
 	}
 
 	operator const wchar_t* () const
@@ -92,17 +104,7 @@ private:
 	wchar_t m_Addr[32];
 };
 
-#define V3D_DEBUG_SAFE_NAME(owner, name) ((name != nullptr)? name : V3D_PTR_TO_STR_STRUCT(owner))
-
-#else //_DEBUG
-
-#define V3D_ASSERT(expression)
-
-#define V3D_ADD_DEBUG_OBJECT(instance, object, name)
-#define V3D_REMOVE_DEBUG_OBJECT(instance, object)
-#define V3D_DEBUG_CODE(code)
-
-#endif //_DEBUG
+#define V3D_SAFE_NAME(owner, name) ((name != nullptr)? name : V3D_PTR_TO_STR_STRUCT(owner))
 
 #define V3D_SET_DEBUG_MARKER_OBJECT_NAME(device, objectType, object, name) device->Vulkan_SetDebugMarkerObjectName(objectType, object, name)
 

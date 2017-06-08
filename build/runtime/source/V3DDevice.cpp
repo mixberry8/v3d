@@ -202,7 +202,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 		return V3D_ERROR_FAIL;
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pInstance, m_Source.device, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pInstance, m_Source.device, V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// Šg’£‹@”\‚ðŽæ“¾
@@ -235,7 +235,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 
 #ifdef _DEBUG
 			STLStringStreamW debugStringStream;
-			debugStringStream << V3D_DEBUG_SAFE_NAME(this, pDebugName) << L"_Queue_F" << i << L"_I" << j;
+			debugStringStream << V3D_SAFE_NAME(this, pDebugName) << L"_Queue_F" << i << L"_I" << j;
 
 			STLStringW debugString = debugStringStream.str();
 

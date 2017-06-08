@@ -61,7 +61,7 @@ V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pC
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandBuffer, V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// Šg’£‹@”\‚ðŽæ“¾
@@ -288,7 +288,7 @@ void V3DCommandBuffer::BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBuffer
 	vkBarrier.dstQueueFamilyIndex = barrier.dstQueueFamily;
 	vkBarrier.buffer = source.buffer;
 	vkBarrier.offset = barrier.offset;
-	vkBarrier.size = barrier.size;
+	vkBarrier.size = (barrier.size == 0)? (source.memorySize - barrier.offset) : barrier.size;
 
 	vkCmdPipelineBarrier(
 		m_Source.commandBuffer,

@@ -30,7 +30,7 @@ V3D_RESULT V3DCommandPool::Initialize(IV3DDevice* pDevice, const V3DCommandPoolD
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandPool, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandPool, V3D_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }

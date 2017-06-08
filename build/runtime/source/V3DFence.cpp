@@ -27,7 +27,7 @@ V3D_RESULT V3DFence::Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName)
 		return ToV3DResult(vkResult);
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.fence, V3D_DEBUG_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.fence, V3D_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
 }
