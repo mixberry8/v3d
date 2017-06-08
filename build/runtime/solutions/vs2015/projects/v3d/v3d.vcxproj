@@ -280,7 +280,7 @@ xcopy "$(OutDir)v3d.lib" "$(SolutionDir)..\..\..\..\bin\vs2015\$(PlatformTarget)
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>V3D_DLL;V3D_DLL_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;_DEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;_DEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\..\include;$(SolutionDir)..\..\source\v3d</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -330,7 +330,7 @@ xcopy "$(OutDir)v3d.lib" "$(SolutionDir)..\..\..\..\bin\vs2015\$(PlatformTarget)
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>V3D_DLL;V3D_DLL_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;_DEBUG;__ATLBASE_H__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;_DEBUG;__ATLBASE_H__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\..\include;$(SolutionDir)..\..\source\v3d</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <ForcedIncludeFiles>pch.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
@@ -386,7 +386,7 @@ xcopy "$(OutDir)v3d.lib" "$(SolutionDir)..\..\..\..\bin\vs2015\$(PlatformTarget)
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>V3D_DLL;V3D_DLL_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;NDEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;NDEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\..\include;$(SolutionDir)..\..\source\v3d</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -444,7 +444,7 @@ xcopy "$(OutDir)v3d.lib" "$(SolutionDir)..\..\..\..\bin\vs2015\$(PlatformTarget)
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>V3D_DLL;V3D_DLL_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;NDEBUG;__ATLBASE_H__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;_WINDOWS;_USRDLL;NDEBUG;__ATLBASE_H__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\..\include;$(SolutionDir)..\..\source\v3d</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <ForcedIncludeFiles>pch.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
