@@ -145,7 +145,7 @@ V3D_RESULT V3DDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descr
 	// デスクリプタセットレイアウトを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	VkDescriptorSetLayoutCreateInfo descSetLayoutCreateInfo{};
+	VkDescriptorSetLayoutCreateInfo descSetLayoutCreateInfo;
 	descSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descSetLayoutCreateInfo.pNext = nullptr;
 	descSetLayoutCreateInfo.flags = 0;
@@ -244,7 +244,7 @@ V3D_RESULT V3DDescriptorSetLayout::Vulkan_CreateDescriptorSet(V3DDescriptorSetLa
 	}
 	else
 	{
-		VkDescriptorSetAllocateInfo descSetAllocInfo{};
+		VkDescriptorSetAllocateInfo descSetAllocInfo;
 		descSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		descSetAllocInfo.pNext = nullptr;
 		descSetAllocInfo.descriptorPool = pHandleT->pool;
@@ -339,9 +339,9 @@ void V3DDescriptorSetLayout::Release()
 	}
 }
 
-/***********************/
+/************************************/
 /* private - V3DDescriptorSetLayout */
-/***********************/
+/************************************/
 
 V3DDescriptorSetLayout::V3DDescriptorSetLayout() :
 	m_RefCounter(1),

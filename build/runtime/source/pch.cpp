@@ -1000,7 +1000,7 @@ VkMemoryPropertyFlags ToVkMemoryPropertyFlags(V3DFlags value)
 
 VkImageType ToVkImageType(V3D_IMAGE_TYPE value)
 {
-	VkImageType vkImageTypeTable[VK_IMAGE_TYPE_RANGE_SIZE] =
+	static constexpr VkImageType vkImageTypeTable[VK_IMAGE_TYPE_RANGE_SIZE] =
 	{
 		VK_IMAGE_TYPE_1D,
 		VK_IMAGE_TYPE_2D,
@@ -1043,7 +1043,7 @@ VkImageCreateFlags ToVkImageCreateFlags(V3DFlags value)
 
 VkImageViewType ToVkImageViewType(V3D_IMAGE_VIEW_TYPE value)
 {
-	VkImageViewType vkImageViewTypeTable[VK_IMAGE_VIEW_TYPE_RANGE_SIZE] =
+	static constexpr VkImageViewType vkImageViewTypeTable[VK_IMAGE_VIEW_TYPE_RANGE_SIZE] =
 	{
 		VK_IMAGE_VIEW_TYPE_1D,
 		VK_IMAGE_VIEW_TYPE_2D,
@@ -1061,7 +1061,7 @@ VkImageViewType ToVkImageViewType(V3D_IMAGE_VIEW_TYPE value)
 
 VkIndexType ToVkIndexType(V3D_INDEX_TYPE value)
 {
-	VkIndexType vkIndexTypeTable[VK_INDEX_TYPE_RANGE_SIZE] =
+	static constexpr VkIndexType vkIndexTypeTable[VK_INDEX_TYPE_RANGE_SIZE] =
 	{
 		VK_INDEX_TYPE_UINT16,
 		VK_INDEX_TYPE_UINT32,
@@ -1074,7 +1074,7 @@ VkIndexType ToVkIndexType(V3D_INDEX_TYPE value)
 
 VkDescriptorType ToVkDescriptorType(V3D_DESCRIPTOR_TYPE value)
 {
-	VkDescriptorType vkDescriptorTypeTable[VK_DESCRIPTOR_TYPE_RANGE_SIZE]
+	static constexpr VkDescriptorType vkDescriptorTypeTable[VK_DESCRIPTOR_TYPE_RANGE_SIZE]
 	{
 		VK_DESCRIPTOR_TYPE_SAMPLER,
 		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -1096,7 +1096,7 @@ VkDescriptorType ToVkDescriptorType(V3D_DESCRIPTOR_TYPE value)
 
 VkFilter ToVkFilter(V3D_FILTER value)
 {
-	VkFilter vkFilterTable[VK_FILTER_RANGE_SIZE] =
+	static constexpr VkFilter vkFilterTable[VK_FILTER_RANGE_SIZE] =
 	{
 		VK_FILTER_NEAREST,
 		VK_FILTER_LINEAR,
@@ -1109,7 +1109,7 @@ VkFilter ToVkFilter(V3D_FILTER value)
 
 VkSamplerMipmapMode ToVkSamplerMipmapMode(V3D_MIPMAP_MODE value)
 {
-	VkSamplerMipmapMode vkSamplerMipmapModeTable[VK_SAMPLER_MIPMAP_MODE_RANGE_SIZE] =
+	static constexpr VkSamplerMipmapMode vkSamplerMipmapModeTable[VK_SAMPLER_MIPMAP_MODE_RANGE_SIZE] =
 	{
 		VK_SAMPLER_MIPMAP_MODE_NEAREST,
 		VK_SAMPLER_MIPMAP_MODE_LINEAR,
@@ -1122,7 +1122,7 @@ VkSamplerMipmapMode ToVkSamplerMipmapMode(V3D_MIPMAP_MODE value)
 
 VkSamplerAddressMode ToVkSamplerAddressMode(V3D_ADDRESS_MODE value)
 {
-	VkSamplerAddressMode vkSamplerAddressModeTable[VK_SAMPLER_ADDRESS_MODE_RANGE_SIZE] =
+	static constexpr VkSamplerAddressMode vkSamplerAddressModeTable[VK_SAMPLER_ADDRESS_MODE_RANGE_SIZE] =
 	{
 		VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
@@ -1137,7 +1137,7 @@ VkSamplerAddressMode ToVkSamplerAddressMode(V3D_ADDRESS_MODE value)
 
 VkBorderColor ToVkBorderColor(V3D_BORDER_COLOR value)
 {
-	VkBorderColor vkBorderColorTable[VK_BORDER_COLOR_RANGE_SIZE] =
+	static constexpr VkBorderColor vkBorderColorTable[VK_BORDER_COLOR_RANGE_SIZE] =
 	{
 		VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
 		VK_BORDER_COLOR_INT_TRANSPARENT_BLACK,

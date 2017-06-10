@@ -517,9 +517,9 @@ void V3DDescriptorSet::Release()
 	}
 }
 
-/***********************/
+/******************************/
 /* private - V3DDescriptorSet */
-/***********************/
+/******************************/
 
 V3DDescriptorSet::V3DDescriptorSet() :
 	m_RefCounter(1),
