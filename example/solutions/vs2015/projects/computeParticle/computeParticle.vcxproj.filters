@@ -4,10 +4,24 @@
     <Filter Include="source">
       <UniqueIdentifier>{73a0d1a4-8473-42f8-92af-65b198a74f70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{ba375f8e-b78a-4d6a-8b15-515e64fe4248}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\computeParticle\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\computeParticle.comp">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="..\..\..\..\data\shader\source\computeParticle.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="..\..\..\..\data\shader\source\computeParticle.vert">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

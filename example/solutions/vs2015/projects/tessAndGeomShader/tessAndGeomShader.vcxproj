@@ -21,6 +21,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\tessAndGeomShader\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\tessAndGeomShader.frag" />
+    <None Include="..\..\..\..\data\shader\source\tessAndGeomShader.geom" />
+    <None Include="..\..\..\..\data\shader\source\tessAndGeomShader.tesc" />
+    <None Include="..\..\..\..\data\shader\source\tessAndGeomShader.tese" />
+    <None Include="..\..\..\..\data\shader\source\tessAndGeomShader.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{38E01398-F0F3-4907-ACCA-627215EA6C07}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

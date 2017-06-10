@@ -4,10 +4,21 @@
     <Filter Include="source">
       <UniqueIdentifier>{73a0d1a4-8473-42f8-92af-65b198a74f70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{051c5f98-1f18-46e6-a522-95b1bde548bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\multithread\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\multithread.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="..\..\..\..\data\shader\source\multithread.vert">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

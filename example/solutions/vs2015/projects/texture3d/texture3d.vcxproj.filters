@@ -4,10 +4,21 @@
     <Filter Include="source">
       <UniqueIdentifier>{73a0d1a4-8473-42f8-92af-65b198a74f70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{cc8280b7-01c4-478f-bb24-41e79c08cfeb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\texture3d\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\texture3d.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="..\..\..\..\data\shader\source\texture3d.vert">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

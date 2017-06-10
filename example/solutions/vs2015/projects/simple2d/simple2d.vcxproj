@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\simple2d\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\simple2d.frag" />
+    <None Include="..\..\..\..\data\shader\source\simple2d.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3407BBBE-1CBF-4EF8-AB5B-1F25A46E26EB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

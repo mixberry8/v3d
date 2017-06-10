@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\multithread\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\multithread.frag" />
+    <None Include="..\..\..\..\data\shader\source\multithread.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1308F25A-12CF-4201-B412-648C700F8E62}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

@@ -4,10 +4,21 @@
     <Filter Include="source">
       <UniqueIdentifier>{73a0d1a4-8473-42f8-92af-65b198a74f70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{1a20637d-d507-4a5c-b302-889bac9b1ad3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\multisample\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\multisample.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="..\..\..\..\data\shader\source\multisample.vert">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

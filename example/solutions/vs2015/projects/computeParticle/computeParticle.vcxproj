@@ -21,6 +21,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\computeParticle\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\computeParticle.comp" />
+    <None Include="..\..\..\..\data\shader\source\computeParticle.frag" />
+    <None Include="..\..\..\..\data\shader\source\computeParticle.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{56AAD657-7A92-4F19-8DEC-6ED6801CE837}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

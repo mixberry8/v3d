@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\textureCube\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\textureCube.frag" />
+    <None Include="..\..\..\..\data\shader\source\textureCube.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F7FD81C7-E5BD-41EC-9AB9-98D7325188B1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

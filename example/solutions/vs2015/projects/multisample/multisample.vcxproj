@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\multisample\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\data\shader\source\multisample.frag" />
+    <None Include="..\..\..\..\data\shader\source\multisample.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8479C1B4-16F5-4C9C-9F69-2CFB7FEA1681}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
