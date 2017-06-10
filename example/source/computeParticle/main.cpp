@@ -81,7 +81,7 @@ public:
 		// ウィンドウを初期化
 		// ----------------------------------------------------------------------------------------------------
 
-		if (Window::Initialize(L"computeParticle", 1024, 768, true, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
+		if (Window::Initialize(L"computeParticle", 1024, 768, false, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);
@@ -109,7 +109,7 @@ protected:
 		// フォントを初期化
 		// ----------------------------------------------------------------------------------------------------
 
-		if (m_Font.Initialize(Application::GetDevice(), L"Arial", 16, 400) == false)
+		if (m_Font.Initialize(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), L"Arial", 16, 400) == false)
 		{
 			return false;
 		}
@@ -436,7 +436,7 @@ protected:
 
 		m_Font.AddText(16, 16, stringStream.str().c_str());
 
-		if (m_Font.Bake(GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence()) == false)
+		if (m_Font.Bake() == false)
 		{
 			return false;
 		}
@@ -466,7 +466,7 @@ protected:
 
 		V3DBarrierBufferDesc barrierBuffer{};
 		barrierBuffer.offset = 0;
-		barrierBuffer.size = V3D_WHOLE_SIZE;
+		barrierBuffer.size = 0;
 
 		barrierBuffer.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
 		barrierBuffer.dstStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
@@ -536,7 +536,7 @@ protected:
 
 		// サブパス 1 - テキストの描画
 		pCommandBufer->NextSubpass();
-		m_Font.Flush(pCommandBufer, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
+		m_Font.Flush(pCommandBufer);
 
 		// レンダーパスを終了
 		pCommandBufer->EndRenderPass();
@@ -646,7 +646,7 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.srcAccessMask = 0;
@@ -859,7 +859,7 @@ protected:
 		// フォントを復帰
 		// ----------------------------------------------------------------------------------------------------
 
-		m_Font.Restore(m_pRenderPass, 1);
+		m_Font.Restore(m_pRenderPass, 1, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
 
 		// ----------------------------------------------------------------------------------------------------
 
@@ -922,6 +922,11 @@ class ComputeParticleApp : public Application
 {
 public:
 	virtual ~ComputeParticleApp() {}
+
+	virtual void OnPreCreate(ApplicationDesc& desc) override
+	{
+		desc.fps = 0;
+	}
 
 	virtual bool OnInitialize() override
 	{
