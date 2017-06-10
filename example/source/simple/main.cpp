@@ -78,9 +78,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	V3DInstanceDesc instanceDesc{};
 #ifdef _DEBUG
-	instanceDesc.layerType = V3D_LAYER_STANDARD_VALIDATION;
+	instanceDesc.layer = V3D_LAYER_STANDARD;
 #else //_DEBUG
-	instanceDesc.layerType = V3D_LAYER_OPTIMUS;
+	instanceDesc.layer = V3D_LAYER_OPTIMUS;
 #endif //_DEBUG
 	instanceDesc.log.flags = V3D_LOG_ALL;
 	instanceDesc.log.pFunction = LogFunction;
@@ -106,7 +106,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	// デバイスを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	result = g_pInstance->CreateDevice(g_pAdapter, &g_pDevice);
+	result = g_pInstance->CreateDevice(g_pAdapter, &g_pDevice, L"Simple(Device)");
 	if (result != V3D_OK)
 	{
 		ReleaseObjects();
@@ -117,7 +117,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	// フェンスを取得
 	// ----------------------------------------------------------------------------------------------------
 
-	result = g_pDevice->CreateFence(&g_pFence);
+	result = g_pDevice->CreateFence(&g_pFence, L"Simple(Fence)");
 	if (result != V3D_OK)
 	{
 		ReleaseObjects();
@@ -159,7 +159,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	graphicsCommandPoolDesc.queueFamily = queueFamily;
 	graphicsCommandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER | V3D_COMMAND_POOL_PROPERTY_TRANSIENT;
 
-	result = g_pDevice->CreateCommandPool(graphicsCommandPoolDesc, &g_pGraphicsCommandPool);
+	result = g_pDevice->CreateCommandPool(graphicsCommandPoolDesc, &g_pGraphicsCommandPool, L"Simple(CommandPool)");
 	if (result != V3D_OK)
 	{
 		ReleaseObjects();
@@ -174,7 +174,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	workCommandPoolDesc.queueFamily = queueFamily;
 	workCommandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER | V3D_COMMAND_POOL_PROPERTY_TRANSIENT;
 
-	result = g_pDevice->CreateCommandBuffer(workCommandPoolDesc, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &g_pWorkCommandBuffer);
+	result = g_pDevice->CreateCommandBuffer(workCommandPoolDesc, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &g_pWorkCommandBuffer, L"Simple(CommandBuffer)");
 	if (result != V3D_OK)
 	{
 		ReleaseObjects();
@@ -254,7 +254,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	swapChainCallbacks.pLostFunction = LostSwapChainFunction;
 	swapChainCallbacks.pRestoreFunction = RestoreSwapChainFunction;
 
-	result = g_pDevice->CreateSwapChain(swapChainDesc, swapChainCallbacks, &g_pSwapChain);
+	result = g_pDevice->CreateSwapChain(swapChainDesc, swapChainCallbacks, &g_pSwapChain, L"Simple(SwapChain)");
 	if (result != V3D_OK)
 	{
 		ReleaseObjects();
@@ -460,7 +460,8 @@ V3D_RESULT CreateSwapChainChilds()
 		static_cast<uint32_t>(attachments.size()), attachments.data(),
 		static_cast<uint32_t>(subpasses.size()), subpasses.data(),
 		static_cast<uint32_t>(subpassDependencies.size()), subpassDependencies.data(),
-		&g_pRenderPass);
+		&g_pRenderPass,
+		L"Simple(RenderPass)");
 
 	if (result != V3D_OK)
 	{
@@ -493,7 +494,7 @@ V3D_RESULT CreateSwapChainChilds()
 
 	for (uint32_t i = 0; i < g_FrameCount; i++)
 	{
-		result = g_pDevice->CreateCommandBuffer(g_pGraphicsCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &g_pFrames[i].pGraphicsCommandBuffer);
+		result = g_pDevice->CreateCommandBuffer(g_pGraphicsCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &g_pFrames[i].pGraphicsCommandBuffer, L"Simple(CommandBuffer)");
 		if (result != V3D_OK)
 		{
 			return result;
@@ -521,7 +522,7 @@ V3D_RESULT CreateSwapChainChilds()
 			imageViewDesc.baseLayer = 0;
 			imageViewDesc.layerCount = 1;
 
-			result = g_pDevice->CreateImageView(pImage, imageViewDesc, &g_pFrames[i].pImageView);
+			result = g_pDevice->CreateImageView(pImage, imageViewDesc, &g_pFrames[i].pImageView, L"Simple(SwapChainImage)");
 			if (result != V3D_OK)
 			{
 				pImage->Release();
@@ -531,7 +532,7 @@ V3D_RESULT CreateSwapChainChilds()
 			pImage->Release();
 
 			// イメージビューにバリアを張って、ステージ、アクセス、レイアウトを初期化します。
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dependencyFlags = 0;
@@ -574,7 +575,7 @@ V3D_RESULT CreateSwapChainChilds()
 	{
 		std::array<IV3DImageView*, 1> pAttachments = { g_pFrames[i].pImageView };
 
-		result = g_pDevice->CreateFrameBuffer(g_pRenderPass, static_cast<uint32_t>(pAttachments.size()), pAttachments.data(), &g_pFrames[i].pFrameBuffer);
+		result = g_pDevice->CreateFrameBuffer(g_pRenderPass, static_cast<uint32_t>(pAttachments.size()), pAttachments.data(), &g_pFrames[i].pFrameBuffer, L"Simple(FrameBuffer)");
 		if (result != V3D_OK)
 		{
 			return result;

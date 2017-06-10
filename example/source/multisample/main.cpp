@@ -89,7 +89,7 @@ protected:
 		// ƒtƒHƒ“ƒg‚ð‰Šú‰»
 		// ----------------------------------------------------------------------------------------------------
 
-		if (m_Font.Initialize(Application::GetDevice(), L"Arial", 16, 400) == false)
+		if (m_Font.Initialize(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), L"Arial", 16, 400) == false)
 		{
 			return false;
 		}
@@ -334,7 +334,7 @@ protected:
 		wsprintf(text, L"Z - X : SampleCount %u", sampleNum);
 		m_Font.AddText(16, 64, text);
 
-		if (m_Font.Bake(GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence()) == false)
+		if (m_Font.Bake() == false)
 		{
 			return false;
 		}
@@ -462,7 +462,7 @@ protected:
 
 		pCommandBufer->BeginRenderPass(m_pTextRenderPass, pTextFrameBuffer, true);
 
-		m_Font.Flush(pCommandBufer, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
+		m_Font.Flush(pCommandBufer);
 
 		pCommandBufer->EndRenderPass();
 
@@ -513,7 +513,8 @@ protected:
 			return false;
 		}
 
-		m_Font.Restore(m_pTextRenderPass, 0);
+		const V3DSwapChainDesc& swapChainDesc = GetSwapChain()->GetDesc();
+		m_Font.Restore(m_pTextRenderPass, 0, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
 
 		return true;
 	}
@@ -921,7 +922,7 @@ private:
 				return false;
 			}
 
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.srcAccessMask = 0;
@@ -956,7 +957,7 @@ private:
 				return false;
 			}
 
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.srcAccessMask = 0;
@@ -1124,6 +1125,11 @@ class MultiSampleApp : public Application
 public:
 	virtual ~MultiSampleApp() {}
 
+	virtual void OnPreCreate(ApplicationDesc& desc) override
+	{
+		desc.fps = 0;
+	}
+
 	virtual bool OnInitialize() override
 	{
 		uint32_t queueFamily = Application::FindQueueFamily(V3D_QUEUE_GRAPHICS, 2);
@@ -1138,7 +1144,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"multisample", 1024, 768, true, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"multisample", 1024, 768, false, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

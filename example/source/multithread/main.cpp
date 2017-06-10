@@ -43,7 +43,7 @@ protected:
 		// フォントを初期化
 		// ----------------------------------------------------------------------------------------------------
 
-		if (m_Font.Initialize(Application::GetDevice(), L"Arial", 16, 400) == false)
+		if (m_Font.Initialize(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), L"Arial", 16, 400) == false)
 		{
 			return false;
 		}
@@ -303,7 +303,7 @@ protected:
 		swprintf_s(text, L"Fps %f", Application::GetFps());
 		m_Font.AddText(16, 16, text);
 
-		if (m_Font.Bake(GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence()) == false)
+		if (m_Font.Bake() == false)
 		{
 			return false;
 		}
@@ -377,13 +377,13 @@ protected:
 			return false;
 		}
 
+		// サブパス 0
 #ifdef ENABLE_MULTITREAD
 
 		// レンダーパスを開始
 		// 第三引数はサブパスのコマンドがセカンダリコマンドバッファーに記録されるので false を指定します。
 		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, false);
 
-		// サブパス 0
 		pCommandBufer->ExecuteCommandBuffers(m_ParallelManager.GetThreadCount(), m_ParallelData.commandBuffers[m_ParallelData.frame].data());
 
 #else //ENABLE_MULTITREAD
@@ -392,7 +392,6 @@ protected:
 		// 第三引数はサブパスのコマンドがプライマリコマンドバッファーに記録されるので true を指定します。
 		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
 
-		// サブパス 0
 		const DrawDesc& drawDesc = m_ParallelData.meshDrawDesc;
 		IV3DDescriptorSet* pDescriptorSet = m_ParallelData.descriptorSets[m_ParallelData.frame];
 		uint32_t uniformDynamicOffset = 0;
@@ -421,7 +420,7 @@ protected:
 
 		// サブパス 1
 		pCommandBufer->NextSubpass();
-		m_Font.Flush(pCommandBufer, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
+		m_Font.Flush(pCommandBufer);
 
 		// レンダーパスを終了
 		pCommandBufer->EndRenderPass();
@@ -586,7 +585,7 @@ protected:
 
 			for (uint32_t i = 0; i < swapChainDesc.imageCount; i++)
 			{
-				V3DBarrierImageDesc barrier{};
+				V3DBarrierImageViewDesc barrier{};
 				barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 				barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 				barrier.srcAccessMask = 0;
@@ -810,7 +809,7 @@ protected:
 		// フォント
 		// ----------------------------------------------------------------------------------------------------
 
-		m_Font.Restore(m_pRenderPass, 1);
+		m_Font.Restore(m_pRenderPass, 1, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
 
 		// ----------------------------------------------------------------------------------------------------
 		// ユニフォーム

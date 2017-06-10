@@ -41,7 +41,7 @@ protected:
 		// フォントを初期化
 		// ----------------------------------------------------------------------------------------------------
 
-		if (m_Font.Initialize(Application::GetDevice(), L"Arial", 16, 400) == false)
+		if (m_Font.Initialize(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), L"Arial", 16, 400) == false)
 		{
 			return false;
 		}
@@ -271,7 +271,7 @@ protected:
 			}
 
 			uint8_t* pMemory;
-			result = m_pMeshBuffer->Map(0, V3D_WHOLE_SIZE, reinterpret_cast<void**>(&pMemory));
+			result = m_pMeshBuffer->Map(0, 0, reinterpret_cast<void**>(&pMemory));
 			if (result == V3D_OK)
 			{
 				// バーテックスを書き込む
@@ -415,7 +415,7 @@ protected:
 		swprintf_s(text, L"A - S : Height %.1f\nZ - X : Level %u\nSpace : PolygonMode %s", m_Height, m_Level, polygonMode);
 		m_Font.AddText(16, 48, text);
 
-		if (m_Font.Bake(GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence()) == false)
+		if (m_Font.Bake() == false)
 		{
 			return false;
 		}
@@ -482,7 +482,7 @@ protected:
 
 		// サブパス 1 - テキストの描画
 		pCommandBufer->NextSubpass();
-		m_Font.Flush(pCommandBufer, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
+		m_Font.Flush(pCommandBufer);
 
 		// レンダーパスを終了
 		pCommandBufer->EndRenderPass();
@@ -591,7 +591,7 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.srcAccessMask = 0;
@@ -818,10 +818,10 @@ protected:
 		}
 
 		// ----------------------------------------------------------------------------------------------------
-		// フォント
+		// フォントを復帰
 		// ----------------------------------------------------------------------------------------------------
 
-		m_Font.Restore(m_pRenderPass, 1);
+		m_Font.Restore(m_pRenderPass, 1, swapChainDesc.imageWidth, swapChainDesc.imageHeight);
 
 		// ----------------------------------------------------------------------------------------------------
 
@@ -941,6 +941,11 @@ class TessellationShaderApp : public Application
 public:
 	virtual ~TessellationShaderApp() {}
 
+	virtual void OnPreCreate(ApplicationDesc& desc) override
+	{
+		desc.fps = 0;
+	}
+
 	virtual bool OnInitialize() override
 	{
 		uint32_t queueFamily = Application::FindQueueFamily(V3D_QUEUE_GRAPHICS, 2);
@@ -955,7 +960,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"tessellationShader", 1024, 768, true, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"tessellationShader", 1024, 768, false, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);

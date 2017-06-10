@@ -384,7 +384,7 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.srcAccessMask = 0;

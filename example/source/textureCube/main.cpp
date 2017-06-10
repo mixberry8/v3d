@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "ViewCameraWindow.h"
+#include "Font.h"
 
 #define WORK_QUEUE_INDEX 0
 #define GRAPHICS_QUEUE_INDEX 1
@@ -30,6 +31,15 @@ public:
 protected:
 	virtual bool OnInitialize() override
 	{
+		// ----------------------------------------------------------------------------------------------------
+		// フォントを初期化
+		// ----------------------------------------------------------------------------------------------------
+
+		if (m_Font.Initialize(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), L"Arial", 16, FW_NORMAL) == false)
+		{
+			return false;
+		}
+
 		// ----------------------------------------------------------------------------------------------------
 		// シェーダーモジュールを作成
 		// ----------------------------------------------------------------------------------------------------
@@ -210,11 +220,32 @@ protected:
 		SAFE_RELEASE(m_pDescriptorSetLayout);
 		SAFE_RELEASE(m_pFragmentShaderModule);
 		SAFE_RELEASE(m_pVertexShaderModule);
+
+		m_Font.Dispose();
 	}
 
 	virtual bool OnIdle() override
 	{
-		//カメラを更新
+		// ----------------------------------------------------------------------------------------------------
+		// テキストを更新
+		// ----------------------------------------------------------------------------------------------------
+
+		std::wstring text;
+
+		m_Font.Reset();
+
+		text = L"Fps " + std::to_wstring(Application::GetFps());
+		m_Font.AddText(16, 16, text.c_str());
+
+		if (m_Font.Bake() == false)
+		{
+			return false;
+		}
+
+		// ----------------------------------------------------------------------------------------------------
+		// カメラを更新
+		// ----------------------------------------------------------------------------------------------------
+
 		ViewCameraWindow::OnIdle();
 
 		// ----------------------------------------------------------------------------------------------------
@@ -256,13 +287,17 @@ protected:
 		scissor.height = swapChainDesc.imageHeight;
 		pCommandBufer->SetScissor(0, 1, &scissor);
 
+		// サブパス 0 : メッシュの描画
 		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &scene);
-
 		pCommandBufer->BindPipeline(m_pPipeline);
 		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
 		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_MeshDrawDesc.vertexOffset);
 		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_MeshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
 		pCommandBufer->DrawIndexed(36, 1, 0, 0, 0);
+
+		// サブパス 1 : テキストの描画
+		pCommandBufer->NextSubpass();
+		m_Font.Flush(pCommandBufer);
 
 		pCommandBufer->EndRenderPass();
 
@@ -278,6 +313,8 @@ protected:
 
 	virtual void OnLostSwapChain() override
 	{
+		m_Font.Lost();
+
 		SAFE_RELEASE(m_pPipeline);
 
 		if (m_FrameBuffers.empty() == false)
@@ -368,7 +405,7 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageDesc barrier{};
+			V3DBarrierImageViewDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.srcAccessMask = 0;
@@ -422,31 +459,50 @@ protected:
 		/* サブパス 0 */
 		/**************/
 
+		std::array<V3DSubpassDesc, 2> subpasses;
+
 		// カラー
-		std::array<V3DAttachmentReference, 1> colorAttachments;
-		colorAttachments[0].attachment = 0;
-		colorAttachments[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		std::array<V3DAttachmentReference, 1> colorAttachments0;
+		colorAttachments0[0].attachment = 0;
+		colorAttachments0[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
 
 		// デプスステンシル
-		V3DAttachmentReference depthStencilAttachment;
-		depthStencilAttachment.attachment = 1;
-		depthStencilAttachment.layout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
+		V3DAttachmentReference depthStencilAttachment0;
+		depthStencilAttachment0.attachment = 1;
+		depthStencilAttachment0.layout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
 
-		std::array<V3DSubpassDesc, 1> subpasses;
 		subpasses[0].inputAttachmentCount = 0;
 		subpasses[0].pInputAttachments = nullptr;
-		subpasses[0].colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
-		subpasses[0].pColorAttachments = colorAttachments.data();
+		subpasses[0].colorAttachmentCount = static_cast<uint32_t>(colorAttachments0.size());
+		subpasses[0].pColorAttachments = colorAttachments0.data();
 		subpasses[0].pResolveAttachments = nullptr;
-		subpasses[0].pDepthStencilAttachment = &depthStencilAttachment;
+		subpasses[0].pDepthStencilAttachment = &depthStencilAttachment0;
 		subpasses[0].preserveAttachmentCount = 0;
 		subpasses[0].pPreserveAttachments = nullptr;
+
+		/**************/
+		/* サブパス 1 */
+		/**************/
+
+		// カラー
+		std::array<V3DAttachmentReference, 1> colorAttachments1;
+		colorAttachments1[0].attachment = 0;
+		colorAttachments1[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+
+		subpasses[1].inputAttachmentCount = 0;
+		subpasses[1].pInputAttachments = nullptr;
+		subpasses[1].colorAttachmentCount = static_cast<uint32_t>(colorAttachments1.size());
+		subpasses[1].pColorAttachments = colorAttachments1.data();
+		subpasses[1].pResolveAttachments = nullptr;
+		subpasses[1].pDepthStencilAttachment = nullptr;
+		subpasses[1].preserveAttachmentCount = 0;
+		subpasses[1].pPreserveAttachments = nullptr;
 
 		/********************/
 		/* サブパスの依存性 */
 		/********************/
 
-		std::array<V3DSubpassDependencyDesc, 2> subpassDependencies;
+		std::array<V3DSubpassDependencyDesc, 3> subpassDependencies;
 
 		subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL;
 		subpassDependencies[0].dstSubpass = 0;
@@ -457,12 +513,20 @@ protected:
 		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 		subpassDependencies[1].srcSubpass = 0;
-		subpassDependencies[1].dstSubpass = V3D_SUBPASS_EXTERNAL;
-		subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
-		subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+		subpassDependencies[1].dstSubpass = 1;
+		subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		subpassDependencies[1].srcAccessMask = V3D_ACCESS_MEMORY_READ;
+		subpassDependencies[1].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
+		subpassDependencies[2].srcSubpass = 1;
+		subpassDependencies[2].dstSubpass = V3D_SUBPASS_EXTERNAL;
+		subpassDependencies[2].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		subpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+		subpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[2].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+		subpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 		V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 			TO_UI32(attachments.size()), attachments.data(),
@@ -551,6 +615,15 @@ protected:
 		}
 
 		// ----------------------------------------------------------------------------------------------------
+		// フォントを復帰
+		// ----------------------------------------------------------------------------------------------------
+
+		if (m_Font.Restore(m_pRenderPass, 1, swapChainDesc.imageWidth, swapChainDesc.imageHeight) == false)
+		{
+			return false;
+		}
+
+		// ----------------------------------------------------------------------------------------------------
 
 		return true;
 	}
@@ -589,6 +662,8 @@ private:
 		Matrix4x4 worldViewProjectionMatrix;
 	};
 
+	Font m_Font;
+
 	IV3DShaderModule* m_pVertexShaderModule;
 	IV3DShaderModule* m_pFragmentShaderModule;
 	IV3DDescriptorSetLayout* m_pDescriptorSetLayout;
@@ -613,6 +688,11 @@ class TextureCubeApp : public Application
 public:
 	virtual ~TextureCubeApp() {}
 
+	virtual void OnPreCreate(ApplicationDesc& desc) override
+	{
+		desc.fps = 0;
+	}
+
 	virtual bool OnInitialize() override
 	{
 		uint32_t queueFamily = Application::FindQueueFamily(V3D_QUEUE_GRAPHICS, 2);
@@ -627,7 +707,7 @@ public:
 		IV3DQueue* pGraphicsQueue;
 		Application::GetDevice()->GetQueue(queueFamily, GRAPHICS_QUEUE_INDEX, &pGraphicsQueue);
 
-		if (m_Window.Initialize(L"textureCube", 1024, 768, true, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
+		if (m_Window.Initialize(L"textureCube", 1024, 768, false, WINDOW_BUFFERING_TYPE_FAKE, pWorkQueue, pGraphicsQueue) == false)
 		{
 			SAFE_RELEASE(pGraphicsQueue);
 			SAFE_RELEASE(pWorkQueue);
