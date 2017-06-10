@@ -1,18 +1,17 @@
 #include "Font.h"
 
 Font::Font() :
-	m_Handle(nullptr),
-	m_ImageFormat(V3D_FORMAT_UNDEFINED),
 	m_Height(0),
 	m_HalfHeight(0),
 	m_BlockCount(0),
 	m_pDevice(nullptr),
 	m_pVertShaderModule(nullptr),
 	m_pFragShaderModule(nullptr),
-	m_pDescriptorSetLayout(nullptr),
+	m_pDescriptorSet(nullptr),
 	m_pPipelineLayout(nullptr),
 	m_pPipeline(nullptr),
-	m_pSampler(nullptr)
+	m_ScreenWidth(0),
+	m_ScreenHeight(0)
 {
 }
 
@@ -21,10 +20,28 @@ Font::~Font()
 	Dispose();
 }
 
-bool Font::Initialize(IV3DDevice* pDevice, const wchar_t* pFontName, int32_t height, int32_t weight)
+bool Font::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence, const wchar_t* pFontName, int32_t height, int32_t weight)
 {
 	SAFE_ADD_REF(pDevice);
 	m_pDevice = pDevice;
+
+	// ----------------------------------------------------------------------------------------------------
+	// フォントイメージのフォーマットを決定する
+	// ----------------------------------------------------------------------------------------------------
+
+	V3D_FORMAT imageFormat = V3D_FORMAT_B8G8R8A8_UNORM;
+	if (m_pDevice->CheckImageFormatFeature(imageFormat, V3D_IMAGE_FORMAT_FEATURE_SAMPLED) != V3D_OK)
+	{
+		imageFormat = V3D_FORMAT_A8B8G8R8_UNORM;
+		if (m_pDevice->CheckImageFormatFeature(imageFormat, V3D_IMAGE_FORMAT_FEATURE_SAMPLED) != V3D_OK)
+		{
+			imageFormat = V3D_FORMAT_B8G8R8A8_UNORM;
+			if (m_pDevice->CheckImageFormatFeature(imageFormat, V3D_IMAGE_FORMAT_FEATURE_SAMPLED) != V3D_OK)
+			{
+				return false;
+			}
+		}
+	}
 
 	// ----------------------------------------------------------------------------------------------------
 	// シェーダーモジュールを作成
@@ -66,43 +83,272 @@ bool Font::Initialize(IV3DDevice* pDevice, const wchar_t* pFontName, int32_t hei
 	}
 
 	// ----------------------------------------------------------------------------------------------------
-	// フォントを作成
+	// フォントイメージを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	m_Handle = CreateFont(
-		height,
-		0, 0, 0,
-		weight,
-		0, 0, 0,
-		SHIFTJIS_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FIXED_PITCH | FF_MODERN,
-		pFontName);
+	IV3DImageView* pDeviceImageView;
 
-	if (m_Handle == nullptr)
 	{
-		return false;
-	}
+		/******************/
+		/* フォントを作成 */
+		/******************/
 
-	// ----------------------------------------------------------------------------------------------------
-	// イメージフォーマットを決定する
-	// ----------------------------------------------------------------------------------------------------
+		HFONT fontHandle = CreateFont(
+			height,
+			0, 0, 0,
+			weight,
+			0, 0, 0,
+			SHIFTJIS_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FIXED_PITCH | FF_MODERN,
+			pFontName);
 
-	m_ImageFormat = V3D_FORMAT_B8G8R8A8_UNORM;
-	if (m_pDevice->CheckImageFormatFeature(m_ImageFormat, V3D_IMAGE_FORMAT_FEATURE_SAMPLED) != V3D_OK)
-	{
-		m_ImageFormat = V3D_FORMAT_A8B8G8R8_UNORM;
-		if (m_pDevice->CheckImageFormatFeature(m_ImageFormat, V3D_IMAGE_FORMAT_FEATURE_SAMPLED) != V3D_OK)
+		if (fontHandle == nullptr)
 		{
-			m_ImageFormat = V3D_FORMAT_B8G8R8A8_UNORM;
-			if (m_pDevice->CheckImageFormatFeature(m_ImageFormat, V3D_IMAGE_FORMAT_FEATURE_SAMPLED) != V3D_OK)
-			{
-				return false;
-			}
+			return false;
 		}
+
+		/************************/
+		/* ホストイメージを作成 */
+		/************************/
+
+		V3DImageDesc imageDesc;
+		imageDesc.type = V3D_IMAGE_TYPE_2D;
+		imageDesc.format = imageFormat;
+		imageDesc.width = Font::ImageSize;
+		imageDesc.height = Font::ImageSize;
+		imageDesc.depth = 1;
+		imageDesc.levelCount = 1;
+		imageDesc.layerCount = 1;
+		imageDesc.samples = V3D_SAMPLE_COUNT_1;
+		imageDesc.tiling = V3D_IMAGE_TILING_LINEAR;
+		imageDesc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_SRC;
+
+		IV3DImage* pHostImage;
+		V3D_RESULT result = m_pDevice->CreateImage(imageDesc, V3D_IMAGE_LAYOUT_PREINITIALIZED, &pHostImage);
+		if (result != V3D_OK)
+		{
+			DeleteObject(fontHandle);
+			return false;
+		}
+
+		result = m_pDevice->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, pHostImage);
+		if (result != V3D_OK)
+		{
+			pHostImage->Release();
+			DeleteObject(fontHandle);
+			return false;
+		}
+
+		/************************************************/
+		/* デバイスコンテキストを取得してフォントを設定 */
+		/************************************************/
+
+		HDC dcHandle = ::GetDC(nullptr);
+		HFONT oldFontHandle = static_cast<HFONT>(SelectObject(dcHandle, fontHandle));
+
+		TEXTMETRIC textMetric;
+		if (::GetTextMetrics(dcHandle, &textMetric) == FALSE)
+		{
+			pHostImage->Release();
+			DeleteObject(fontHandle);
+			::SelectObject(dcHandle, oldFontHandle);
+			::ReleaseDC(nullptr, dcHandle);
+			return false;
+		}
+
+		/****************************************/
+		/* ホストイメージにフォントをマッピング */
+		/****************************************/
+
+		void* pMemory;
+		result = pHostImage->Map(0, 0, &pMemory);
+		if (result != V3D_OK)
+		{
+			pHostImage->Release();
+			DeleteObject(fontHandle);
+			::SelectObject(dcHandle, oldFontHandle);
+			::ReleaseDC(nullptr, dcHandle);
+			return false;
+		}
+
+		std::vector<uint8_t> glyphBuffer;
+		uint32_t imageX = 0;
+		uint32_t imageY = 0;
+		uint32_t imageLine = 0;
+
+		m_Glyphs.reserve(Font::LastCode - Font::FirstCode + 1);
+
+		for (wchar_t code = Font::FirstCode; code <= Font::LastCode; code++)
+		{
+			GLYPHMETRICS glyphMetrics;
+
+			uint32_t glyphBufferSize = GetGlyphOutlineW(dcHandle, code, GGO_GRAY8_BITMAP, &glyphMetrics, 0, nullptr, &Font::Matrix);
+			ASSERT(glyphBufferSize != GDI_ERROR);
+
+			glyphBuffer.resize(glyphBufferSize);
+
+			if (Font::ImageSize <= (imageX + glyphMetrics.gmBlackBoxX))
+			{
+				imageX = Font::Margin;
+				imageY = imageLine + Font::Margin;
+			}
+
+			ASSERT(Font::ImageSize >= (imageY + glyphMetrics.gmBlackBoxY));
+
+			Glyph glyph;
+			glyph.code = code;
+			glyph.left = static_cast<float>(imageX) * Font::InvImageSizeF;
+			glyph.right = static_cast<float>(imageX + glyphMetrics.gmBlackBoxX) * Font::InvImageSizeF;
+			glyph.top = static_cast<float>(imageY) * Font::InvImageSizeF;
+			glyph.bottom = static_cast<float>(imageY + glyphMetrics.gmBlackBoxY) * Font::InvImageSizeF;
+			glyph.x = glyphMetrics.gmptGlyphOrigin.x;
+			glyph.y = textMetric.tmAscent - glyphMetrics.gmptGlyphOrigin.y;
+			glyph.width = glyphMetrics.gmBlackBoxX;
+			glyph.height = glyphMetrics.gmBlackBoxY;
+			glyph.cellWidth = glyphMetrics.gmCellIncX;
+			m_Glyphs.push_back(glyph);
+
+			if (GetGlyphOutlineW(dcHandle, code, GGO_GRAY8_BITMAP, &glyphMetrics, glyphBufferSize, glyphBuffer.data(), &Font::Matrix) != GDI_ERROR)
+			{
+				uint32_t srcPitch = ((glyphMetrics.gmBlackBoxX + 3) >> 2) << 2;
+				uint8_t* pSrcRow = glyphBuffer.data();
+				uint32_t* pDstRow = static_cast<uint32_t*>(pMemory) + Font::ImageSize * imageY + imageX;
+
+				for (uint32_t i = 0; i < glyphMetrics.gmBlackBoxY; i++)
+				{
+					uint8_t* pSrc = pSrcRow;
+					uint8_t* pSrcEnd = pSrc + glyphMetrics.gmBlackBoxX;
+					uint32_t* pDst = pDstRow;
+
+					while (pSrc != pSrcEnd)
+					{
+						uint8_t alpha = *pSrc++;
+						alpha = ((alpha * 255) >> 6);
+
+						*pDst++ = (alpha << 24) | 0x00FFFFFF;
+					}
+
+					pSrcRow += srcPitch;
+					pDstRow += Font::ImageSize;
+				}
+			}
+
+			imageX += glyphMetrics.gmBlackBoxX + Font::Margin;
+			imageLine = MAXIMUM(imageY + TO_I32(glyphMetrics.gmBlackBoxY), imageLine);
+		}
+
+		DeleteObject(fontHandle);
+		SelectObject(dcHandle, oldFontHandle);
+		ReleaseDC(nullptr, dcHandle);
+
+		result = pHostImage->Unmap();
+		if (result != V3D_OK)
+		{
+			pHostImage->Release();
+			return false;
+		}
+
+		/**************************/
+		/* デバイスイメージを作成 */
+		/**************************/
+
+		imageDesc.tiling = V3D_IMAGE_TILING_OPTIMAL;
+		imageDesc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_SAMPLED;
+
+		IV3DImage* pDeviceImage;
+		result = m_pDevice->CreateImage(imageDesc, V3D_IMAGE_LAYOUT_UNDEFINED, &pDeviceImage, L"Font");
+		if (result != V3D_OK)
+		{
+			pHostImage->Release();
+			return false;
+		}
+
+		result = m_pDevice->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_DEVICE_LOCAL, pDeviceImage, L"Font");
+		if (result != V3D_OK)
+		{
+			pDeviceImage->Release();
+			pHostImage->Release();
+			return false;
+		}
+
+		/******************************************/
+		/* ホストイメージをデバイスイメージに転送 */
+		/******************************************/
+
+		CommandHelper commandHelper(pQueue, pCommandBuffer, pFence);
+
+		if (commandHelper.Begin() == nullptr)
+		{
+			pDeviceImage->Release();
+			pHostImage->Release();
+			return false;
+		}
+
+		V3DBarrierImageDesc barrier{};
+		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		barrier.dependencyFlags = 0;
+
+		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
+		barrier.srcLayout = V3D_IMAGE_LAYOUT_PREINITIALIZED;
+		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
+		pCommandBuffer->BarrierImage(pHostImage, barrier);
+
+		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+
+		pCommandBuffer->CopyImage(pDeviceImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_SRC);
+
+		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+		pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+
+		if (commandHelper.End() == false)
+		{
+			pDeviceImage->Release();
+			pHostImage->Release();
+			return false;
+		}
+
+		pHostImage->Release();
+
+		/**********************************/
+		/* デバイスイメージのビューを作成 */
+		/**********************************/
+
+		V3DImageViewDesc imageViewDesc;
+		imageViewDesc.type = V3D_IMAGE_VIEW_TYPE_2D;
+		imageViewDesc.baseLevel = 0;
+		imageViewDesc.levelCount = 1;
+		imageViewDesc.baseLayer = 0;
+		imageViewDesc.layerCount = 1;
+
+		result = m_pDevice->CreateImageView(pDeviceImage, imageViewDesc, &pDeviceImageView, L"Font");
+		if (result != V3D_OK)
+		{
+			pDeviceImage->Release();
+			return false;
+		}
+
+		pDeviceImage->Release();
 	}
 
 	// ----------------------------------------------------------------------------------------------------
 	// デスクリプタセットレイアウトを作成
 	// ----------------------------------------------------------------------------------------------------
+
+	IV3DDescriptorSetLayout* pDescriptorSetLayout;
 
 	{
 		Array1<V3DDescriptorDesc, 1> descriptors =
@@ -110,7 +356,7 @@ bool Font::Initialize(IV3DDevice* pDevice, const wchar_t* pFontName, int32_t hei
 			{ 0, V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, V3D_SHADER_STAGE_FRAGMENT }
 		};
 
-		V3D_RESULT result = m_pDevice->CreateDescriptorSetLayout(TO_UI32(descriptors.size()), descriptors.data(), Font::DescriptorSetPoolSize, Font::DescriptorSetPoolSize, &m_pDescriptorSetLayout);
+		V3D_RESULT result = m_pDevice->CreateDescriptorSetLayout(TO_UI32(descriptors.size()), descriptors.data(), Font::DescriptorSetPoolSize, Font::DescriptorSetPoolSize, &pDescriptorSetLayout);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -123,11 +369,12 @@ bool Font::Initialize(IV3DDevice* pDevice, const wchar_t* pFontName, int32_t hei
 
 	{
 		Array1<V3DConstantDesc, 1> constants = { V3D_SHADER_STAGE_VERTEX, 0, sizeof(Matrix4x4) };
-		Array1<IV3DDescriptorSetLayout*, 1> descriptorSetLayouts = { m_pDescriptorSetLayout };
+		Array1<IV3DDescriptorSetLayout*, 1> descriptorSetLayouts = { pDescriptorSetLayout };
 
 		V3D_RESULT result = m_pDevice->CreatePipelineLayout(TO_UI32(constants.size()), constants.data(), TO_UI32(descriptorSetLayouts.size()), descriptorSetLayouts.data(), &m_pPipelineLayout);
 		if (result != V3D_OK)
 		{
+			pDescriptorSetLayout->Release();
 			return false;
 		}
 	}
@@ -136,11 +383,13 @@ bool Font::Initialize(IV3DDevice* pDevice, const wchar_t* pFontName, int32_t hei
 	// サンプラーを作成
 	// ----------------------------------------------------------------------------------------------------
 
+	IV3DSampler* pSampler;
+
 	{
 		V3DSamplerDesc samplerDesc{};
 		samplerDesc.magFilter = V3D_FILTER_NEAREST;
 		samplerDesc.minFilter = V3D_FILTER_NEAREST;
-		samplerDesc.mipmapMode =  V3D_MIPMAP_MODE_NEAREST;
+		samplerDesc.mipmapMode = V3D_MIPMAP_MODE_NEAREST;
 		samplerDesc.addressModeU = V3D_ADDRESS_MODE_CLAMP_TO_BORDER;
 		samplerDesc.addressModeV = V3D_ADDRESS_MODE_CLAMP_TO_BORDER;
 		samplerDesc.addressModeW = V3D_ADDRESS_MODE_CLAMP_TO_BORDER;
@@ -153,12 +402,47 @@ bool Font::Initialize(IV3DDevice* pDevice, const wchar_t* pFontName, int32_t hei
 		samplerDesc.maxLod = 0.0f;
 		samplerDesc.borderColor = V3D_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
-		V3D_RESULT result = m_pDevice->CreateSampler(samplerDesc, &m_pSampler);
+		V3D_RESULT result = m_pDevice->CreateSampler(samplerDesc, &pSampler);
 		if (result != V3D_OK)
 		{
+			pDescriptorSetLayout->Release();
 			return false;
 		}
 	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// デスクリプタセットを作成
+	// ----------------------------------------------------------------------------------------------------
+
+	{
+		V3D_RESULT result = m_pDevice->CreateDescriptorSet(pDescriptorSetLayout, &m_pDescriptorSet);
+		if (result != V3D_OK)
+		{
+			pDescriptorSetLayout->Release();
+			pSampler->Release();
+			return false;
+		}
+
+		result = m_pDescriptorSet->SetImageViewAndSampler(0, pDeviceImageView, pSampler);
+		if (result != V3D_OK)
+		{
+			m_pDescriptorSet->Release();
+			pDescriptorSetLayout->Release();
+			pSampler->Release();
+			pDeviceImageView->Release();
+			return false;
+		}
+
+		m_pDescriptorSet->Update();
+	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// 後処理
+	// ----------------------------------------------------------------------------------------------------
+
+	pDescriptorSetLayout->Release();
+	pSampler->Release();
+	pDeviceImageView->Release();
 
 	// ----------------------------------------------------------------------------------------------------
 	// 初期化
@@ -183,26 +467,15 @@ void Font::Dispose()
 	for (size_t i = 0; i < m_Blocks.size(); i++)
 	{
 		Font::Block& block = m_Blocks[i];
-
 		SAFE_RELEASE(block.pVertexBuffer);
-		SAFE_RELEASE(block.pDescriptorSet);
-		SAFE_RELEASE(block.pDeviceImageView);
-		SAFE_RELEASE(block.pDeviceImage);
-		SAFE_RELEASE(block.pHostImage);
 	}
 
-	SAFE_RELEASE(m_pSampler);
 	SAFE_RELEASE(m_pPipeline);
 	SAFE_RELEASE(m_pPipelineLayout);
-	SAFE_RELEASE(m_pDescriptorSetLayout);
+	SAFE_RELEASE(m_pDescriptorSet);
 	SAFE_RELEASE(m_pFragShaderModule);
 	SAFE_RELEASE(m_pVertShaderModule);
 	SAFE_RELEASE(m_pDevice);
-
-	if (m_Handle != nullptr)
-	{
-		DeleteObject(m_Handle);
-	}
 }
 
 void Font::Lost()
@@ -210,9 +483,17 @@ void Font::Lost()
 	SAFE_RELEASE(m_pPipeline);
 }
 
-bool Font::Restore(IV3DRenderPass* pRenderPass, uint32_t subpass)
+bool Font::Restore(IV3DRenderPass* pRenderPass, uint32_t subpass, uint32_t screenWidth, uint32_t screenHeight)
 {
+	// ----------------------------------------------------------------------------------------------------
+	// 念のため解放
+	// ----------------------------------------------------------------------------------------------------
+
 	Lost();
+
+	// ----------------------------------------------------------------------------------------------------
+	// パイプラインを作成
+	// ----------------------------------------------------------------------------------------------------
 
 	Array1<V3DPipelineVertexElement, 2> vertexElements =
 	{
@@ -273,6 +554,15 @@ bool Font::Restore(IV3DRenderPass* pRenderPass, uint32_t subpass)
 		return false;
 	}
 
+	// ----------------------------------------------------------------------------------------------------
+	// スクリーンサイズを更新
+	// ----------------------------------------------------------------------------------------------------
+
+	m_ScreenWidth = screenWidth;
+	m_ScreenHeight = screenHeight;
+
+	// ----------------------------------------------------------------------------------------------------
+
 	return true;
 }
 
@@ -282,9 +572,6 @@ void Font::Reset()
 	{
 		Font::Block& block = m_Blocks[i];
 
-		block.imageX = Font::Margin;
-		block.imageY = Font::Margin;
-		block.imageLine = Font::Margin;
 		block.characters.clear();
 		block.vertexCount = 0;
 	}
@@ -292,154 +579,23 @@ void Font::Reset()
 	m_BlockCount = 0;
 }
 
-bool Font::Bake(IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence)
+bool Font::Bake()
 {
 	if (m_BlockCount == 0)
 	{
 		return true;
 	}
 
-	HDC dcHandle = GetDC(nullptr);
-	HFONT oldHandle = static_cast<HFONT>(::SelectObject(dcHandle, m_Handle));
-
-	TEXTMETRIC textMetric;
-	if (::GetTextMetrics(dcHandle, &textMetric) == FALSE)
-	{
-		::SelectObject(dcHandle, oldHandle);
-		::ReleaseDC(nullptr, dcHandle);
-		return false;
-	}
-
-	Font::Block* pBlockBegin = m_Blocks.data();
-	Font::Block* pBlockEnd = pBlockBegin + m_BlockCount;
-	Font::Block* pBlock;
-
 	// ----------------------------------------------------------------------------------------------------
-	// イメージのバリア
+	// バーテックスを書き込む
 	// ----------------------------------------------------------------------------------------------------
 
-	CommandHelper commandHelper(pQueue, pCommandBuffer, pFence);
+	Font::Block* pBlock = m_Blocks.data();
+	Font::Block* pBlockEnd = pBlock + m_BlockCount;
 
-	if (commandHelper.Begin() == nullptr)
-	{
-		return false;
-	}
-
-	pBlock = pBlockBegin;
-	while (pBlock != pBlockEnd)
-	{
-		if (pBlock->isInit == false)
-		{
-			V3DBarrierImageDesc barrier{};
-
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_HOST;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = V3D_ACCESS_HOST_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_GENERAL;
-			pCommandBuffer->BarrierImage(pBlock->pHostImage, barrier);
-
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-			pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
-
-			pBlock->isInit = true;
-		}
-		else
-		{
-			V3DBarrierImageDesc barrier{};
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_HOST;
-			barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-			barrier.dstAccessMask = V3D_ACCESS_HOST_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_GENERAL;
-			pCommandBuffer->BarrierImage(pBlock->pHostImage, barrier);
-
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-			barrier.srcAccessMask = V3D_ACCESS_SHADER_READ;
-			barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-			pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
-		}
-
-		pBlock++;
-	}
-
-	if (commandHelper.End() == false)
-	{
-		return false;
-	}
-
-	// ----------------------------------------------------------------------------------------------------
-	// イメージにフォントを書き込む
-	// ----------------------------------------------------------------------------------------------------
-
-	pBlock = pBlockBegin;
 	while (pBlock != pBlockEnd)
 	{
 		void* pMemory;
-
-		if (pBlock->pHostImage->Map(0, V3D_WHOLE_SIZE, &pMemory) == V3D_OK)
-		{
-			Font::Character* pChara = pBlock->characters.data();
-			Font::Character* pCharaEnd = pChara + pBlock->characters.size();
-
-			while (pChara != pCharaEnd)
-			{
-				m_GlyphBuffer.resize(pChara->glyphBufferSize);
-
-				if (GetGlyphOutlineW(dcHandle, pChara->code, GGO_GRAY8_BITMAP, &pChara->glyphMetrics, pChara->glyphBufferSize, m_GlyphBuffer.data(), &Font::Matrix) != GDI_ERROR)
-				{
-					const GLYPHMETRICS& glyphMetrics = pChara->glyphMetrics;
-
-					uint32_t srcPitch = ((glyphMetrics.gmBlackBoxX + 3) >> 2) << 2;
-					uint8_t* pSrcRow = m_GlyphBuffer.data();
-					uint32_t* pDstRow = static_cast<uint32_t*>(pMemory) + Font::ImageSize * pChara->sy + pChara->sx;
-
-					for (uint32_t i = 0; i < glyphMetrics.gmBlackBoxY; i++)
-					{
-						uint8_t* pSrc = pSrcRow;
-						uint8_t* pSrcEnd = pSrc + glyphMetrics.gmBlackBoxX;
-						uint32_t* pDst = pDstRow;
-
-						while (pSrc != pSrcEnd)
-						{
-							uint8_t alpha = *pSrc++;
-							alpha = ((alpha * 255) >> 6);
-
-							*pDst++ = (alpha << 24) | 0x00FFFFFF;
-						}
-
-						pSrcRow += srcPitch;
-						pDstRow += Font::ImageSize;
-					}
-				}
-
-				pChara++;
-			}
-
-			pBlock->pHostImage->Unmap();
-		}
-
-		// ----------------------------------------------------------------------------------------------------
-		// バーテックスを書き込む
-		// ----------------------------------------------------------------------------------------------------
 
 		if (pBlock->pVertexBuffer->Map(0, pBlock->pVertexBuffer->GetResourceDesc().memorySize, &pMemory) == V3D_OK)
 		{
@@ -450,15 +606,17 @@ bool Font::Bake(IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence*
 
 			while (pChara != pCharaEnd)
 			{
+				const Font::Glyph* pGlyph = pChara->pGlyph;
+
 				float dx = TO_F32(pChara->dx);
 				float dy = TO_F32(pChara->dy);
-				float dxx = TO_F32(pChara->dx + pChara->glyphMetrics.gmBlackBoxX);
-				float dyy = TO_F32(pChara->dy + pChara->glyphMetrics.gmBlackBoxY);
+				float dxx = dx + pGlyph->width;
+				float dyy = dy + pGlyph->height;
 
-				float su = TO_F32(pChara->sx) * Font::InvImageSizeF;
-				float sv = TO_F32(pChara->sy) * Font::InvImageSizeF;
-				float suu = TO_F32(pChara->sx + pChara->glyphMetrics.gmBlackBoxX) * Font::InvImageSizeF;
-				float svv = TO_F32(pChara->sy + pChara->glyphMetrics.gmBlackBoxY) * Font::InvImageSizeF;
+				const float& su = pGlyph->left;
+				const float& sv = pGlyph->top;
+				const float& suu = pGlyph->right;
+				const float& svv = pGlyph->bottom;
 
 				pDst[0].pos.Set(dx, dy, 0.0f, 1.0f);
 				pDst[1].pos.Set(dx, dyy, 0.0f, 1.0f);
@@ -490,70 +648,10 @@ bool Font::Bake(IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence*
 		pBlock++;
 	}
 
-	SelectObject(dcHandle, oldHandle);
-	ReleaseDC(nullptr, dcHandle);
-
-	// ----------------------------------------------------------------------------------------------------
-	// ホストイメージをデバイスイメージにコピーして、ホストイメージをクリア
-	// ----------------------------------------------------------------------------------------------------
-
-	if (commandHelper.Begin() == nullptr)
-	{
-		return false;
-	}
-
-	pBlock = pBlockBegin;
-	while (pBlock != pBlockEnd)
-	{
-		V3DBarrierImageDesc barrier{};
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-
-		// ホストイメージをデバイスイメージにコピー
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_HOST;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = V3D_ACCESS_HOST_WRITE;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_GENERAL;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
-		pCommandBuffer->BarrierImage(pBlock->pHostImage, barrier);
-		pCommandBuffer->CopyImage(pBlock->pDeviceImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, pBlock->pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_SRC);
-
-		// ホストイメージをクリア
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_READ;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		pCommandBuffer->BarrierImage(pBlock->pHostImage, barrier);
-		pCommandBuffer->ClearImage(pBlock->pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, V3DClearValue{});
-
-		// デバイスイメージのバリア
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
-
-		pBlock++;
-	}
-
-	if (commandHelper.End() == false)
-	{
-		return false;
-	}
-
-	// ----------------------------------------------------------------------------------------------------
-
 	return true;
 }
 
-void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t height)
+void Font::Flush(IV3DCommandBuffer* pCommandBuffer)
 {
 	if (m_BlockCount == 0)
 	{
@@ -564,14 +662,14 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t hei
 	Font::Block* pBlockEnd = pBlock + m_BlockCount;
 
 	Matrix4x4 matrix;
-	matrix.x.x = 2.0f / TO_F32(width);
-	matrix.y.y = 2.0f / TO_F32(height);
+	matrix.x.x = FLOAT_DIV(2.0f, TO_F32(m_ScreenWidth));
+	matrix.y.y = FLOAT_DIV(2.0f, TO_F32(m_ScreenHeight));
 	matrix.w.x = -1.0f;
 	matrix.w.y = -1.0f;
 
 	V3DViewport viewport{};
-	viewport.rect.width = width;
-	viewport.rect.height = height;
+	viewport.rect.width = m_ScreenWidth;
+	viewport.rect.height = m_ScreenHeight;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	pCommandBuffer->SetViewport(0, 1, &viewport);
@@ -579,24 +677,11 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t hei
 
 	pCommandBuffer->PushConstant(m_pPipelineLayout, 0, &matrix);
 	pCommandBuffer->BindPipeline(m_pPipeline);
+	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
 
 	while (pBlock != pBlockEnd)
 	{			
-		V3DBarrierImageDesc barrier{};
-/*
-		// デバイスイメージのバリア
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		pCommandBuffer->BarrierImage(pBlock->pDeviceImage, barrier);
-*/
 		// 描画
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &pBlock->pDescriptorSet, 0, nullptr);
 		pCommandBuffer->BindVertexBuffers(0, 1, &pBlock->pVertexBuffer, &pBlock->vertexBufferOffset);
 		pCommandBuffer->Draw(pBlock->vertexCount, 1, 0, 0);
 
@@ -606,17 +691,6 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer, uint32_t width, uint32_t hei
 
 bool Font::AddText(int32_t x, int32_t y, const wchar_t* pText)
 {
-	HDC dcHandle = GetDC(nullptr);
-	HFONT oldHandle = static_cast<HFONT>(::SelectObject(dcHandle, m_Handle));
-
-	TEXTMETRIC textMetric;
-	if (::GetTextMetrics(dcHandle, &textMetric) == FALSE)
-	{
-		::SelectObject(dcHandle, oldHandle);
-		::ReleaseDC(nullptr, dcHandle);
-		return false;
-	}
-
 	size_t characterCount = wcsnlen_s(pText, Font::MaxCharacter);
 
 	int dx = x;
@@ -658,41 +732,26 @@ bool Font::AddText(int32_t x, int32_t y, const wchar_t* pText)
 		}
 		else
 		{
-			Font::Character character;
-
-			character.glyphBufferSize = GetGlyphOutlineW(dcHandle, code, GGO_GRAY8_BITMAP, &character.glyphMetrics, 0, nullptr, &Font::Matrix);
-			if (character.glyphBufferSize != GDI_ERROR)
+			if ((Font::FirstCode <= code) && (code <= Font::LastCode))
 			{
-				character.code = code;
-				character.dx = dx + character.glyphMetrics.gmptGlyphOrigin.x;
-				character.dy = dy + (textMetric.tmAscent - character.glyphMetrics.gmptGlyphOrigin.y);
+				const Font::Glyph* pGlyph = &m_Glyphs[code - Font::FirstCode];
 
-				if (Font::ImageSize <= (pBlock->imageX + character.glyphMetrics.gmBlackBoxX))
-				{
-					pBlock->imageX = Font::Margin;
-					pBlock->imageY = pBlock->imageLine + Font::Margin;
-				}
+				Font::Character character;
+				character.dx = dx + pGlyph->x;
+				character.dy = dy + pGlyph->y;
+				character.pGlyph = pGlyph;
 
-				if ((Font::ImageSize <= (pBlock->imageY + character.glyphMetrics.gmBlackBoxY)) || (m_BlockCharacterMax <= pBlock->characters.size()))
+				if (m_BlockCharacterMax <= pBlock->characters.size())
 				{
 					pBlock = AddBlock();
 				}
 
-				character.sx = pBlock->imageX;
-				character.sy = pBlock->imageY;
-
 				pBlock->characters.push_back(character);
 
-				pBlock->imageX += character.glyphMetrics.gmBlackBoxX + Font::Margin;
-				pBlock->imageLine = MAXIMUM(pBlock->imageY + TO_I32(character.glyphMetrics.gmBlackBoxY), pBlock->imageLine);
-
-				dx += character.glyphMetrics.gmCellIncX;
+				dx += pGlyph->cellWidth;
 			}
 		}
 	}
-
-	SelectObject(dcHandle, oldHandle);
-	ReleaseDC(nullptr, dcHandle);
 
 	return true;
 }
@@ -720,89 +779,6 @@ Font::Block* Font::AddBlock()
 
 	Font::Block* pBlock = &m_Blocks.back();
 
-	pBlock->imageX = Font::Margin;
-	pBlock->imageY = Font::Margin;
-	pBlock->imageLine = Font::Margin;
-
-	// ----------------------------------------------------------------------------------------------------
-	// イメージを作成
-	// ----------------------------------------------------------------------------------------------------
-
-	V3DImageDesc imageDesc{};
-	imageDesc.type = V3D_IMAGE_TYPE_2D;
-	imageDesc.format = m_ImageFormat;
-	imageDesc.width = Font::ImageSize;
-	imageDesc.height = Font::ImageSize;
-	imageDesc.depth = 1;
-	imageDesc.levelCount = 1;
-	imageDesc.layerCount = 1;
-	imageDesc.samples = V3D_SAMPLE_COUNT_1;
-
-	// ホスト
-	imageDesc.tiling = V3D_IMAGE_TILING_LINEAR;
-	imageDesc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_SRC | V3D_IMAGE_USAGE_TRANSFER_DST;
-	V3D_RESULT result = m_pDevice->CreateImage(imageDesc, V3D_IMAGE_LAYOUT_UNDEFINED, &pBlock->pHostImage);
-	if (result == V3D_OK)
-	{
-		result = m_pDevice->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, pBlock->pHostImage);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-	// デバイス
-	imageDesc.tiling = V3D_IMAGE_TILING_OPTIMAL;
-	imageDesc.usageFlags = V3D_IMAGE_USAGE_TRANSFER_DST | V3D_IMAGE_USAGE_SAMPLED;
-	result = m_pDevice->CreateImage(imageDesc, V3D_IMAGE_LAYOUT_UNDEFINED, &pBlock->pDeviceImage);
-	if (result == V3D_OK)
-	{
-		result = m_pDevice->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_DEVICE_LOCAL, pBlock->pDeviceImage);
-		if (result != V3D_OK)
-		{
-			return false;
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-	V3DImageViewDesc imageViewDesc{};
-	imageViewDesc.type = V3D_IMAGE_VIEW_TYPE_2D;
-	imageViewDesc.baseLevel = 0;
-	imageViewDesc.levelCount = 1;
-	imageViewDesc.baseLayer = 0;
-	imageViewDesc.layerCount = 1;
-
-	result = m_pDevice->CreateImageView(pBlock->pDeviceImage, imageViewDesc, &pBlock->pDeviceImageView);
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	// ----------------------------------------------------------------------------------------------------
-	// デスクリプタセットを作成
-	// ----------------------------------------------------------------------------------------------------
-
-	result = m_pDevice->CreateDescriptorSet(m_pDescriptorSetLayout, &pBlock->pDescriptorSet);
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	result = pBlock->pDescriptorSet->SetImageViewAndSampler(0, pBlock->pDeviceImageView, V3D_IMAGE_LAYOUT_SHADER_READ_ONLY, m_pSampler);
-	if (result != V3D_OK)
-	{
-		return false;
-	}
-
-	pBlock->pDescriptorSet->Update();
-
 	// ----------------------------------------------------------------------------------------------------
 	// バーテックスバッファを作成
 	// ----------------------------------------------------------------------------------------------------
@@ -811,7 +787,7 @@ Font::Block* Font::AddBlock()
 	bufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX;
 	bufferDesc.size = 6 * sizeof(Font::Vertex) * m_BlockCharacterMax;
 
-	result = m_pDevice->CreateBuffer(bufferDesc, &pBlock->pVertexBuffer);
+	V3D_RESULT result = m_pDevice->CreateBuffer(bufferDesc, &pBlock->pVertexBuffer);
 	if (result == V3D_OK)
 	{
 		result = m_pDevice->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, pBlock->pVertexBuffer);
