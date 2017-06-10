@@ -110,7 +110,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	swapChainCallbacks.pRestoreFunction = Window::RestoreSwapChainFunction;
 	swapChainCallbacks.pUserData = this;
 
-	V3D_RESULT result = Application::GetDevice()->CreateSwapChain(swapChainDesc, swapChainCallbacks, &m_pSwapChain);
+	V3D_RESULT result = Application::GetDevice()->CreateSwapChain(swapChainDesc, swapChainCallbacks, &m_pSwapChain, L"Example_SwapChain");
 	if (result != V3D_OK)
 	{
 		Dispose();
@@ -126,14 +126,14 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 		commandPoolDesc.queueFamily = m_pWorkQueue->GetFamily();
 		commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
 
-		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pWorkCommandPool);
+		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pWorkCommandPool, L"Example_WorkCommandPool");
 		if (result != V3D_OK)
 		{
 			Dispose();
 			return false;
 		}
 
-		result = Application::GetDevice()->CreateFence(&m_pWorkFence);
+		result = Application::GetDevice()->CreateFence(&m_pWorkFence, L"Example_WorkFence");
 		if (result != V3D_OK)
 		{
 			Dispose();
@@ -150,7 +150,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 		commandPoolDesc.queueFamily = m_pGraphicsQueue->GetFamily();
 		commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
 
-		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pGraphicsCommandPool);
+		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pGraphicsCommandPool, L"Example_GraphicsCommandPool");
 		if (result != V3D_OK)
 		{
 			Dispose();
@@ -268,10 +268,9 @@ bool Window::CreateImageView(uint32_t index, IV3DImageView** ppImageView)
 		return false;
 	}
 
-	V3DBarrierImageDesc barrier;
+	V3DBarrierImageViewDesc barrier{};
 	barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 	barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-	barrier.dependencyFlags = 0;
 	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
@@ -513,13 +512,13 @@ V3D_RESULT Window::CreateSwapChainResources()
 	{
 		Window::Frame frame{};
 
-		V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(m_pGraphicsCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &frame.pGraphicsCommandBuffer);
+		V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(m_pGraphicsCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &frame.pGraphicsCommandBuffer, L"Example_GraphicsCommandBuffer");
 		if (result != V3D_OK)
 		{
 			return result;
 		}
 
-		result = Application::GetDevice()->CreateFence(&frame.pGraphicsFence);
+		result = Application::GetDevice()->CreateFence(&frame.pGraphicsFence, L"Example_GraphicsFence");
 		if (result != V3D_OK)
 		{
 			SAFE_RELEASE(frame.pGraphicsCommandBuffer);
@@ -533,7 +532,7 @@ V3D_RESULT Window::CreateSwapChainResources()
 	// 作業用コマンドバッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(m_pWorkCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &m_pWorkCommandBuffer);
+	V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(m_pWorkCommandPool, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &m_pWorkCommandBuffer, L"Example_WorkCommandBuffer");
 	if (result != V3D_OK)
 	{
 		return result;
@@ -670,6 +669,7 @@ void Window::SaveScreenshot()
 				V3DBarrierImageDesc barrier{};
 				barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+
 				barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 				barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
 
@@ -837,6 +837,21 @@ void Window::Process()
 		return;
 	}
 
+	// ----------------------------------------------------------------------------------------------------
+	// イメージを表示
+	// ----------------------------------------------------------------------------------------------------
+
+	result = m_pGraphicsQueue->Present(m_pSwapChain);
+	if (result != V3D_OK)
+	{
+		Halt();
+		return;
+	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// 待機
+	// ----------------------------------------------------------------------------------------------------
+
 	m_Frames[imageIndex].initFence = true;
 
 	if (m_BufferingType == WINDOW_BUFFERING_TYPE_FAKE)
@@ -860,16 +875,5 @@ void Window::Process()
 				return;
 			}
 		}
-	}
-
-	// ----------------------------------------------------------------------------------------------------
-	// イメージを表示
-	// ----------------------------------------------------------------------------------------------------
-
-	result = m_pGraphicsQueue->Present(m_pSwapChain);
-	if (result != V3D_OK)
-	{
-		Halt();
-		return;
 	}
 }
