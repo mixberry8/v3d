@@ -2,6 +2,8 @@
 #include <Window.h>
 #include <mmsystem.h>
 #include <vector>
+#include <chrono>
+#include <thread>
 #ifdef _DEBUG
 #include <crtdbg.h>
 #endif //_DEBUG
@@ -9,10 +11,6 @@
 Application* Application::s_pThis = nullptr;
 
 Application::Application() :
-m_SetTimePeriod(false),
-m_ReqResetFps(true),
-m_DefTimeHead(0),
-m_SumTimes(0),
 m_Fps(60.0),
 m_DeltaTime(1.0 / m_Fps),
 m_pInstance(nullptr),
@@ -20,11 +18,6 @@ m_pAdapter(nullptr),
 m_pDevice(nullptr)
 {
 	Application::s_pThis = this;
-
-	for (uint32_t i = 0; i < Application::DefTimeSize; i++)
-	{
-		m_DefTimes[i] = 0.0;
-	}
 }
 
 Application::~Application()
@@ -43,9 +36,11 @@ int32_t Application::Execute()
 
 	ApplicationDesc desc{};
 #ifdef _DEBUG
-	desc.layerType = V3D_LAYER_STANDARD_VALIDATION;
+	desc.layer = V3D_LAYER_STANDARD;
+	desc.logFlags = V3D_LOG_WARNING | V3D_LOG_ERROR | V3D_LOG_DEBUG;
 #else //_DEBUG
-	desc.layerType = V3D_LAYER_OPTIMUS;
+	desc.layer = V3D_LAYER_OPTIMUS;
+	desc.logFlags = 0;
 #endif //_DEBUG
 	desc.fps = 60;
 
@@ -56,8 +51,8 @@ int32_t Application::Execute()
 	// ----------------------------------------------------------------------------------------------------
 
 	V3DInstanceDesc instanceDesc{};
-	instanceDesc.layerType = desc.layerType;
-	instanceDesc.log.flags = V3D_LOG_PERFORMANCE_WARNING | V3D_LOG_WARNING | V3D_LOG_ERROR;
+	instanceDesc.layer = desc.layer;
+	instanceDesc.log.flags = desc.logFlags;
 	instanceDesc.log.pFunction = Application::LogFunction;
 
 	V3D_RESULT result = V3DCreateInstance(instanceDesc, &m_pInstance);
@@ -78,7 +73,7 @@ int32_t Application::Execute()
 
 	m_pInstance->GetAdapter(0, &m_pAdapter);
 
-	result = m_pInstance->CreateDevice(m_pAdapter, &m_pDevice);
+	result = m_pInstance->CreateDevice(m_pAdapter, &m_pDevice, L"Example_Device");
 	if (result != V3D_OK)
 	{
 		SAFE_RELEASE(m_pAdapter);
@@ -104,7 +99,12 @@ int32_t Application::Execute()
 	bool continueLoop = true;
 	MSG msg{};
 
-	timeBeginPeriod(1);
+	auto startClock = std::chrono::high_resolution_clock::now();
+	uint32_t defTimeHead = 0;
+	double defTimes[DefTimeSize] = {};
+	double sumTimes = 0.0;
+	long long sleepErrorCount = 0;
+	long long period = (desc.fps > 0)? 1000000 / desc.fps : 0;
 
 	while(continueLoop == true)
 	{
@@ -112,78 +112,56 @@ int32_t Application::Execute()
 		// FPS
 		// ----------------------------------------------------------------------------------------------------
 
-		LARGE_INTEGER perFreq;
-		::QueryPerformanceFrequency(&perFreq);
+		auto curClock = std::chrono::high_resolution_clock::now();
 
-		LARGE_INTEGER curPerfCount;
-		::QueryPerformanceCounter(&curPerfCount);
-
-		LARGE_INTEGER framePeriodCount;
-		framePeriodCount.QuadPart = (desc.fps > 0)? (perFreq.QuadPart / desc.fps) : 0;
-
-		// Fps : リセット処理
-		if (m_ReqResetFps == true)
-		{
-			m_StartFrameCount.QuadPart = curPerfCount.QuadPart - framePeriodCount.QuadPart;
-			m_ReqResetFps = false;
-		}
-
+		// スリープ
 		if (desc.fps > 0)
 		{
-			// FPS : スリープ処理
-			LONGLONG frameSleepCount = framePeriodCount.QuadPart - (curPerfCount.QuadPart - m_StartFrameCount.QuadPart) + m_SleepErrorCount;
-			if (frameSleepCount > 0)
+			long long defCount = std::chrono::duration_cast<std::chrono::duration<long long, std::chrono::microseconds::period>>(curClock - startClock).count();
+			long long sleepCount = period - defCount + sleepErrorCount;
+			if (sleepCount > 0)
 			{
-				uint32_t frameSleepTime = static_cast<uint32_t>(frameSleepCount * 1000 / perFreq.QuadPart);
+				auto sleepStartCount = std::chrono::high_resolution_clock::now();
+				std::this_thread::sleep_for(std::chrono::microseconds(sleepCount));
+				auto sleepEndCount = std::chrono::high_resolution_clock::now();
 
-				LARGE_INTEGER sleepStartCount;
-				LARGE_INTEGER sleepEndCount;
-
-				::QueryPerformanceCounter(&sleepStartCount);
-				::Sleep(frameSleepTime);
-				::QueryPerformanceCounter(&sleepEndCount);
-
-				// スリープの誤差
-				// 指定したスリープ時間よりも長くスリープした場合、値はマイナスになる
-				m_SleepErrorCount = frameSleepCount - (sleepEndCount.QuadPart - sleepStartCount.QuadPart);
+				// スリープの誤差 ( 指定したスリープ時間よりも長くスリープした場合、値はマイナスになる )
+				sleepErrorCount = sleepCount - std::chrono::duration_cast<std::chrono::duration<long long, std::chrono::microseconds::period>>(sleepEndCount - sleepStartCount).count();
 			}
 			else
 			{
-				::Sleep(0);
-				m_SleepErrorCount = 0;
+				std::this_thread::sleep_for(std::chrono::microseconds(0));
+				sleepErrorCount = 0;
 			}
 		}
 
-		// Fps : 更新処理
-		::QueryPerformanceCounter(&curPerfCount);
-		LONGLONG defCount = curPerfCount.QuadPart - m_StartFrameCount.QuadPart;
-		double defTime = static_cast<double>(defCount * 1000) / static_cast<double>(perFreq.QuadPart);
-		if (defTime < FLOAT_EPSILON)
+		curClock = std::chrono::high_resolution_clock::now();
+
+		// 更新
+		double defTime = std::chrono::duration_cast<std::chrono::duration<double, std::chrono::microseconds::period>>(curClock - startClock).count();
+		if (defTime > FLOAT_EPSILON)
 		{
-			m_Fps = 0.0;
+			defTimeHead = (defTimeHead + 1) % Application::DefTimeSize;
+
+			uint32_t defTimeTail = (defTimeHead + Application::Application::DefTimeSize - 1) % Application::Application::DefTimeSize;
+			defTimes[defTimeTail] = defTime;
+
+			double aveDef = (sumTimes + defTime) * Application::Application::InvDefTimeSize;
+			if (aveDef > FLOAT_EPSILON)
+			{
+				m_Fps = 1000000.0 / aveDef;
+			}
+
+			sumTimes += defTime - defTimes[defTimeHead];
 		}
 		else
 		{
-			// 古いデータを削除
-			m_DefTimeHead = (m_DefTimeHead + 1) % Application::DefTimeSize;
-
-			// 新しいデータを追加
-			uint32_t defTimeTail = (m_DefTimeHead + Application::Application::DefTimeSize - 1) % Application::Application::DefTimeSize;
-			m_DefTimes[defTimeTail] = defTime;
-
-			double aveDef = (m_SumTimes + defTime) / Application::Application::DefTimeSize;
-			if (aveDef > FLOAT_EPSILON)
-			{
-				m_Fps = 1000.0 / aveDef;
-			}
-
-			// 共通加算部分の更新
-			m_SumTimes += defTime - m_DefTimes[m_DefTimeHead];
+			m_Fps = 0.0;
 		}
 
 		m_DeltaTime = (m_Fps > FLOAT_EPSILON) ? FLOAT_RECIPROCAL(m_Fps) : 1.0;
 
-		::QueryPerformanceCounter(&m_StartFrameCount);
+		startClock = std::chrono::high_resolution_clock::now();
 
 		// ----------------------------------------------------------------------------------------------------
 		// メッセージポンプ
@@ -217,8 +195,6 @@ int32_t Application::Execute()
 			}
 		}
 	}
-
-	timeEndPeriod(1);
 
 	// ----------------------------------------------------------------------------------------------------
 

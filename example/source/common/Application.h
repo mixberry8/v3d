@@ -4,7 +4,8 @@ class Window;
 
 struct ApplicationDesc
 {
-	V3D_LAYER_TYPE layerType;
+	V3D_LAYER layer;
+	V3DFlags logFlags;
 	int32_t fps;
 };
 
@@ -31,17 +32,11 @@ public:
 	static double GetDeltaTime();
 
 private:
-	static constexpr uint32_t DefTimeSize = 10;
+	static constexpr uint32_t DefTimeSize = 2;
+	static constexpr double InvDefTimeSize = 1.0 / static_cast<double>(DefTimeSize);
 
 	static Application* s_pThis;
 
-	bool m_SetTimePeriod;
-	bool m_ReqResetFps;
-	LARGE_INTEGER m_StartFrameCount;
-	LONGLONG m_SleepErrorCount;
-	uint32_t m_DefTimeHead;
-	double m_DefTimes[DefTimeSize];
-	double m_SumTimes;
 	double m_Fps;
 	double m_DeltaTime;
 
