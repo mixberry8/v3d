@@ -21,8 +21,8 @@ V3D_RESULT V3DCommandPool::Initialize(IV3DDevice* pDevice, const V3DCommandPoolD
 	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	createInfo.pNext = nullptr;
 	createInfo.queueFamilyIndex = m_Desc.queueFamily;
-	if (m_Desc.propertyFlags & V3D_COMMAND_POOL_PROPERTY_TRANSIENT) { createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT; }
-	if (m_Desc.propertyFlags & V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER) { createInfo.flags |= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; }
+	if (m_Desc.usageFlags & V3D_COMMAND_POOL_USAGE_TRANSIENT) { createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT; }
+	if (m_Desc.usageFlags & V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER) { createInfo.flags |= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; }
 
 	VkResult vkResult = vkCreateCommandPool(m_pDevice->GetSource().device, &createInfo, nullptr, &m_Source.commandPool);
 	if (vkResult != VK_SUCCESS)
@@ -53,7 +53,7 @@ V3D_RESULT V3DCommandPool::Reset(V3DFlags resetFlags)
 {
 	uint32_t vkResetFlags = 0;
 
-	if (resetFlags & V3D_COMMAND_ALLOCATOR_RESET_RELEASE_RESOURCES)
+	if (resetFlags & V3D_COMMAND_POOL_RESET_RELEASE_RESOURCES)
 	{
 		vkResetFlags |= VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT;
 	}
