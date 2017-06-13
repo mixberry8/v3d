@@ -544,8 +544,8 @@ V3D_RESULT _stdcall LoadDDS_BCn(IInputStream* pInputStream, V3D_FORMAT format, c
 		return V3D_ERROR_FAIL;
 	}
 
-	uint64_t rowPitch = max(1, width >> 2) * blockSize;
-	uint64_t depthPitch = rowPitch * max(1, height >> 2);
+	uint64_t rowPitch = max(1, (width + 3) >> 2) * blockSize;
+	uint64_t depthPitch = rowPitch * max(1, (height + 3) >> 2);
 	uint64_t size = depthPitch * depth;
 
 	uint64_t readSize = pInputStream->Read(size, pSrcBuffer);
@@ -769,8 +769,8 @@ uint64_t CalcDDSVolumeSizeBC(V3DImageDesc* pImageDesc)
 			return V3D_ERROR_FAIL;
 		}
 
-		uint64_t rowPitch = max(1, width >> 2) * blockSize;
-		uint64_t depthPitch = rowPitch * max(1, height >> 2);
+		uint64_t rowPitch = max(1, (width + 3) >> 2) * blockSize;
+		uint64_t depthPitch = rowPitch * max(1, (height + 3) >> 2);
 		uint64_t size = depthPitch * pImageDesc->depth;
 
 		bufferSize += size;
