@@ -731,30 +731,31 @@ enum V3D_IMAGE_LAYOUT
 	//! @brief すべてのアクセスをサポートします。<br>
 	V3D_IMAGE_LAYOUT_GENERAL = 1,
 	//! @brief カラーアタッチメント、リゾルブアタッチメントに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用できるイメージの使用法に \link V3D_IMAGE_USAGE_COLOR_ATTACHMENT \endlink が指定されている必要があります。
+	//! このレイアウトを適用するイメージの使用法には \link V3D_IMAGE_USAGE_COLOR_ATTACHMENT \endlink が含まれている必要があります。
 	V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT = 2,
 	//! @brief デプスステンシルアタッチメントに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用できるイメージの使用法に \link V3D_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT \endlink が指定されている必要があります。
+	//! このレイアウトを適用するイメージの使用法には \link V3D_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT \endlink が含まれている必要があります。
 	V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT = 3,
 	//! @brief シェーダーから読み取ることのできるデプスステンシルイメージに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用できるイメージの使用法に \link V3D_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT \endlink と
-	//! \link V3D_IMAGE_USAGE_SAMPLED \endlink もしくわ \link V3D_IMAGE_USAGE_INPUT_ATTACHMENT \endlink のいずれかが指定されている必要があります。
+	//! このレイアウトを適用するイメージの使用法には \link V3D_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT \endlink、
+	//! \link V3D_IMAGE_USAGE_SAMPLED \endlink もしくわ \link V3D_IMAGE_USAGE_INPUT_ATTACHMENT \endlink のいずれかが含まれている必要があります。
 	V3D_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY = 4,
 	//! @brief シェーダーからの読み取り専用イメージに対して有効なレイアウトです。<br>
 	//! これはサンプリングすることのできるイメージ、インプットアタッチメントとして使用することができます。<br>
-	//! またこのレイアウトを適用できるイメージの使用法に \link V3D_IMAGE_USAGE_SAMPLED \endlink または \link V3D_IMAGE_USAGE_INPUT_ATTACHMENT \endlink のいずれかが指定されている必要があります。
+	//! またこのレイアウトを適用するイメージの使用法には \link V3D_IMAGE_USAGE_SAMPLED \endlink または \link V3D_IMAGE_USAGE_INPUT_ATTACHMENT \endlink のいずれかが含まれている必要があります。
 	V3D_IMAGE_LAYOUT_SHADER_READ_ONLY = 5,
 	//! @brief コピーコマンドのコピー元イメージに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用できるイメージの使用法に \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が指定されている必要があります。
+	//! このレイアウトを適用するイメージの使用法には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
 	//! @sa IV3DCommandBuffer::CopyImage
+	//! @sa IV3DCommandBuffer::CopyImageToBuffer
 	V3D_IMAGE_LAYOUT_TRANSFER_SRC = 6,
 	//! @brief コピーコマンドのコピー先イメージに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用できるイメージの使用法に \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が指定されている必要があります。
+	//! このレイアウトを適用するイメージの使用法には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
 	//! @sa IV3DCommandBuffer::CopyImage
+	//! @sa IV3DCommandBuffer::CopyBufferToImage
 	V3D_IMAGE_LAYOUT_TRANSFER_DST = 7,
 	//! @brief デバイスのアクセスをサポートしません<br>
-	//! イメージ作成時の初期レイアウトとして使用することができます。<br>
-	//! このレイアウトはイメージ作成後、すぐにメモリへの書き込みができます。<br>
+	//! イメージ作成時の初期レイアウトとして使用することができ、イメージ作成後すぐにメモリへの書き込みができます。<br>
 	//! また異なるレイアウトへ移行するとき、メモリの内容は保持されます。
 	V3D_IMAGE_LAYOUT_PREINITIALIZED = 8,
 	//! @brief スワップチェインのイメージに対して有効なレイアウトです。<br>
@@ -808,6 +809,14 @@ enum V3D_INDEX_TYPE : uint8_t
 //! @addtogroup v3d_struct_group
 //! @{
 
+//! @union V3DPoint2D
+//! @brief 符号無し整数の x y 座標
+struct V3DPoint2D
+{
+	uint32_t x; //!< X 座標です。
+	uint32_t y; //!< Y 座標です。
+};
+
 //! @union V3DPoint3D
 //! @brief 符号無し整数の x y z 座標
 struct V3DPoint3D
@@ -815,6 +824,14 @@ struct V3DPoint3D
 	uint32_t x; //!< X 座標です。
 	uint32_t y; //!< Y 座標です。
 	uint32_t z; //!< Z 座標です。
+};
+
+//! @union V3DSize2D
+//! @brief 符号無し整数の width height サイズ
+struct V3DSize2D
+{
+	uint32_t width; //!< 幅です。
+	uint32_t height; //!< 高さです。
 };
 
 //! @union V3DSize3D
@@ -850,7 +867,7 @@ struct V3DRectangle3D
 
 //! @union V3DViewport
 //! @brief ビューポート
-//! @note 深度は minDepth < maxDepth である必要があります。
+//! @remarks 深度は minDepth < maxDepth である必要があります。
 struct V3DViewport
 {
 	V3DRectangle2D rect; //!< ビューポートの領域です。
@@ -1065,7 +1082,7 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @retval V3D_ERROR_DEVICE_LOST
-	//! @note
+	//! @remarks
 	//! クエリがキューに送信 ( IV3DQueue::Submit ) された後に使用してください。<br>
 	//! 返り値が V3D_OK でなくてもクエリの結果を取得しようとした後は IV3DCommandBuffer::ResetQueryPool でクエリプールをリセットしてください。<br>
 	//! <br>
@@ -1148,7 +1165,7 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! このメソッドはメモリ全体のアクセスを有効な状態にします。<br>
 	//! 一度に多くのリソースがこのメモリをアクセスする際 ( IV3DResource::Map および IV3DResource::Unmap ) のパフォーマンスを向上させることができます。
 	virtual V3D_RESULT BeginMap() = 0;
@@ -1197,7 +1214,7 @@ struct V3DResourceDesc
 	//! @brief メモリの特性を表す \link V3D_MEMORY_PROPERTY_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags memoryPropertyFlags;
 	//! @brief メモリタイプのビットマスクです。
-	//! @note 各ビットは IV3DAdapter::GetMemoryTypeDesc の第一引数である memoryType を表します。
+	//! @remarks 各ビットは IV3DAdapter::GetMemoryTypeDesc の第一引数である memoryType を表します。
 	uint32_t memoryTypeBits;
 	//! @brief アライメントが適用されたメモリのサイズをバイト単位で指定します。
 	uint64_t memorySize;
@@ -1291,6 +1308,8 @@ enum V3D_BUFFER_USAGE_FLAG : V3DFlags
 
 //! @struct V3DBufferDesc
 //! @brief バッファーの記述
+//! @sa IV3DDevice::CreateBuffer
+//! @sa IV3DBuffer::GetDesc
 struct V3DBufferDesc
 {
 	V3DFlags usageFlags; //!< バッファーの使用法を表す \link V3D_BUFFER_USAGE_FLAG \endlink 列挙定数の組み合わせです。
@@ -1392,6 +1411,8 @@ enum V3D_IMAGE_USAGE_FLAG : V3DFlags
 
 //! @struct V3DImageDesc
 //! @brief イメージの記述
+//! @sa IV3DDevice::CreateImage
+//! @sa IV3DImage::GetDesc
 struct V3DImageDesc
 {
 	V3D_IMAGE_TYPE type; //!< イメージのタイプです。
@@ -1408,6 +1429,7 @@ struct V3DImageDesc
 
 //! @struct V3DImageSubresourceLayout
 //! @brief イメージのサブリソースレイアウト
+//! @sa IV3DImage::GetSubresourceLayout
 struct V3DImageSubresourceLayout
 {
 	uint64_t offset; //!< メモリのオフセットをバイト単位で指定します。
@@ -1435,7 +1457,7 @@ public:
 	//! @param[in] level サブリソースのレベルです。
 	//! @param[in] layer サブリソースのレイヤーです。
 	//! @return イメージのサブリソースレイアウトを返します。
-	//! @note
+	//! @remarks
 	//! サブリソースのレイアウトを取得できるようにするためには、イメージのタイリングに \link V3D_IMAGE_TILING_LINEAR \endlink が指定されている必要があります。
 	virtual const V3DImageSubresourceLayout& GetSubresourceLayout(uint32_t level, uint32_t layer) const = 0;
 
@@ -1456,6 +1478,8 @@ protected:
 
 //! @struct V3DBufferViewDesc
 //! @brief バッファービューの記述
+//! @sa IV3DDevice::CreateBufferView
+//! @sa IV3DBufferView::GetDesc
 struct V3DBufferViewDesc
 {
 	V3D_FORMAT format; //!< フォーマットです。
@@ -1516,6 +1540,8 @@ enum V3D_IMAGE_VIEW_TYPE : uint8_t
 
 //! @struct V3DImageViewDesc
 //! @brief イメージビューの記述
+//! @sa IV3DDevice::CreateImageView
+//! @sa IV3DImageView::GetDesc
 struct V3DImageViewDesc
 {
 	V3D_IMAGE_VIEW_TYPE type; //!< イメージビューのタイプです。
@@ -1623,9 +1649,10 @@ enum V3D_BORDER_COLOR : uint8_t
 
 //! @struct V3DSamplerDesc
 //! @brief サンプラの記述
-//! @note
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>magFilter</td><td>V3D_FILTER_NEAREST</td></tr>
 //! <tr><td>minFilter</td><td>V3D_FILTER_NEAREST</td></tr>
 //! <tr><td>mipmapMode</td><td>V3D_MIPMAP_MODE_NEAREST</td></tr>
@@ -1641,7 +1668,8 @@ enum V3D_BORDER_COLOR : uint8_t
 //! <tr><td>maxLod</td><td>0.0f</td></tr>
 //! <tr><td>borderColor</td><td>V3D_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK</td></tr>
 //! </table>
-//! <br>
+//! @sa IV3DDevice::CreateSampler
+//! @sa IV3DSampler::GetDesc
 struct V3DSamplerDesc
 {
 	V3D_FILTER magFilter; //!< 拡大フィルタです。
@@ -1650,13 +1678,13 @@ struct V3DSamplerDesc
 	V3D_ADDRESS_MODE addressModeU; //!< U 座標のアドレッシングモードです。
 	V3D_ADDRESS_MODE addressModeV; //!< V 座標のアドレッシングモードです。
 	V3D_ADDRESS_MODE addressModeW; //!< W 座標のアドレッシングモードです。
-	float mipLodBias; //!< 計算されたミップマップレベルからのオフセットです。
-	bool anisotropyEnable; //!< 異方性フィルタリングを有効にするかどうかを指定します。
-	float maxAnisotropy; //!< 異方性値をクランプする値です。
+	float mipLodBias; //!< ミップマップのレベルのオフセットです。<br>この値は { - V3DDeviceCaps::maxSamplerLodBias <= mipLodBias <= + V3DDeviceCaps::maxSamplerLodBias } の範囲に制限されます。
+	bool anisotropyEnable; //!< 異方性フィルタリングを有効にするかどうかを指定します。<br>この値は V3DDeviceCaps::flags に \link V3D_CAP_SAMPLER_ANISOTROPY \endlink が含まれている場合にのみ true を指定することができます。
+	float maxAnisotropy; //!< 異方性値をクランプする値です。<br>この値は anisotropyEnable が true のときに有効になり V3DDeviceCaps::maxSamplerAnisotropy 以下に制限されます。
 	bool compareEnable; //!< 比較オペーレーターである compareOp を有効にするかどうかを指定します。
 	V3D_COMPARE_OP compareOp; //!< 比較オペレーターです。<br>\link V3D_COMPARE_OP \endlink の説明にある R はサンプラーによって入力される値であり、S はアタッチメントのテクセルの値を表します。
-	float minLod; //!< 計算されたミップレベルをクランプする最小値です。<br>通常この値は最初のミップマップを指定します。
-	float maxLod; //!< 計算されたミップレベルをクランプする最大値です。<br>通常この値はミップマップの数を指定します。
+	float minLod; //!< ミップマップのレベルをクランプする最小値です。<br>通常この値は最初のミップマップのレベルを指定します。
+	float maxLod; //!< ミップマップのレベルをクランプする最大値です。<br>通常この値は最後ミップマップのレベルの数を指定します。
 	V3D_BORDER_COLOR borderColor; //!< 境界線の色です。
 };
 
@@ -1724,6 +1752,7 @@ enum V3D_ATTACHMENT_STORE_OP : uint8_t
 
 //! @struct V3DAttachmentDesc
 //! @brief アタッチメントの記述
+//! @sa IV3DDevice::CreateRenderPass
 struct V3DAttachmentDesc
 {
 	//! @brief イメージのフォーマットです。<br>
@@ -1758,6 +1787,7 @@ struct V3DAttachmentDesc
 
 //! @struct V3DAttachmentReference
 //! @brief アタッチメントの参照
+//! @sa V3DSubpassDesc
 struct V3DAttachmentReference
 {
 	uint32_t attachment; //!< IV3DDevice::CreateRenderPass で指定した V3DAttachmentDesc 構造体の配列のインデックスです。
@@ -1766,13 +1796,14 @@ struct V3DAttachmentReference
 
 //! @struct V3DSubpassDesc
 //! @brief サブパスの記述
+//! @sa IV3DDevice::CreateRenderPass
 struct V3DSubpassDesc
 {
 	//! @brief シェーダーから読み取ることができるインプットアタッチメントの数です。
 	uint32_t inputAttachmentCount;
 	//! @brief シェーダーから読み取ることができるインプットアタッチメントの参照配列です。<br>
 	//! 配列の要素の数は inputAttachmentCount の値と同じである必要があります。
-	//! @note
+	//! @remarks
 	//! ここで指定するアタッチメント ( V3DAttachmentReference::attachment ) で指定されているイメージの使用法には \link V3D_IMAGE_USAGE_INPUT_ATTACHMENT \endlink が含まれている必要があります。
 	const V3DAttachmentReference* pInputAttachments;
 
@@ -1780,19 +1811,19 @@ struct V3DSubpassDesc
 	uint32_t colorAttachmentCount;
 	//! @brief 出力先のカラーアタッチメントの参照配列です。<br>
 	//! 配列の要素の数は colorAttachmentCount の値と同じである必要があります。<br>
-	//! @note
+	//! @remarks
 	//! ここで指定するアタッチメント V3DAttachmentReference::attachment はイメージの使用法 V3DImageDesc::usageFlags に \link V3D_IMAGE_USAGE_COLOR_ATTACHMENT \endlink が指定されている必要があります。
 	const V3DAttachmentReference* pColorAttachments;
 	//! @brief 出力先のカラーアタッチメント ( pColorAttachments ) をマルチサンプリングした結果をレンダリングするアタッチメントの参照配列です。<br>
 	//! 配列の要素の数は colorAttachmentCount の値と同じである必要があります。
-	//! @note
+	//! @remarks
 	//! ここで指定するアタッチメント V3DAttachmentReference::attachment はイメージの使用法 V3DImageDesc::usageFlags に \link V3D_IMAGE_USAGE_COLOR_ATTACHMENT \endlink が指定されている必要があり、
 	//! サンプル数 ( V3DImageDesc::samples ) は \link V3D_SAMPLE_COUNT_1 \endlink である必要があります。<br>
 	//! また、マルチサンプリングイメージの変換先のアタッチメントとして使用しない場合は V3DAttachmentReference::attachment に \link V3D_ATTACHMENT_UNUSED \endlink を指定してください。<br>
 	const V3DAttachmentReference* pResolveAttachments;
 
 	//! @brief 出力先のデプスステンシルアタッチメントの参照です。
-	//! @note
+	//! @remarks
 	//! ここで指定するアタッチメント V3DAttachmentReference::attachment はイメージの使用法に \link V3D_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT \endlink が指定されている必要があり、<br>
 	//! サンプル数 V3DImageDesc::samples はカラーアタッチメントと同じである必要があります。<br>
 	//! また、デプスステンシルアタッチメントが存在しない場合は nullptr を指定してください。<br>
@@ -1807,6 +1838,7 @@ struct V3DSubpassDesc
 
 //! @struct V3DSubpassDependencyDesc
 //! @brief サブパスの依存性の記述
+//! @sa IV3DDevice::CreateRenderPass
 struct V3DSubpassDependencyDesc
 {
 	uint32_t srcSubpass; //!< 移行元のサブパスのインデックスです。
@@ -1845,6 +1877,7 @@ protected:
 
 //! @struct V3DFrameBufferDesc
 //! @brief フレームバッファーの記述
+//! @sa IV3DFrameBuffer::GetDesc
 struct V3DFrameBufferDesc
 {
 	uint32_t attachmentWidth; //!< アタッチメントの幅です。
@@ -1930,6 +1963,7 @@ enum V3D_DESCRIPTOR_TYPE : uint8_t
 
 //! @struct V3DDescriptorDesc
 //! @brief デスクリプタの記述
+//! @sa IV3DDevice::CreateDescriptorSetLayout
 struct V3DDescriptorDesc
 {
 	uint32_t binding; //!< バインディングです。
@@ -1939,6 +1973,7 @@ struct V3DDescriptorDesc
 
 //! @struct V3DDescriptorSetLayoutStatistics
 //! @brief デスクリプタセットレイアウトの統計
+//! @sa IV3DDescriptorSetLayout::GetStatistics
 struct V3DDescriptorSetLayoutStatistics
 {
 	uint32_t poolCount; //!< 作成されたプールの数です。
@@ -2001,7 +2036,7 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! @note
+	//! @remarks
 	//! デスクリプタの種類によってアライメントが異なるため、offset には適切な値を指定してください。<br>
 	//! 各デスクリプタのアライメントは V3DDeviceCaps に記述されており、以下のようになります。<br>
 	//! <br>
@@ -2034,7 +2069,7 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! @note
+	//! @remarks
 	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER \endlink
@@ -2060,7 +2095,7 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! @note
+	//! @remarks
 	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink<br>
@@ -2075,7 +2110,7 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! @note
+	//! @remarks
 	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink<br>
@@ -2096,7 +2131,7 @@ public:
 	//! @retval V3D_OK
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
-	//! @note
+	//! @remarks
 	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink
@@ -2112,7 +2147,7 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @sa V3DDescriptorDesc
-	//! @note
+	//! @remarks
 	//! このメソッドで指定したイメージビューはデスクリプタセットをバインドする前にイメージレイアウトを \link V3D_IMAGE_LAYOUT_SHADER_READ_ONLY \endlink に移行しておく必要があります。<br>
 	//! <br>
 	//! サポートしているデスクリプタタイプ<br>
@@ -2131,13 +2166,13 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @sa V3DDescriptorDesc
-	//! @note
+	//! @remarks
 	//! サポートしているデスクリプタタイプ<br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink
 	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler) = 0;
 
 	//! @brief デスクリプタセットを更新します
-	//! @note デスクリプタセットに各種リソースを設定した際に実行してください。
+	//! @remarks デスクリプタセットに各種リソースを設定した際に実行してください。
 	virtual void Update() = 0;
 
 protected:
@@ -2156,8 +2191,8 @@ protected:
 //! @{
 
 //! @struct V3DConstantDesc
-//! @brief 定数の記述
-//! @sa IV3DCommandBuffer::PushConstant
+//! @brief プッシュ定数の記述
+//! @sa IV3DDevice::CreatePipelineLayout
 struct V3DConstantDesc
 {
 	V3DFlags shaderStageFlags; //!< 定数をプッシュするシェーダーステージを表す \link V3D_SHADER_STAGE_FLAG \endlink 列挙定数の組み合わせです。
@@ -2273,6 +2308,13 @@ enum V3D_STENCIL_OP : uint8_t
 //! <tr><td>Rc Gc Bc Ac</td><td></td>コマンド IV3DCommandBuffer::SetBlendConstants で設定するブレンド定数</tr>
 //! </table>
 //! <br>
+//! @remarks
+//! 以下のものは V3DDeviceCaps::colorBlendFlags に \link V3D_COLOR_BLEND_CAP_DUAL_SRC \endlink が含まれている場合にのみ使用することができます。<br>
+//! <br>
+//! \link V3D_BLEND_FACTOR_SRC1_COLOR \endlink<br>
+//! \link V3D_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR \endlink<br>
+//! \link V3D_BLEND_FACTOR_SRC1_ALPHA \endlink<br>
+//! \link V3D_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA \endlink<br>
 enum V3D_BLEND_FACTOR : uint8_t
 {
 	//! @brief
@@ -2415,13 +2457,14 @@ enum V3D_LOGIC_OP : uint8_t
 //! @{
 
 //! @struct V3DPipelineShaderConstantDesc
-//! @brief パイプラインのシェーダー定数の記述
+//! @brief パイプラインのシェーダーの特殊化定数の記述
+//! @sa V3DPipelineShader
 struct V3DPipelineShaderConstantDesc
 {
 	//! @brief 定数の識別子を整数で指定します。<br>
-	//! layout(constant_id = [id]) const
+	//! layout(constant_id = id) const
 	uint32_t id;
-	//! @brief 定数データ上の定数のオフセットをバイト単位で指定します。
+	//! @brief データ上の定数のオフセットをバイト単位で指定します。
 	uint32_t offset;
 	//! @brief 定数のサイズをバイト単位で指定します。
 	uint32_t size;
@@ -2442,9 +2485,9 @@ struct V3DPipelineShader
 	//! @name 特殊化定数
 	//! @{
 
-	uint32_t constantCount; //!< 定数の数です。
+	uint32_t constantCount; //!< 特殊化定数の数です。
 	V3DPipelineShaderConstantDesc* pConstants; //!< constantCount の値の数の要素を持つ V3DPipelineShaderConstantDesc 構造体の配列です。
-	void* pConstantData; //!< 定数データのポインタです。
+	void* pConstantData; //!< 特殊化定数データのポインタです。
 
 	//! @}
 };
@@ -2456,7 +2499,8 @@ struct V3DPipelineVertexElement
 	//! @brief ロケーションです。<br>
 	//! layout(location = [location])
 	uint32_t location;
-	//! @brief オフセットをバイト単位で指定します。
+	//! @brief オフセットをバイト単位で指定します。<br>
+	//! この値は V3DDeviceCaps::maxVertexInputElementOffset 以下に制限されます。
 	uint32_t offset;
 	//! @brief フォーマットです。
 	V3D_FORMAT format;
@@ -2466,9 +2510,10 @@ struct V3DPipelineVertexElement
 //! @brief パイプラインのバーテックスレイアウト
 struct V3DPipelineVertexLayout
 {
-	//! @brief バーテックスバッファのバインド位置です。
+	//! @brief バーテックスバッファーのバインド位置です。
 	uint32_t binding;
-	//! @brief バーテックスのストライをバイト単位で指定します。
+	//! @brief バーテックスのストライドをバイト単位で指定します。<br>
+	//! この値は V3DDeviceCaps::maxVertexInputBindingStride 以下に制限されます。
 	uint32_t stride;
 	//! @brief バーテックスレイアウトの最初のエレメントのインデックスです。
 	//! @sa V3DPipelineVertexInputDesc::pElements
@@ -2502,14 +2547,15 @@ struct V3DPipelineVertexInputDesc
 //! @brief パイプラインのテッセレーションの記述
 struct V3DPipelineTessellationDesc
 {
-	uint32_t patchControlPoints; //!< パッチごとのコントロールポイントの数です。
+	uint32_t patchControlPoints; //!< パッチごとのコントロールポイントの数です。<br>この値は V3DDeviceCaps::maxTessellationPatchSize 以下に制限されます。
 };
 
 //! @struct V3DPipelineRasterizationDesc
-//! @brief パイプラインのラスタライゼーションの記述
-//! @note
+//! @brief パイプラインのラスター化の記述
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>discardEnable</td><td>false</td></tr>
 //! <tr><td>depthClampEnable</td><td>false</td></tr>
 //! <tr><td>polygonMode</td><td>V3D_POLYGON_MODE_FILL</td></tr>
@@ -2522,13 +2568,14 @@ struct V3DPipelineTessellationDesc
 //! <br>
 struct V3DPipelineRasterizationDesc
 {
-	//! @brief ラスタライズステージの直前にプリミティブを破棄するかどうかを指定します。<br>
-	//! この値が false の場合は、ビューポート、シザリングは必ず指定する必要があります。
+	//! @brief ラスタライズステージの直前にプリミティブを破棄するかどうかを指定します。
 	bool discardEnable;
-	//! @brief 深度をクランプするかどうかを指定します。
+	//! @brief 深度をクランプするかどうかを指定します。<br>この値は V3DDeviceCaps::rasterizerFlags に \link V3D_RASTERIZER_CAP_DEPTH_CLAMP \endlink が含まれている場合にのみ true を指定することができます。
 	bool depthClampEnable;
 
-	//! @brief ポリゴンモードです。
+	//! @brief ポリゴンモードです。<br>
+	//! V3DDeviceCaps::rasterizerFlags に \link V3D_RASTERIZER_CAP_FILL_MODE_NON_SOLID \endlink が含まれていなかった場合、
+	//! \link V3D_POLYGON_MODE_LINE \endlink および \link V3D_POLYGON_MODE_POINT \endlink を指定することはできません。
 	V3D_POLYGON_MODE polygonMode;
 	//! @brief カリングモードです。
 	V3D_CULL_MODE cullMode;
@@ -2537,7 +2584,8 @@ struct V3DPipelineRasterizationDesc
 	bool depthBiasEnable;
 	//! @brief 一定の深度値を制御する係数です。
 	float depthBiasConstantFactor;
-	//! @brief 最大 または 最小の深度バイアスです。
+	//! @brief 最大 または 最小の深度バイアスです。<br>
+	//! V3DDeviceCaps::rasterizerFlags に \link V3D_RASTERIZER_CAP_DEPTH_BIAS_CLAMP \endlink が含まれていなかった場合は 0.0f を指定する必要があります。
 	float depthBiasClamp;
 	//! @brief 深度バイアスの計算におけるスロープに適用される係数です。
 	float depthBiasSlopeFactor;
@@ -2545,9 +2593,10 @@ struct V3DPipelineRasterizationDesc
 
 //! @struct V3DPipelineMultisampleDesc
 //! @brief パイプラインのマルチサンプルの記述
-//! @note
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>rasterizationSamples</td><td>V3D_SAMPLE_COUNT_1</td></tr>
 //! <tr><td>sampleShadingEnable</td><td>false</td></tr>
 //! <tr><td>minSampleShading</td><td>0.0f</td></tr>
@@ -2557,29 +2606,29 @@ struct V3DPipelineRasterizationDesc
 //! <br>
 struct V3DPipelineMultisampleDesc
 {
-	//! @brief カラーアタッチメント、デプスステンシルアタッチメントのサンプル数です。<br>
-	//! V3DDeviceCaps::multisampleFlags に \link V3D_MULTISAMPLE_CAP_VARIABLE_RATE \endlink が指定されていなかった場合、
+	//! @brief ラスター化のサンプル数です。<br>
+	//! V3DDeviceCaps::multisampleFlags に \link V3D_MULTISAMPLE_CAP_VARIABLE_RATE \endlink が含まれていなかった場合、
 	//! サブパスのカラーアタッチメント、デプスステンシルアタッチメントのサンプル数はこの値である必要があります。
 	V3D_SAMPLE_COUNT_FLAG rasterizationSamples;
 	//! @brief フラグメントがサンプル毎にシェーディングを実行するかどうかを指定します。<br>
-	//! V3DDeviceCaps::multisampleFlags に \link V3D_MULTISAMPLE_CAP_SAMPLE_RATE_SHADING \endlink が指定されている場合に有効になります。
+	//! この値は V3DDeviceCaps::multisampleFlags に \link V3D_MULTISAMPLE_CAP_SAMPLE_RATE_SHADING \endlink が含まれている場合にのみ true を指定することができます。
 	bool sampleShadingEnable;
 	//! @brief サンプル毎のシェーディングの最小分率です。<br>
-	//! sampleShadingEnable を true にした場合は必ず指定してください。<br>
-	//! また値の範囲は 0.0f ～ 1.0f の間である必要があります。
+	//! この値は sampleShadingEnable が true のときに有効になり、0.0f ～ 1.0f の間に制限されます。
 	float minSampleShading;
 	//! @brief アルファトゥカバレッジを使用するかどうかを指定します。
 	bool alphaToCoverageEnable;
 	//! @brief フラグメントシェーダから出力されたアルファ値を、固定小数点が表現可能な最大値または 1.0 で置き換えるかどうかを指定します。<br>
-	//! この操作は V3DDeviceCaps::multisampleFlags に \link V3D_MULTISAMPLE_CAP_ALPHA_TO_ONE \endlink が指定されている場合にのみ true を指定することができます。
+	//! この値は V3DDeviceCaps::multisampleFlags に \link V3D_MULTISAMPLE_CAP_ALPHA_TO_ONE \endlink が含まれている場合にのみ true を指定することができます。
 	bool alphaToOneEnable;
 };
 
 //! @struct V3DPipelineStencilOpDesc
 //! @brief パイプラインのステンシルオペレーターの記述
-//! @note
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>failOp</td><td>V3D_STENCIL_OP_KEEP</td></tr>
 //! <tr><td>passOp</td><td>V3D_STENCIL_OP_KEEP</td></tr>
 //! <tr><td>depthFailOp</td><td>V3D_STENCIL_OP_KEEP</td></tr>
@@ -2595,7 +2644,7 @@ struct V3DPipelineStencilOpDesc
 	V3D_STENCIL_OP depthFailOp; //!< ステンシルテストに合格し、深度テストに合格しなかったサンプルに対して実行されるアクションです。
 
 	//! @brief ステンシルテストで使用される比較オペレーターです。<br>
-	//! \link V3D_COMPARE_OP \endlink の説明にある R はマスクされた reference の値であり、S はマスクされたステンシルの値を表します。
+	//! \link V3D_COMPARE_OP \endlink の説明にある R はマスクされた IV3DCommandBuffer::SetStencilReference で設定された値であり、S はマスクされたステンシルの値を表します。
 	V3D_COMPARE_OP compareOp;
 
 	//! @brief ステンシルテストによって読み込まれる値のビットマスクを指定します。
@@ -2606,9 +2655,10 @@ struct V3DPipelineStencilOpDesc
 
 //! @struct V3DPipelineDepthStencilDesc
 //! @brief パイプラインのデプスステンシルの記述
-//! @note
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>depthTestEnable</td><td>true</td></tr>
 //! <tr><td>depthWriteEnable</td><td>true</td></tr>
 //! <tr><td>depthCompareOp</td><td>V3D_COMPARE_OP_LESS</td></tr>
@@ -2637,21 +2687,23 @@ struct V3DPipelineDepthStencilDesc
 	//! @brief ステンシルテストの後面のオペレーターです。
 	V3DPipelineStencilOpDesc stencilBack;
 
-	//! @brief 深度の境界テストをするかどうかを指定します。
+	//! @brief 深度の境界テストをするかどうかを指定します。<br>
+	//! この値は V3DDeviceCaps::depthStencilFlags に \link V3D_DEPTH_STENCIL_CAP_DEPTH_BOUNDS \endlink が含まれている場合にのみ true を指定することができます。
 	bool depthBoundsTestEnable;
 	//! @brief 深度の境界テストの最小値です。<br>
-	//! 値は 0.0f ～ 1.0f の間で指定する必要があります。
+	//! この値は depthBoundsTestEnable が true のときに有効になり、0.0f ～ 1.0f の間に制限されます。
 	float minDepthBounds;
 	//! @brief 深度の境界テストの最大値です。<br>
-	//! 値は 0.0f ～ 1.0f の間で指定する必要があります。
+	//! この値は depthBoundsTestEnable が true のときに有効になり、0.0f ～ 1.0f の間に制限されます。
 	float maxDepthBounds;
 };
 
 //! @struct V3DPipelineColorBlendAttachment
 //! @brief パイプラインのカラーアタッチメントのブレンド
-//! @note
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>blendEnable</td><td>false</td></tr>
 //! <tr><td>srcColorFactor</td><td>V3D_BLEND_FACTOR_ONE</td></tr>
 //! <tr><td>dstColorFactor</td><td>V3D_BLEND_FACTOR_ZERO</td></tr>
@@ -2676,9 +2728,10 @@ struct V3DPipelineColorBlendAttachment
 
 //! @struct V3DPipelineColorBlendDesc
 //! @brief パイプラインのカラーブレンドの記述
-//! @note
+//! @remarks
 //! デフォルト値<br>
-//! <table>
+//! <table class="basic">
+//! <tr><th>ステート</th><th>デフォルト値</th></tr>
 //! <tr><td>logicOpEnable</td><td>false</td></tr>
 //! <tr><td>logicOp</td><td>V3D_LOGIC_OP_COPY</td></tr>
 //! <tr><td>attachmentCount</td><td>1 以上</td></tr>
@@ -2687,13 +2740,19 @@ struct V3DPipelineColorBlendAttachment
 //! <br>
 struct V3DPipelineColorBlendDesc
 {
-	bool logicOpEnable; //!< 論理演算 ( logicOp ) を有効にするかどうかを指定します。
-	V3D_LOGIC_OP logicOp; //!< 論理演算の種類です。
+	//! @brief 論理演算を有効にするかどうかを指定します。<br>
+	//! この値は V3DDeviceCaps::colorBlendFlags に \link V3D_COLOR_BLEND_CAP_LOGIC_OP \endlink が含まれている場合にのみ true を指定することができます。
+	bool logicOpEnable;
+	//! @brief 論理演算の種類です。<br>
+	//! この値は logicOpEnable が true のときに有効になります。
+	V3D_LOGIC_OP logicOp;
 
 	//! @brief サブパスのカラーアタッチメントの数です。
 	uint32_t attachmentCount;
 	//! @brief サブパスのカラーアタッチメントのブレンド配列です。<br>
-	//! 配列の要素の数は attachmentCount 値と同じである必要がります。
+	//! 配列の要素の数は attachmentCount 値と同じである必要がります。<br>
+	//! また V3DDeviceCaps::colorBlendFlags に \link V3D_COLOR_BLEND_CAP_INDEPENDENT \endlink が含まれていなかった場合、アタッチメント毎に異なるブレンドをすることができないため、
+	//! 配列の要素はすべて同じ値でないといけません。<br>
 	V3DPipelineColorBlendAttachment* pAttachments;
 };
 
@@ -2712,7 +2771,7 @@ struct V3DGraphicsPipelineDesc
 	V3D_PRIMITIVE_TOPOLOGY primitiveTopology; //!< プリミティブトポロジです。
 
 	V3DPipelineTessellationDesc tessellation; //!< テッセーレーションです。
-	V3DPipelineRasterizationDesc rasterization; //!< ラスタライゼーションです。
+	V3DPipelineRasterizationDesc rasterization; //!< ラスター化です。
 	V3DPipelineMultisampleDesc multisample; //!< マルチサンプルです。
 
 	V3DPipelineDepthStencilDesc depthStencil; //!< デプスステンシルです。
@@ -2836,7 +2895,7 @@ public:
 
 	//! @brief 現在のイメージのインデックスを取得します。
 	//! @return 現在のイメージのインデックスを返します。
-	//! @note 返される値は AcquireNextImage で更新されます。
+	//! @remarks 返される値は AcquireNextImage で更新されます。
 	virtual uint32_t GetCurrentImageIndex() const = 0;
 	//! @brief 指定したインデックスのイメージを取得します。
 	//! @param[in] imageIndex 取得するイメージのインデックスです。
@@ -3196,8 +3255,8 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
-	//! コマンドバッファーを作成する際に指定したコマンドプールの使用法 V3DCommandPoolDesc::usageFlags に \link V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER \endlink が含まれていない場合、
+	//! @remarks
+	//! このコマンドバッファーがアクセスするコマンドプール作成時に指定した使用法である V3DCommandPoolDesc::usageFlags に \link V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER \endlink が含まれていない場合、
 	//! このメソッドは機能しません。
 	virtual V3D_RESULT Reset(V3DFlags resetFlags) = 0;
 
@@ -3206,7 +3265,7 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! このメソッドはセカンダリコマンドバッファーで使用することはできません。
 	virtual V3D_RESULT Begin() = 0;
 	//! @brief コマンドの書き込みを開始します。
@@ -3218,7 +3277,7 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! usageFlags に \link V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE \endlink を指定した場合は pRenderPass と subpass は必ず指定してください。<br>
 	//! また pFrameBuffer に nullptr を指定することも可能ですが、パフォーマンスを考慮したい場合は有効なフレームバッファを指定することを推奨します。
 	virtual V3D_RESULT Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderPass, uint32_t subpass, IV3DFrameBuffer* pFrameBuffer) = 0;
@@ -3237,24 +3296,14 @@ public:
 	//! @brief バッファーにバリアを張ります。
 	//! @param[in] pBuffer バリアを張るバッファーです。
 	//! @param[in] barrier バリアを張るバッファーの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBufferDesc& barrier) = 0;
@@ -3262,50 +3311,32 @@ public:
 	//! @brief バッファービューにバリアを張ります。
 	//! @param[in] pBufferView バリアを張るバッファビューです。
 	//! @param[in] barrier バリアを張るバッファービューの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) = 0;
 
 	//! @brief バッファービューにバリアを張ります。
-	//! @param[in] bufferViewCount バリアを張るバッファビューの数です。
-	//! @param[in] ppBufferViews バリアを張るバッファビューの配列です。
+	//! @param[in] bufferViewCount バリアを張るバッファビューの数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] ppBufferViews バリアを張るバッファビューの配列です。<br>
+	//! 配列の要素数は、bufferViewCount である必要があります。
 	//! @param[in] barrier バリアを張るバッファービューの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferView** ppBufferViews, const V3DBarrierBufferViewDesc& barrier) = 0;
@@ -3313,24 +3344,14 @@ public:
 	//! @brief イメージにバリアを張ります。
 	//! @param[in] pImage バリアを張るイメージです。
 	//! @param[in] barrier バリアを張るイメージの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc& barrier) = 0;
@@ -3338,166 +3359,149 @@ public:
 	//! @brief イメージビューにバリアを張ります。
 	//! @param[in] pImageView バリアを張るイメージビューです。
 	//! @param[in] barrier バリアを張るイメージビューの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageViewDesc& barrier) = 0;
 
 	//! @brief イメージビューにバリアを張ります。
-	//! @param[in] imageVewCount バリアを張るイメージビューの数です。
-	//! @param[in] ppImageViews バリアを張るイメージビューの配列です。
+	//! @param[in] imageVewCount バリアを張るイメージビューの数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] ppImageViews バリアを張るイメージビューの配列です。<br>
+	//! 配列の要素数は、imageVewCount である必要があります。
 	//! @param[in] barrier バリアを張るイメージビューの記述です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageViewDesc& barrier) = 0;
 
-	//! @brief バッファーをコピーします。
-	//! @param[in] pDstBuffer コピー先のバッファを表す IV3DBuffer インターフェースのポインタです。
-	//! @param[in] dstOffset コピー先のバッファのメモリオフセットをバイト単位で指定します。
-	//! @param[in] pSrcBuffer コピー元のバッファを表す IV3DBuffer インターフェースのポインタです。
-	//! @param[in] srcOffset コピー元のバッファのメモリオフセットをバイト単位で指定します。
-	//! @param[in] size コピーするサイズ
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @brief バッファーを指定した値で塗りつぶします
+	//! @param[in] pDstBuffer 塗りつぶすバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstOffset 塗りつぶすバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= dstOffset < V3DBufferDesc::size } の範囲に制限されます。<br>
+	//! @param[in] size 塗りつぶすサイズをバイト単位で指定します。<br>
+	//! この値は 4 の整数倍である必要があり、{ 4 <= size <= (V3DBufferDesc::size - dstOffset) } の範囲に制限されます。
+	//! @param[in] data 塗りつぶす任意の値を指定します。
+	//! @par
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
+	//!   </tr>
+	//! </table>
+	virtual void FillBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t size, uint32_t data) = 0;
+
+	//! @brief バッファーを更新します。
+	//! @param[in] pDstBuffer 更新するバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstOffset 更新するバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は 4 の整数倍である必要があり { 0 <= dstOffset < V3DBufferDesc::size } の範囲に制限されます。<br>
+	//! また 65536 バイト以上の場合は内部で分割して更新するため、パフォーマンスが低下することに注意してください。<br>
+	//! @param[in] srcSize 更新するソースのサイズをバイト単位で指定します。<br>
+	//! この値は 4 の整数倍である必要があります。<br>
+	//! @param[in] pSrc 更新するソースです。<br>
+	//! nullptr を指定することはできません。
+	//! @par
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
+	//!   </tr>
+	//! </table>
+	virtual void UpdateBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t srcSize, const void* pSrc) = 0;
+
+	//! @brief バッファーをコピーします。
+	//! @param[in] pDstBuffer コピー先のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstOffset コピー先のバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= dstOffset < V3DBufferDesc::size } の範囲に制限されます。
+	//! @param[in] pSrcBuffer コピー元のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcOffset コピー元のバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= dstOffset < V3DBufferDesc::size } の範囲に制限されます。
+	//! @param[in] size コピーするサイズをバイト単位で指定します。<br>
+	//! この値は { 1 <= size <= min(dstBufferSize - dstOffset, srcBufferSize - srcOffset) } の範囲に制限されます。
+	//! @par
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size) = 0;
 
 	//! @brief バッファーをコピーします。
-	//! @param[in] pDstBuffer コピー先のバッファを表す IV3DBuffer インターフェースのポインタです。
-	//! @param[in] pSrcBuffer コピー元のバッファを表す IV3DBuffer インターフェースのポインタです。
-	//! @param[in] rangeCount コピーする範囲の数です。
-	//! @param[in] pRanges rangeCount の値の数の要素を持つ V3DCopyBufferRange 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pDstBuffer コピー先のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_DST \endlink が含まれている必要があります。<br>
+	//! @param[in] pSrcBuffer コピー元のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。<br>
+	//! @param[in] rangeCount コピーする範囲の数です。<br>
+	//! この値は、1以上を指定する必要があります。
+	//! @param[in] pRanges コピーする範囲の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
+	//! @par
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, IV3DBuffer* pSrcBuffer, uint32_t rangeCount, const V3DCopyBufferRange* pRanges) = 0;
 
 	//! @brief イメージをコピーします。
-	//! @param[in] pDstImage コピー先のイメージです。
-	//! @param[in] dstImageLayout コピー先のイメージレイアウトです。
-	//! @param[in] pSrcImage コピー元のイメージです。
-	//! @param[in] srcImageLayout コピー元のイメージレイアウトです。
-	//! @note コピー先、コピー元のイメージのタイプ、フォーマット、サイズ、レベル数、レイヤー数、アスペクトのすべてが一致している必要があります。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pDstImage コピー先のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。<br>
+	//! @param[in] dstImageLayout コピー先のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。<br>
+	//! @param[in] pSrcImage コピー元のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout コピー元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] rangeCount コピーする範囲の数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] pRanges コピーする範囲の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
+	//! @remarks
+	//! コピー操作をするイメージは、タイプ、サンプル数が一致している必要があります。<br>
+	//! またフォーマットはコピー元が V3D_FORMAT_R8G8B8A8_UNORM、コピー先が V3D_FORMAT_R32_UINT のように異なっていても、エレメントのサイズが一致していればコピーすることが可能です。<br>
+	//! ただしデプスステンシルの場合、フォーマットは一致していなければなりません。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
-	//!   </tr>
-	//! </table>
-	virtual void CopyImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout) = 0;
-
-	//! @brief イメージをコピーします。
-	//! @param[in] pDstImage コピー先のイメージです。
-	//! @param[in] dstImageLayout コピー先のイメージレイアウトです。
-	//! @param[in] pSrcImage コピー元のイメージです。
-	//! @param[in] srcImageLayout コピー元のイメージレイアウトです。
-	//! @param[in] rangeCount コピーする範囲の数です。
-	//! @param[in] pRanges rangeCount 値の数の要素を持つ V3DCopyImageRange 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
-	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyImage(
@@ -3505,66 +3509,88 @@ public:
 		IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout,
 		uint32_t rangeCount, const V3DCopyImageRange* pRanges) = 0;
 
-	//! @brief バッファをイメージにコピーします。
-	//! @param[in] pDstImage コピー先のイメージです。
-	//! @param[in] dstImageLayout コピー先のイメージのレイアウトです。
-	//! @param[in] dstLevel コピー先のイメージのレベルです。
-	//! @param[in] dstBaseLayer コピー先のイメージの最初のレベルです。
-	//! @param[in] dstLayerCount コピー先のイメージのレベル数です。
-	//! @param[in] dstOffset コピー先のイメージのオフセットです。
-	//! @param[in] dstSize コピー先のイメージのサイズです。
-	//! @param[in] pSrcBuffer コピー元のバッファです。
-	//! @param[in] srcBufferOffset コピー元のバッファのメモリオフセットをバイト単位で指定します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @brief イメージをコピーします。
+	//! @param[in] pDstImage コピー先のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout コピー先のイメージレイアウトです。<br>
+	//! イメージレイアウトは \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] pSrcImage コピー元のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout コピー元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれか指定します。<br>
+	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @remarks
+	//! コピー操作をするイメージは、タイプ、サイズ、レベル数、レイヤー数、サンプル数が一致している必要があります。<br>
+	//! またフォーマットはコピー元が V3D_FORMAT_R8G8B8A8_UNORM、コピー先が V3D_FORMAT_R32_UINT のように異なっていても、エレメントのサイズが一致していればコピーすることが可能です。<br>
+	//! ただしデプスステンシルの場合、フォーマットは一致していなければなりません。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
+	//!   </tr>
+	//! </table>
+	virtual void CopyImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout) = 0;
+
+	//! @brief バッファーをイメージにコピーします。
+	//! @param[in] pDstImage コピー先のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout コピー先のイメージのレイアウトです。<br>
+	//! メージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] dstLevel コピー先のイメージのレベルです。<br>
+	//! この値は { 0 <= dstLevel < V3DImageDesc::levelCount } の範囲に制限されます。
+	//! @param[in] dstBaseLayer コピー先のイメージの最初のレイヤーです。<br>
+	//! この値は { 0 <= dstBaseLayer < V3DImageDesc::layerCount } の範囲に制限されます。
+	//! @param[in] dstLayerCount コピー先のイメージのレイヤー数です。<br>
+	//! この値は { 1 <= dstLayerCount <= (V3DImageDesc::layerCount - dstBaseLayer) } の範囲に制限されます。
+	//! @param[in] dstOffset コピー先のイメージのオフセットです。<br>
+	//! この値は { (0, 0, 0) <= dstOffset < (V3DImageDesc::width, V3DImageDesc::height, V3DImageDesc::depth) } の範囲に制限されます。
+	//! @param[in] dstSize コピー先のイメージのサイズです。<br>
+	//  この値は、1以上である必要があります。
+	//! @param[in] pSrcBuffer コピー元のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcBufferOffset コピー元のバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= srcBufferOffset < V3DBufferDesc::size } の範囲に制限されます。<br>
+	//! また ( V3DBufferDesc::size - srcBufferOffset ) の値は、実際にコピーされるサイズと同じであるか、上回っていなければなりません。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyBufferToImage(
 		IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, uint32_t dstLevel, uint32_t dstBaseLayer, uint32_t dstLayerCount, const V3DPoint3D& dstOffset, const V3DSize3D& dstSize,
 		IV3DBuffer* pSrcBuffer, uint32_t srcBufferOffset) = 0;
 
-	//! @brief バッファをイメージにコピーします
-	//! @param[in] pDstImage コピー先のイメージです。
-	//! @param[in] dstImageLayout コピー先のイメージのレイアウトです。
-	//! @param[in] pSrcBuffer コピー元のバッファです。
-	//! @param[in] rangeCount コピーする範囲の数です。
-	//! @param[in] pRanges rangeCount の値の要素の数を持つ V3DCopyBufferToImageRange 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @brief バッファーをイメージにコピーします
+	//! @param[in] pDstImage コピー先のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout コピー先のイメージのレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink、\link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。<br>
+	//! @param[in] pSrcBuffer コピー元のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。<br>
+	//! @param[in] rangeCount コピーする範囲の数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] pRanges コピーする範囲の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyBufferToImage(
@@ -3573,34 +3599,33 @@ public:
 		uint32_t rangeCount, const V3DCopyBufferToImageRange* pRanges) = 0;
 
 	//! @brief イメージをバッファーにコピーします。
-	//! @param[in] pDstBuffer コピー先のバッファーです。
-	//! @param[in] dstBufferOffset コピー先のバッファーのメモリオフセットをバイト単位で指定します。
-	//! @param[in] pSrcImage コピー元のイメージです。
-	//! @param[in] srcImageLayout コピー元のイメージのレイアウトです。
-	//! @param[in] srcLevel コピー元のイメージのレベルです。
-	//! @param[in] srcBaseLayer コピー元のイメージの最初のレイヤーです。
+	//! @param[in] pDstBuffer コピー先のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstBufferOffset コピー先のバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= dstBufferOffset < V3DBufferDesc::size } の範囲に制限されます。
+	//! @param[in] pSrcImage コピー元のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout コピー元のイメージのレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink、\link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。<br>
+	//! @param[in] srcLevel コピー元のイメージのレベルです。<br>
+	//! この値は { 0 <= srcLevel < V3DImageDesc::levelCount } の範囲に制限されます。
+	//! @param[in] srcBaseLayer コピー元のイメージの最初のレイヤーです。<br>
+	//! この値は { 0 <= srcBaseLayer < V3DImageDesc::layerCount } の範囲に制限されます。
 	//! @param[in] srcLayerCount コピー元のイメージのレイヤー数です。
-	//! @param[in] srcOffset コピー元のイメージのオフセットです。
-	//! @param[in] srcSize コピー元のイメージのサイズです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! この値は { 1 <= srcLayerCount <= (V3DImageDesc::layerCount - srcBaseLayer) } の範囲に制限されます。
+	//! @param[in] srcOffset コピー元のイメージのオフセットです。<br>
+	//! この値は { (0, 0, 0) <= srcOffset < (V3DImageDesc::width, V3DImageDesc::height, V3DImageDesc::depth) } の範囲に制限されます。
+	//! @param[in] srcSize コピー元のイメージのサイズです。<br>
+	//! この値は { {1, 1, 1} <= srcSize <= ((V3DImageDesc::width, V3DImageDesc::height, V3DImageDesc::depth) - srcOffset) } の範囲に制限されます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyImageToBuffer(
@@ -3608,30 +3633,25 @@ public:
 		IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout, uint32_t srcLevel, uint32_t srcBaseLayer, uint32_t srcLayerCount, const V3DPoint3D& srcOffset, const V3DSize3D& srcSize) = 0;
 
 	//! @brief イメージをバッファーにコピーします。
-	//! @param[in] pDstBuffer コピー先のバッファーです。
-	//! @param[in] pSrcImage コピー元のイメージです。
-	//! @param[in] srcImageLayout コピー元のイメージのレイアウトです。
-	//! @param[in] rangeCount コピーする範囲の数です。
-	//! @param[in] pRanges rangeCount の値の要素の数を持つ V3DCopyImageToBufferRange 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pDstBuffer コピー先のバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] pSrcImage コピー元のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout コピー元のイメージのレイアウトです。<br>
+	//! メージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] rangeCount コピーする範囲の数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] pRanges コピーする範囲の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void CopyImageToBuffer(
@@ -3640,30 +3660,38 @@ public:
 		uint32_t rangeCount, const V3DCopyImageToBufferRange* pRanges) = 0;
 
 	//! @brief イメージを転送します。
-	//! @param[in] pDstImage 転送先のイメージです。
-	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。
-	//! @param[in] pSrcImage 転送元のイメージです。
-	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。
-	//! @param[in] rangeCount 転送する範囲の数です。
-	//! @param[in] pRanges rangeCount 値の数の要素を持つ V3DBlitImageRange 構造体の配列です。
+	//! @param[in] pDstImage 転送先のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImage は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] pSrcImage 転送元のイメージです。<br>
+	//! イメージ作成時の使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。<br>
+	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImage は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] rangeCount 転送する範囲の数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] pRanges rangeCount 値の数の要素を持つ V3DBlitImageRange 構造体の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
 	//! @param[in] filter フィルターです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! 転送操作をするイメージは、フォーマットによっては使用できない場合がありますので IV3DDevice::CheckImageFormatFeature を使用して事前に確認しておく必要があります。<br>
+	//! また IV3DDevice::CheckImageFormatFeature の第２引数 または 第３引数である featureFlags に指定する値は以下のようになります。<br>
+	//! - 転送先イメージ ( pDstImage )<br>
+	//! \link V3D_IMAGE_FORMAT_FEATURE_BLIT_DST \endlink<br>
+	//! - 転送元イメージ ( pSrcImage )<br>
+	//! \link V3D_IMAGE_FORMAT_FEATURE_BLIT_SRC \endlink<br>
+	//! また filter に \link V3D_FILTER_LINEAR \endlink を指定する場合は \link V3D_IMAGE_FORMAT_FEATURE_SAMPLED_FILTER_LINEAR \endlink も含めてください。<br>
+	//! .
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BlitImage(
@@ -3672,58 +3700,95 @@ public:
 		uint32_t rangeCount, V3DBlitImageRange* pRanges,
 		V3D_FILTER filter) = 0;
 
-	//! @brief マルチサンプルイメージを非マルチサンプルイメージの変換します。
-	//! @param[in] pDstImage 変換先のイメージです。
-	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。
-	//! @param[in] pSrcImage 変換元のイメージです。
-	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。
-	//! @note
-	//! 変換先、変換元のイメージのタイプ、フォーマット、サイズ、レベル数、レイヤー数のすべてが一致している必要があります。<br>
+	//! @brief イメージビューを転送します。
+	//! @param[in] pDstImageView 転送先のイメージビューです。<br>
+	//! アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImageView は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] dstRect 転送先の領域です。<br>
+	//! この値は、転送先イメージの範囲 ( width height ) を超えて指定してはいけません。
+	//! @param[in] pSrcImageView 転送元のイメージビューです。<br>
+	//! アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink、\link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImageView は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] srcRect 転送元の領域です。<br>
+	//! この値は、転送元イメージの範囲 ( width height ) を超えて指定してはいけません。
+	//! @param[in] filter フィルターです。
+	//! @remarks
+	//! 転送操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数、サンプル数が一致している必要があります。<br>
 	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
-	virtual void ResolveImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout) = 0;
+	//! @sa IV3DCommandBuffer::BlitImage
+	virtual void BlitImageView(
+		IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, const V3DRectangle2D& dstRect,
+		IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout, const V3DRectangle2D& srcRect,
+		V3D_FILTER filter) = 0;
 
-	//! @brief マルチサンプルイメージを非マルチサンプルイメージの変換します。
-	//! @param[in] pDstImage 変換先のイメージです。
-	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。
-	//! @param[in] pSrcImage 変換元のイメージです。
-	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。
-	//! @param[in] rangeCount 変換する範囲の数です。
-	//! @param[in] pRanges rangeCount 値の数の要素を持つ V3DResolveImageRange 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @brief イメージビューを転送します。
+	//! @param[in] pDstImageView 転送先のイメージビューです。<br>
+	//! アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImageView は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] pSrcImageView 転送元のイメージビューです。<br>
+	//! アクセスするイメージ作成時の使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImageView は転送を開始する前にこのイメージレイアウトに移行く必要があります。
+	//! @param[in] filter フィルターです。
+	//! @remarks
+	//! 転送操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数、サンプル数が一致している必要があります。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
+	//!   </tr>
+	//! </table>
+	//! @sa IV3DCommandBuffer::BlitImage
+	virtual void BlitImageView(
+		IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout,
+		IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout,
+		V3D_FILTER filter) = 0;
+
+	//! @brief マルチサンプルイメージを非マルチサンプルイメージに変換します。
+	//! @param[in] pDstImage 変換先のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかである必要があります。<br>
+	//! また pDstImage は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] pSrcImage 変換元のイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。
+	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。<br>
+	//! イメージレイアウトは \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImage は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] rangeCount 変換する範囲の数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] pRanges rangeCount 変換する範囲の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
+	//! @remarks
+	//! 変換操作をするイメージビューはタイプ、フォーマットが一致している必要があります。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void ResolveImage(
@@ -3731,52 +3796,85 @@ public:
 		IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout,
 		uint32_t rangeCount, const V3DResolveImageRange* pRanges) = 0;
 
-	//! @brief マルチサンプルイメージを非マルチサンプルイメージの変換します。
-	//! @param[in] pDstImageView 変換先のイメージビューです。
-	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。
-	//! @param[in] pSrcImageView 変換元のイメージビューです。
-	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。
-	//! @note
-	//! 変換先、変換元のイメージビューのタイプ、フォーマット、サイズ、レベル数、レイヤー数のすべてが一致している必要があります。<br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @brief マルチサンプルイメージビューを非マルチサンプルイメージビューに変換します。
+	//! @param[in] pDstImageView 変換先のイメージビューです。<br>
+	//! アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。<br>
+	//! またサンプル数である V3DImageDesc::samples には \link V3D_SAMPLE_COUNT_1 \endlink が指定されている必要があります。
+	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] dstOffset 変換先イメージのオフセットです。<br>
+	//! この値は、変換先イメージの範囲 ( width height ) を超えて指定してはいけません。
+	//! @param[in] pSrcImageView 変換元のイメージビューです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。<br>
+	//! またサンプル数である V3DImageDesc::samples は \link V3D_SAMPLE_COUNT_1 \endlink ではあってはいけません。
+	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] srcOffset 変換元イメージのオフセットです。<br>
+	//! この値は、変換元イメージの範囲 ( width height ) を超えて指定してはいけません。
+	//! @param[in] size 変換するイメージのサイズです。<br>
+	//! この値は変換操作をするイメージの範囲 ( imageSize - offset ) を超えて指定してはいけません。
+	//! @remarks
+	//! 変換操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数が一致している必要があります。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
+	//!   </tr>
+	//! </table>
+	virtual void ResolveImageView(
+		IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, const V3DPoint2D& dstOffset,
+		IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout, const V3DPoint2D& srcOffset,
+		const V3DSize2D& size ) = 0;
+
+	//! @brief マルチサンプルイメージビューを非マルチサンプルイメージビューに変換します。
+	//! @param[in] pDstImageView 変換先のイメージビューです。<br>
+	//! アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。<br>
+	//! またサンプル数である V3DImageDesc::samples には \link V3D_SAMPLE_COUNT_1 \endlink が指定されている必要があります。<br>
+	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。<br>
+	//! イメージレイアウトは \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pDstImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] pSrcImageView 変換元のイメージビューです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_SRC \endlink が含まれている必要があります。<br>
+	//! またサンプル数である V3DImageDesc::samples は \link V3D_SAMPLE_COUNT_1 \endlink ではあってはいけません。
+	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_SRC \endlink のいずれかを指定します。<br>
+	//! また pSrcImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @remarks
+	//! 変換操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数が一致している必要があります。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout) = 0;
 
 	//! @brief レンダーパスを開始します。
-	//! @param[in] pRenderPass 開始するレンダーパスを表す IV3DRenderPass インターフェースのポインタです。
-	//! @param[in] pFrameBuffer サブパスが参照するアタッチメントが入っているフレームバッファです。
-	//! @param[in] subpassContentInline サブパスのコマンドをこのコマンドバッファーに記録する場合は true を指定します。<br>
-	//! またサブパスのコマンドをセカンダリコマンドバッファーで記録してこのコマンドバッファーで実行したい場合は false を指定してください。
+	//! @param[in] pRenderPass レンダーパスです。
+	//! @param[in] pFrameBuffer 指定したレンダーパスに対応するフレームバッファーです。
+	//! @param[in] subpassContentInline サブパスのコマンドの記録方法です。<br>
+	//! サブパスのコマンドをこのコマンドバッファーに記録する場合は true を指定します。<br>
+	//! またサブパスのコマンドをセカンダリコマンドバッファーで記録して、このコマンドバッファーで実行する場合は false を指定してください。
 	//! @param[in] pRenderArea レンダリング領域です。<br>
-	//! nullptr の場合は アタッチメント全体を表します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! レンダリング領域は、アタッチメントの範囲 ( width height ) を超えて指定してはいけません。<br>
+	//! また nullptr を指定した場合は、アタッチメント全体をレンダリング領域とします。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_INPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_SHADER \endlink <br>
@@ -3788,26 +3886,19 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 
 	virtual void BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea = nullptr) = 0;
 	//! @brief レンダーパスを終了します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_INPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_SHADER \endlink <br>
@@ -3819,24 +3910,19 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!     <td>
-	//!     レンダーパス内でのみ有効
 	//!     </td>
+	//!     <td> レンダーパス内でのみ有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void EndRenderPass() = 0;
 
 	//! @brief 次のサブパスへ移行します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
 	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
@@ -3850,31 +3936,25 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!     <td>
-	//!     レンダーパス内でのみ有効
-	//!     </td>
+	//!     <td> レンダーパス内でのみ有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void NextSubpass() = 0;
 
 	//! @brief イメージをクリアします。
-	//! @param[in] pImage クリアするイメージです。
+	//! @param[in] pImage クリアするイメージです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
 	//! @param[in] imageLayout クリアするイメージのレイアウトです。<br>
-	//! この値は \link V3D_IMAGE_LAYOUT_GENERAL \endlink 、 \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかである必要があります。
-	//! @param[in] clearValue クリアする値です。
-	//! @note 
-	//! クリアする前にイメージを指定したレイアウトに移行している必要があります。<br>
-	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink、\link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pImage はクリアを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] clearValue クリアする値です。<br>
+	//! クリアするイメージがカラーの場合は V3DClearValue::color 、デプスステンシルの場合は V3DClearValue::depthStencil に任意の値を指定します。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
 	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
@@ -3887,38 +3967,30 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
-	//!       \link V3D_PIPELINE_STAGE_COMPUTE_SHADER \endlink ※ <br>
+	//!       \link V3D_PIPELINE_STAGE_COMPUTE_SHADER \endlink <b>※</b> <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
 	//!       <br>
-	//!       ※ クリアするイメージがデプスステンシルの場合は無効です
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!       <b>※</b> クリアするイメージがデプスステンシルの場合は無効です
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
-	//! @sa IV3DCommandBuffer::BarrierImage
 	virtual void ClearImage(IV3DImage* pImage, V3D_IMAGE_LAYOUT imageLayout, const V3DClearValue& clearValue) = 0;
 
 	//! @brief イメージビューをクリアします。
-	//! @param[in] pImageView クリアするイメージのビューを表す IV3DImageView インターフェースのポインタです。
-	//! @param[in] imageLayout クリアするイメージのレイアウトです。<br>
-	//! この値は \link V3D_IMAGE_LAYOUT_GENERAL \endlink 、 \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかである必要があります。
-	//! @param[in] clearValue クリアする値です。
-	//! @note 
-	//! クリアする前にイメージを指定したレイアウトに移行している必要があります。<br>
-	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pImageView クリアするイメージのビューです。<br>
+	//! イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には \link V3D_IMAGE_USAGE_TRANSFER_DST \endlink が含まれている必要があります。
+	//! @param[in] imageLayout クリアするイメージレイアウトです。<br>
+	//! イメージレイアウトには \link V3D_IMAGE_LAYOUT_GENERAL \endlink または \link V3D_IMAGE_LAYOUT_TRANSFER_DST \endlink のいずれかを指定します。<br>
+	//! また pImageView はクリアを開始する前にこのイメージレイアウトに移行しておく必要があります。
+	//! @param[in] clearValue クリアする値です。<br>
+	//! クリアするイメージがカラーの場合は V3DClearValue::color 、デプスステンシルの場合は V3DClearValue::depthStencil に任意の値を指定します。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_INPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_SHADER \endlink <br>
@@ -3929,37 +4001,35 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
-	//!       \link V3D_PIPELINE_STAGE_COMPUTE_SHADER \endlink ※ <br>
+	//!       \link V3D_PIPELINE_STAGE_COMPUTE_SHADER \endlink <b>※</b> <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!       <br>
-	//!       ※ クリアするイメージがデプスステンシルの場合は無効です
-	//!     <td>
-	//!     無効
 	//!     </td>
+	//!     <br>
+	//!     <b>※</b> クリアするイメージがデプスステンシルの場合は無効です
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
-	//! @sa IV3DCommandBuffer::BarrierImageView
 	virtual void ClearImageView(IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, const V3DClearValue& clearValue) = 0;
 
 	//! @brief サブパスのアタッチメントをクリアします。
-	//! @param[in] colorAttachmentCount クリアするアタッチメントの数です。
-	//! @param[in] pColorAttachments colorAttachmentCount の値の数の要素を持つ V3DClearAttachmentDesc 構造体の配列です。
-	//! @param[in] pDepthStencilAttachment デプスステンシルアタッチメントのクリアの記述のポインタです。 ( デプスステンシルが無い場合は nullptr )
-	//! @param[in] rangeCount クリアする範囲の数です。
-	//! @param[in] pRanges rectCount の値の数の要素を持つ V3DClearRange 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] colorAttachmentCount クリアするアタッチメントの数です。<br>
+	//! クリアするカラーアタッチメントが存在しない場合は 0 を指定することができます。
+	//! @param[in] pColorAttachments クリアするカラーアタッチメントの記述の配列です。<br>
+	//! colorAttachmentCount が 1以上の場合は、colorAttachmentCount の値の要素を持つ配列を指定する必要があります。<br>
+	//! また colorAttachmentCount の値が 0 の場合は nullptr を指定してください。
+	//! @param[in] pDepthStencilAttachment クリアするデプスステンシルアタッチメントの記述です。<br>
+	//! デプスステンシルアタッチメントをクリアしない、または存在しない場合は nullptr を指定することができます。
+	//! @param[in] rangeCount クリアする範囲の数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] pRanges クリアする範囲の配列です。<br>
+	//! 配列の要素数は rangeCount である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_INPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_SHADER \endlink <br>
@@ -3971,9 +4041,8 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!     <td>
-	//!     レンダーパス内でのみ有効
 	//!     </td>
+	//!     <td> レンダーパス内でのみ有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void ClearAttachments(
@@ -3982,24 +4051,15 @@ public:
 		uint32_t rangeCount, const V3DClearRange* pRanges) = 0;
 
 	//! @brief パイプラインをバインドします。
-	//! @param[in] pPipeline バインドするパイプラインを表す IV3DPipeline インターフェースのポインタです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pPipeline バインドするパイプラインです。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BindPipeline(IV3DPipeline* pPipeline) = 0;
@@ -4007,30 +4067,25 @@ public:
 	//! @brief デスクリプタセットをバインドします。
 	//! @param[in] pipelineType パイプラインのタイプです。
 	//! @param[in] pPipelineLayout パイプラインのレイアウトです。
-	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。
-	//! @param[in] descriptorSetCount バインドするデスクリプタセットの数です。
-	//! @param[in] ppDescriptorSets descriptorSetCount の値の数の要素を持つ IV3DDescriptorSet インターフェースのポインタの配列です。
+	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。<br>
+	//! この値は { 0 <= firstSet < V3DDeviceCaps::maxBoundDescriptorSets } の範囲に制限されます。
+	//! @param[in] descriptorSetCount バインドするデスクリプタセットの数です。<br>
+	//! この値は { 1 <= descriptorSetCount <= (V3DDeviceCaps::maxBoundDescriptorSets - firstSet) } の範囲に制限されます。
+	//! @param[in] ppDescriptorSets バインドするデスクリプタセットの配列です。<br>
+	//! 配列の要素数は descriptorSetCount ある必要があります。
 	//! @param[in] dynamicOffsetCount ダイナミックオフセットの数です。<br>
-	//! この値はデスクリプタセットに格納されているダイナミックユニフォームバッファーの数と同じである必要があります。
+	//! この値はデスクリプタセットに格納されているダイナミックバッファーの数と一致している必要があります。
 	//! @param[in] pDynamicOffsets ダイナミックオフセットの配列です。<br>
-	//! この配列は dynamicOffsetCount の値の数の要素を持っている必要があり、各要素の値はバイト単位で指定します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! dynamicOffsetCount が 1以上の場合は、dynamicOffsetCount 値の要素を持つ配列を指定してください。<br>
+	//! また dynamicOffsetCount が 0 の場合は nullptr を指定してください。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BindDescriptorSets(
@@ -4039,333 +4094,254 @@ public:
 		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
 
 	//! @brief バーテックスバッファーをバインドします。
-	//! @param[in] firstBinding 最初のバインディングです。
-	//! @param[in] bindingCount バインディング数です。
-	//! @param[in] ppBuffers バッファーのポインタの配列です。<br>
-	//! この配列は bindingCount の値の数の要素が必要です。
-	//! @param[in] pOffsets バッファーのメモリオフセットの配列です。<br>
-	//! この配列は bindingCount の値の数の要素が必要であり、各要素の値はバイト単位で指定します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] firstBinding 最初のバインディングのインデックスです。<br>
+	//! この値は { 0 <= firstBinding < V3DDeviceCaps::maxVertexInputBindings } の範囲に制限されます。
+	//! @param[in] bindingCount バインディングの数です。<br>
+	//! この値は { 1 <= bindingCount < (V3DDeviceCaps::maxVertexInputBindings - firstBinding) } の範囲に制限されます。
+	//! @param[in] ppBuffers バーテックスバッファーの配列です。<br>
+	//! 配列の要素数は bindingCount である必要があります。<br>
+	//! またバッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_VERTEX \endlink が含まれている必要があります。
+	//! @param[in] pOffsets バーテックスバッファーのメモリオフセットの配列です。<br>
+	//! 配列の要素数は bindingCount ある必要があります。<br>
+	//! また配列の要素であるメモリオフセットは、バイト単位で指定します。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BindVertexBuffers(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets) = 0;
 
 	//! @brief インデックスバッファーをバインドします。
-	//! @param[in] pBuffer バインドするインデックスバッファーです。
-	//! @param[in] offset バインドするインデックスバッファーのメモリオフセットをバイト単位で指定します。
-	//! @param[in] indexType インデックスタイプを表す \link V3D_INDEX_TYPE \endlink 列挙定数のいずれかを指定します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pBuffer バインドするインデックスバッファーです。<br>
+	//! バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には \link V3D_BUFFER_USAGE_INDEX \endlink が含まれている必要があります。<br>
+	//! またバッファーに書き込まれているインデックスの値は V3DDeviceCaps::maxDrawIndexedIndexValue 以下に制限されます。
+	//! @param[in] offset バインドするインデックスバッファーのメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= offset < V3DBufferDesc::size } の範囲に制限されます。
+	//! @param[in] indexType インデックスタイプを表す \link V3D_INDEX_TYPE \endlink 列挙定数のいずれかを指定します。<br>
+	//! \link V3D_INDEX_TYPE_UINT16 \endlink は実装に依存することなく、どの環境でも指定することができます。<br>
+	//! \link V3D_INDEX_TYPE_UINT32 \endlink は V3DDeviceCaps::flags に \link V3D_CAP_FULL_DRAW_INDEX_UINT32 \endlink が含まれている場合にのみ指定することができます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D_INDEX_TYPE indexType) = 0;
 
-	//! @brief 定数をプッシュします。
+	//! @brief プッシュ定数を更新します。
 	//! @param[in] pPipelineLayout パイプラインレイアウトです。
-	//! @param[in] slot 定数をプッシュするスロットです。<br>
-	//! パイプラインレイアウト作成時に指定した V3DConstantDesc 構造体の配列のインデックスになります。
-	//! @param[in] pData プッシュするデータです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] slot プッシュ定数のスロットです。<br>
+	//! pPipelineLayout の作成時に指定した V3DConstantDesc 構造体の配列のインデックスを指定します。
+	//! @param[in] pData プッシュ定数を更新するデータです。<br>
+	//! 更新するデータのバイトサイズは V3DConstantDesc::size である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	//! @sa IV3DDevice::CreatePipelineLayout
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, const void* pData) = 0;
 
-	//! @brief 定数をプッシュします。
+	//! @brief プッシュ定数を更新します。
 	//! @param[in] pPipelineLayout パイプラインレイアウトです。
-	//! @param[in] slot 定数をプッシュするスロットです。<br>
-	//! パイプラインレイアウト作成時に指定した V3DConstantDesc 構造体の配列のインデックスです。
-	//! @param[in] offset プッシュ先の定数のメモリオフセットをバイト単位で指定します。
-	//! @param[in] size プッシュするデータのサイズをバイト単位で指定します。
-	//! @param[in] pData プッシュするデータです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] slot プッシュ定数のスロットです。<br>
+	//! pPipelineLayout 作成時に指定した V3DConstantDesc 構造体の配列のインデックスを指定します。
+	//! @param[in] offset プッシュ定数のメモリオフセットをバイト単位で指定します。<br>
+	//! この値は { 0 <= offset < V3DConstantDesc::size } の範囲に制限されます。
+	//! @param[in] size プッシュ定数を更新するデータのサイズをバイト単位で指定します。
+	//! この値は { 1 <= size <= (V3DConstantDesc::size - offset) } の範囲に制限されます。
+	//! @param[in] pData プッシュ定数を更新するデータです。<br>
+	//! 更新するデータのバイトサイズは V3DConstantDesc::size の値である必要がある必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	//! @sa IV3DDevice::CreatePipelineLayout
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) = 0;
 
-	//! @brief デスクリプタセットをプッシュします。
+	//! @brief プッシュデスクリプタセットを更新します。
 	//! @param[in] pipelineType パイプラインのタイプです。
 	//! @param[in] pPipelineLayout パイプラインのレイアウトです。
-	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。
-	//! @param[in] descriptorSetCount プッシュするデスクリプタセットの数です。
-	//! @param[in] ppDescriptorSets descriptorSetCount の値の数の要素を持つ IV3DDescriptorSet インターフェースのポインタの配列です。
-	//! @note
-	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS \endlink が含まれている場合に使用することができます。<br>
+	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。<br>
+	//! この値は { 0 <= firstSet < V3DDeviceCaps::maxBoundDescriptorSets } の範囲に制限されます。
+	//! @param[in] descriptorSetCount プッシュするデスクリプタセットの数です。<br>
+	//! この値は { 1 <= descriptorSetCount <= (V3DDeviceCaps::maxBoundDescriptorSets - firstSet) } の範囲に制限されます。
+	//! @param[in] ppDescriptorSets descriptorSetCount の値の数の要素を持つ IV3DDescriptorSet インターフェースのポインタの配列です。<br>
+	//! 配列の要素数は descriptorSetCount である必要があります。
+	//! @remarks
+	//! このコマンドは V3DDeviceCaps::extensionFlags に \link V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS \endlink が含まれている場合に使用することができます。<br>
 	//! <br>
 	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets) = 0;
 
 	//! @brief ビューポートを設定します。
-	//! @param[in] firstViewport 設定する最初のビューポートのインデックスです。
-	//! @param[in] viewportCount 設定するビューポートの数です。<br>
-	//! ビューポートの最大数は V3DDeviceCaps::maxViewports の値になります。
-	//! @param[in] pViewports viewportCount の値の数の要素を持つ V3DViewport 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] firstViewport 最初のビューポートのインデックスです。<br>
+	//! この値は { 0 <= firstViewport < V3DDeviceCaps::maxViewports } の範囲に制限されます。
+	//! @param[in] viewportCount ビューポートの数です。<br>
+	//! この値は { 1 <= viewportCount < (V3DDeviceCaps::maxViewports - firstViewport) } の範囲に制限されます。
+	//! @param[in] pViewports ビューポートの配列です。<br>
+	//! 配列の要素数は viewportCount である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const V3DViewport* pViewports) = 0;
 
 	//! @brief シザリングを設定します。
-	//! @param[in] firstScissor 設定する最初のシザリングのインデックスです。
-	//! @param[in] scissorCount 設定するシザリングの数です。<br>
-	//! シザリングの最大数は V3DDeviceCaps::maxViewports の値になります。
-	//! @param[in] pScissors scissorCount の値の数の要素を持つ V3DRectangle2D 構造体の配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] firstScissor 最初のシザリングのインデックスです。<br>
+	//! この値は { 0 <= firstScissor < V3DDeviceCaps::maxViewports } の範囲に制限されます。
+	//! @param[in] scissorCount ザリング領域の数です。<br>
+	//! この値は { 1 <= scissorCount <= (V3DDeviceCaps::maxViewports - firstScissor) } の範囲に制限されます。
+	//! @param[in] pScissors シザリング領域の配列です。<br>
+	//! 配列の要素数は scissorCount である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) = 0;
 
 	//! @brief ステンシルの比較オペレーターで使用される値を設定します。
 	//! @param[in] faceMask 設定するフェイスを表す \link V3D_STENCIL_FACE_FLAG \endlink 列挙定数の組み合わせです。
-	//! @param[in] reference 比較オペレーターで使用される値です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] reference 比較オペレーターで使用される値です。<br>
+	//! ステンシルのビット数を超える値を指定することはできません。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	//! @sa V3D_COMPARE_OP
 	virtual void SetStencilReference(V3DFlags faceMask, uint32_t reference) = 0;
 
 	//! @brief ブレンド定数を設定します。
-	//! @param[in] blendConstants RGBA のブレンド定数を 0.0f ～ 1.0f の間で指定します。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] blendConstants ブレンド定数です。<br>
+	//! 配列の要素 [0, 3] は RGBA を表しています。<br>
+	//! また要素の値は { 0.0 <= blendConstants <= 1.0 } の範囲に制限されます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>\link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	//! @sa V3D_BLEND_FACTOR
-	//! @sa V3DPipelineColorBlendAttachment
 	virtual void SetBlendConstants(const float blendConstants[4]) = 0;
 
 	//! @brief クエリプールをリセットします。
 	//! @param[in] pQueryPool リセットするクエリプールです。
-	//! @param[in] firstQuery リセットする最初のクエリのインデックスです。
-	//! @param[in] queryCount リセットするクエリの数です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] firstQuery リセットする最初のクエリのインデックスです。<br>
+	//! この値は { 0 <= firstQuery < V3DQueryPoolDesc::queryCount } の範囲に制限されます。
+	//! @param[in] queryCount リセットするクエリの数です。<br>
+	//! この値は { 1 <= queryCount <= (V3DQueryPoolDesc::queryCount - firstQuery) } の範囲に制限されます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void ResetQueryPool(IV3DQueryPool* pQueryPool, uint32_t firstQuery, uint32_t queryCount) = 0;
+
 	//! @brief クエリを開始します。
-	//! @param[in] pQueryPool クエリの結果を管理するクエリプールです。
-	//! @param[in] query 結果の取得を開始するクエリのインデックスです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pQueryPool クエリを開始するクエリプールです。
+	//! @param[in] query 開始するクエリのインデックスです。<br>
+	//! この値は { 0 <= query < V3DQueryPoolDesc::queryCount } の範囲に制限されます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BeginQuery(IV3DQueryPool* pQueryPool, uint32_t query) = 0;
+
 	//! @brief クエリを終了します。
-	//! @param[in] pQueryPool クエリの結果を管理するクエリプールです。
-	//! @param[in] query 結果が格納されているクエリのインデックスです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] pQueryPool クエリを終了するクエリプールです。
+	//! @param[in] query 終了するクエリのインデックスです。<br>
+	//! この値は { 0 <= query < V3DQueryPoolDesc::queryCount } の範囲に制限されます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void EndQuery(IV3DQueryPool* pQueryPool, uint32_t query) = 0;
+
 	//! @brief タイプスタンプを書き込みます。
 	//! @param[in] pQueryPool タイムスタンプを管理するクエリプールです。
-	//! @param[in] pipelineStage パイプラインステージです。
-	//! @param[in] query タイムスタンプのクエリのインデックスです。
-	//! @note
-	//! 指定したパイプラインステージの実行が完了した際にタイムスタンプの値を書き込みます。<br>
+	//! @param[in] pipelineStage パイプラインステージです。<br>
+	//! @param[in] query タイムスタンプのクエリのインデックスです。<br>
+	//! この値は { 0 <= query < V3DQueryPoolDesc::queryCount } の範囲に制限されます。
+	//! @remarks
+	//! このメソッドは V3DDeviceCaps::timestampComputeAndGraphics が true の場合にのみ使用することができます。<br>
 	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! タイムスタンプの値は、指定したパイプラインステージの実行が完了した後に書き込まれます。<br>
+	//! また書き込まれる値は、ナノ秒単位です。<br>
+	//! <br>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_PIPELINE_STAGE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_TRANSFER \endlink </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void WriteTimestamp(IV3DQueryPool* pQueryPool, V3D_PIPELINE_STAGE_FLAG pipelineStage, uint32_t query) = 0;
@@ -4375,19 +4351,13 @@ public:
 	//! @param[in] instanceCount インスタンスの数です。
 	//! @param[in] firstVertex 最初の頂点のインデックスです。
 	//! @param[in] firstInstance 最初のインスタンスのインデックスです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_INPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_SHADER \endlink <br>
@@ -4399,9 +4369,8 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!     <td>
-	//!     レンダーパス内でのみ有効
 	//!     </td>
+	//!     <td> レンダーパス内でのみ有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) = 0;
@@ -4412,19 +4381,13 @@ public:
 	//! @param[in] firstIndex 最初のインデックスです。
 	//! @param[in] firstInstance 最初のインスタンスのインデックスです。
 	//! @param[in] vertexOffset 頂点のバイトオフセットです。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td>  \link V3D_QUEUE_GRAPHICS \endlink </td>
 	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
 	//!       \link V3D_PIPELINE_STAGE_TOP_OF_PIPE \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_INPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_VERTEX_SHADER \endlink <br>
@@ -4436,58 +4399,44 @@ public:
 	//!       \link V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT \endlink <br>
 	//!       \link V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE \endlink <br>
-	//!     <td>
-	//!     レンダーパス内でのみ有効
 	//!     </td>
+	//!     <td> レンダーパス内でのみ有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t firstInstance, int32_t vertexOffset) = 0;
 
 	//! @brief コンピュートシェーダーの作業をディスパッチします。
-	//! @param[in] groupCountX X 方向にディスパッチされるグループの数です。
-	//! @param[in] groupCountY Y 方向にディスパッチされるグループの数です。
-	//! @param[in] groupCountZ Z 方向にディスパッチされるグループの数です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] groupCountX X 方向にディスパッチされるグループの数です。<br>
+	//! この値は { 1 <= groupCountX < V3DDeviceCaps::maxComputeDispatchGroupCount.x } の範囲に制限されます。
+	//! @param[in] groupCountY Y 方向にディスパッチされるグループの数です。<br>
+	//! この値は { 1 <= groupCountY < V3DDeviceCaps::maxComputeDispatchGroupCount.y } の範囲に制限されます。
+	//! @param[in] groupCountZ Z 方向にディスパッチされるグループの数です。<br>
+	//! この値は { 1 <= groupCountZ < V3DDeviceCaps::maxComputeDispatchGroupCount.z } の範囲に制限されます。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!       \link V3D_PIPELINE_STAGE_COMPUTE_SHADER \endlink <br>
-	//!     <td>
-	//!     無効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> \link V3D_PIPELINE_STAGE_COMPUTE_SHADER \endlink </td>
+	//!     <td> 無効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
 	//! @brief セカンダリコマンドバッファーを実行します。
-	//! @param[in] commandBufferCount 実行するセカンダリコマンドバッファーの数です。
-	//! @param[in] ppCommandBuffers commandBufferCount の値の数の要素を持つ IV3DCommandBuffer インターフェースのポインタの配列です。
-	//! @note
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! @param[in] commandBufferCount 実行するセカンダリコマンドバッファーの数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] ppCommandBuffers セカンダリコマンドバッファーの配列です。<br>
+	//! 配列の要素数は、commandBufferCount である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!       \link V3D_QUEUE_TRANSFER \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink <br> \link V3D_QUEUE_TRANSFER \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) = 0;
@@ -4495,49 +4444,31 @@ public:
 	//! @brief デバッグマーカーを開始します。
 	//! @param[in] pName デバッグマーカーの名前です。
 	//! @param[in] color デバッグマーカーの色です。<br>
-	//! 配列の要素の値は先頭から RGBA になっています。
-	//! @note
-	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
+	//! 配列の要素 [0, 3] は RGBA を表しています。
+	//! @remarks
+	//! このコマンドは V3DDeviceCaps::extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
 	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void BeginDebugMarker(const char* pName, const float color[4]) = 0;
 	//! @brief デバッグマーカーを終了します。
-	//! @note
-	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
+	//! @remarks
+	//! このコマンドは V3DDeviceCaps::extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
 	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void EndDebugMarker() = 0;
@@ -4545,26 +4476,17 @@ public:
 	//! @brief デバッグマーカーを挿入します。
 	//! @param[in] pName デバッグマーカーの名前です。
 	//! @param[in] color デバッグマーカーの色です。<br>
-	//! 配列の要素の値は先頭から RGBA になっています。
-	//! @note
-	//! このコマンドは V3DDeviceCaps 構造体のメンバである extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
+	//! 配列の要素 [0, 3] は RGBA を表しています。
+	//! @remarks
+	//! このコマンドは V3DDeviceCaps::extensionFlags に \link V3D_DEVICE_EXTENSION_DEBUG_MARKER \endlink が含まれている場合に使用することができます。<br>
 	//! <br>
-	//! <table>
-	//!   <tr><th>サポートされるコマンドバッファー</th><th>サポートされるキュー</th><th>サポートされるパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>サポートするキュー</th><th>サポートするパイプラインステージ</th><th>レンダーパス内での使用</th></tr>
 	//!   <tr>
-	//!     <td>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br>
-	//!       \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!       \link V3D_QUEUE_GRAPHICS \endlink <br>
-	//!       \link V3D_QUEUE_COMPUTE \endlink <br>
-	//!     </td>
-	//!     <td>
-	//!     </td>
-	//!     <td>
-	//!     有効
-	//!     </td>
+	//!     <td> \link V3D_COMMAND_BUFFER_TYPE_PRIMARY \endlink <br> \link V3D_COMMAND_BUFFER_TYPE_SECONDARY \endlink </td>
+	//!     <td> \link V3D_QUEUE_GRAPHICS \endlink <br> \link V3D_QUEUE_COMPUTE \endlink </td>
+	//!     <td> </td>
+	//!     <td> 有効 </td>
 	//!   </tr>
 	//! </table>
 	virtual void InsertDebugMarker(const char* pName, const float color[4]) = 0;
@@ -4943,12 +4865,11 @@ enum V3D_SHADER_CAP_FLAG : V3DFlags
 	//! この機能が有効になっていない場合、シェーダーによって書き込まれたポイントサイズ 1.0 のみがサポートされます。<br>
 	//! サポートされているポイントサイズの範囲と粒度は、それぞれ V3DDeviceCaps 構造体の pointSizeRange および pointSizeGranularity になります。
 	V3D_SHADER_CAP_LARGE_POINTS = 0x00000020,
-	//! @brief テッセレーション制御、テッセレーション評価、およびジオメトリシェーダステージで PointSize ビルトイン装飾が使用できます。<br>
-	//! この機能が有効になっていない場合は、PointSize で装飾されたメンバーを読み書きしないでください。<br>
+	//! @brief テッセレーション制御シェーダー、テッセレーション評価シェーダー、およびジオメトリシェーダーで gl_PointSize 変数が使用できます。<br>
+	//! この機能が有効になっていない場合は、gl_PointSize 変数を読み書きしないでください。<br>
 	//! また、テッセレーションシェーダーまたはジオメトリシェーダーから書き込まれるポイントのサイズは 1.0 になります。<br>
-	//! これは、シェーダモジュールがテッセレーション制御シェーダと評価シェーダの　TessellationPointSize 機能を宣言できるかどうか、
-	//! またはシェーダモジュールがジオメトリシェーダの GeometryPointSize 機能を宣言できるかどうかを表します。<br>
-	//! この機能をサポートする実装では、tessellationShader または geometryShader のいずれかの機能または両方をサポートする必要があります。
+	//! これは、シェーダモジュールがテッセレーション制御シェーダーとテッセレーション評価シェーダーの TessellationPointSize 機能、
+	//! またはジオメトリシェーダーの GeometryPointSize 機能を宣言できるかどうかを表します。
 	V3D_SHADER_CAP_TESSELLATION_AND_GEOMETRY_POINTSIZE = 0x00000040,
 	//! @brief image gather 命令の拡張セットがシェーダコードで利用することができます。<br>
 	//! この機能が有効でない場合、OpImage * Gather 命令は Offset オペランドと ConstOffsets オペランドをサポートしません。<br>
@@ -5038,7 +4959,7 @@ enum V3D_RASTERIZER_CAP_FLAG : V3DFlags
 	//! @sa V3DPipelineRasterizationDesc::depthClampEnable
 	V3D_RASTERIZER_CAP_DEPTH_CLAMP = 0x00000010,
 	//! @brief 深度バイアスのクランプをサポートします。
-	//! @sa V3DPipelineRasterizationDesc::depthBiasEnable
+	//! @sa V3DPipelineRasterizationDesc::depthBiasClamp
 	V3D_RASTERIZER_CAP_DEPTH_BIAS_CLAMP = 0x00000020,
 };
 
@@ -5096,7 +5017,7 @@ enum V3D_DEVICE_EXTENSION_FLAG : V3DFlags
 	//! @sa IV3DCommandBuffer::PushDescriptorSets
 	V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS = 0x00000001,
 	//! @brief デバッグマーカーを使用することができます。
-	//! @note
+	//! @remarks
 	//! この拡張機能が使用できるレイヤーは \link V3D_LAYER_NSIGHT \endlink または \link V3D_LAYER_RENDERDOC \endlink のいずれかになります。
 	//! @sa IV3DCommandBuffer::BeginDebugMarker
 	//! @sa IV3DCommandBuffer::EndDebugMarker
@@ -5111,6 +5032,7 @@ enum V3D_DEVICE_EXTENSION_FLAG : V3DFlags
 
 //! @struct V3DDeviceCaps
 //! @brief デバイスの能力
+//! @sa IV3DDevice::GetCaps
 struct V3DDeviceCaps
 {
 	V3DFlags flags; //!< 全般的な能力を表す \link V3D_CAP_FLAG \endlink 列挙定数の組み合わせです。
@@ -5132,39 +5054,65 @@ struct V3DDeviceCaps
 	//! @brief キューブイメージの幅、高さ最大値です。
 	uint32_t maxImageDimensionCube;
 	//! @brief イメージの最大レイヤー数です。
-	uint32_t maxImageArrayLayers;
+	uint32_t maxImageLayers;
 	//! @brief テクセルバッファーの要素の最大数です。
 	uint32_t maxTexelBufferElements;
-	//! @brief ユニフォームバッファの最大サイズです。
+	//! @brief ユニフォームバッファーの最大サイズです。
 	uint32_t maxUniformBufferSize;
-	//! @brief ストレージバッファの最大サイズです。
+	//! @brief ストレージバッファーの最大サイズです。
 	uint32_t maxStorageBufferSize;
-	//! @brief IV3DCommandBuffer::PushConstant でプッシュできる定数の最大サイズをバイト単位で指定します。
+	//! @brief IV3DCommandBuffer::PushConstant で更新できる定数の最大サイズをバイト単位で指定します。
 	uint32_t maxPushConstantsSize;
-	//! @brief デバイスが作成できるリソースメモリの最大数です。
+	//! @brief デバイスが確保できるリソースメモリの最大数です。
 	//! @sa IV3DDevice::AllocateResourceMemory
 	uint32_t maxResourceMemoryCount;
-	//! @brief IV3DDevice::CreateSampler で作成することのできるサンプラーの最大数です。
+	//! @brief デバイスが作成できるサンプラーの最大数です。
+	//! @sa IV3DDevice::CreateSampler
 	uint32_t maxSamplerCreateCount;
-	//! @brief エイリアシングのない同じメモリ内の隣接するバッファーまたは最適なイメージを結合することができるオフセットの粒度をバイト単位で指定します。
+	//! @brief エイリアシングのない同じメモリ内の隣接するバッファーまたはイメージを結合することができるオフセットの粒度をバイト単位で指定します。
 	uint64_t bufferImageGranularity;
 	//! @brief パイプラインで設定できるデスクリプタセットの最大数です。
 	uint32_t maxBoundDescriptorSets;
 
-	//! @brief サンプラーの最大数です。
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるサンプラーの最大数です。
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
+	//! \link V3D_DESCRIPTOR_TYPE_SAMPLER \endlink、\link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
+	//! </ul>
 	uint32_t maxPerStageDescriptorSamplers;
-	//! @brief ユニフォームバッファの最大数です。
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるユニフォームバッファーの最大数です。
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
+	//! \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER \endlink、\link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC \endlink<br>
+	//! </ul>
 	uint32_t maxPerStageDescriptorUniformBuffers;
-	//! @brief ストレージバッファの最大数です。
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるストレージバッファーの最大数です。
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
+	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER \endlink、\link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC \endlink<br>
+	//! </ul>
 	uint32_t maxPerStageDescriptorStorageBuffers;
-	//! @brief サンプリングイメージの最大数です。
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるサンプリングイメージの最大数です。
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
+	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink、\link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink または \link V3D_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER \endlink<br>
+	//! </ul>
 	uint32_t maxPerStageDescriptorSampledImages;
-	//! @brief ストレージイメージの最大数です。
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるストレージイメージの最大数です。
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
+	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_IMAGE \endlink<br> または \link V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER \endlink<br>
+	//! </ul>
 	uint32_t maxPerStageDescriptorStorageImages;
-	//! @brief インプットアタッチメントの最大数です。
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるインプットアタッチメントの最大数です。
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
+	//! \link V3D_DESCRIPTOR_TYPE_INPUT_ATTACHMENT \endlink<br>
+	//! </ul>
 	uint32_t maxPerStageDescriptorInputAttachments;
-	//! @brief パイプラインレイアウトでシェーダステージにアクセスできる最大リソース数です。<br>
-	//! 以下のリソースに対して制限が適用されます。<br>
+	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるリソースの最大数です。<br>
+	//! <ul>
+	//! <li>制限が適用されるデスクリプター</li><br>
 	//! \link V3D_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_SAMPLED_IMAGE \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_IMAGE \endlink<br>
@@ -5174,89 +5122,89 @@ struct V3DDeviceCaps
 	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC \endlink<br>
 	//! \link V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC \endlink<br>
-	//! <br>
 	//! または<br>
-	//! <br>
 	//! \link V3D_DESCRIPTOR_TYPE_INPUT_ATTACHMENT \endlink<br>
 	//! <br>
-	//! またフラグメントシェーダステージの場合、フレームバッファのカラーアタッチメントにもこの制限が適用されます。
+	//! またフラグメントシェーダステージの場合、フレームバッファーのカラーアタッチメントにもこの制限が適用されます。
+	//! </ul>
 	uint32_t maxPerStageResources;
 
-	//! @brief デスクリプタセットにバインドできるサンプラーの最大数です。
+	//! @brief デスクリプタセットに設定できるサンプラーの最大数です。
 	uint32_t maxDescriptorSetSamplers;
-	//! @brief デスクリプタセットにバインドできるユニフォームバッファの最大数です。
+	//! @brief デスクリプタセットに設定できるユニフォームバッファーの最大数です。
 	uint32_t maxDescriptorSetUniformBuffers;
-	//! @brief デスクリプタセットにバインドできるダイナミックユニフォームバッファの最大数です。
+	//! @brief デスクリプタセットに設定できるダイナミックユニフォームバッファーの最大数です。
 	uint32_t maxDescriptorSetUniformBuffersDynamic;
-	//! @brief デスクリプタセットにバインドできるストレージバッファの最大数です。
+	//! @brief デスクリプタセットに設定できるストレージバッファーの最大数です。
 	uint32_t maxDescriptorSetStorageBuffers;
-	//! @brief デスクリプタセットにバインドできるダイナミックストレージバッファの最大数です。
+	//! @brief デスクリプタセットに設定できるダイナミックストレージバッファーの最大数です。
 	uint32_t maxDescriptorSetStorageBuffersDynamic;
-	//! @brief デスクリプタセットにバインドできるサンプリングイメージの最大数です。
+	//! @brief デスクリプタセットに設定できるサンプリングイメージの最大数です。
 	uint32_t maxDescriptorSetSampledImages;
-	//! @brief デスクリプタセットにバインドできるストレージイメージの最大数です。
+	//! @brief デスクリプタセットに設定できるストレージイメージの最大数です。
 	uint32_t maxDescriptorSetStorageImages;
-	//! @brief デスクリプタセットにバインドできるインプットアタッチメントの最大数です。
+	//! @brief デスクリプタセットに設定できるインプットアタッチメントの最大数です。
 	uint32_t maxDescriptorSetInputAttachments;
 
-	//! @brief 頂点要素の最大数 ( V3DPipelineVertexInputDesc::elementCount ) です。
+	//! @brief 頂点要素の数である V3DPipelineVertexInputDesc::elementCount の最大値です。
 	uint32_t maxVertexInputElements;
 	//! @brief 一度にバインドできる頂点バッファの最大数です。
+	//! @sa IV3DCommandBuffer::BindVertexBuffers
 	uint32_t maxVertexInputBindings;
 	//! @brief 頂点要素の最大オフセットをバイト単位で指定します。
 	uint32_t maxVertexInputElementOffset;
-	//! @brief 頂点レイアウトの最大ストライド ( V3DPipelineVertexLayout::stride ) をバイト単位で指定します。
+	//! @brief 頂点レイアウトのストライドである V3DPipelineVertexLayout::stride の最大サイズをバイト単位で指定します。
 	uint32_t maxVertexInputBindingStride;
-	//! @brief バーテックスシェーダーによって出力することのできる変数の成分の最大数です。
+	//! @brief バーテックスシェーダーで宣言することのできる出力変数の最大数です。
 	uint32_t maxVertexOutputComponents;
 
 	//! @brief テッセレーションプリミティブジェネレーターの最大テッセーレーション生成レベルです。
 	uint32_t maxTessellationGenerationLevel;
 	//! @brief テッセーレーション制御シェーダーおよびテッセーレーションプリミティブジェネレーターで処理可能な最大パッチサイズです。<br>
-	//! グラフィックスパイプライン作成時に指定した V3DPipelineTessellationDesc 構造体の patchControlPoints の値と、シェーダーの OutputVertices 実行モードで指定された値は、この制限値でなければなりません。
+	//! グラフィックスパイプライン作成時に指定した V3DPipelineTessellationDesc::patchControlPoints の値と、シェーダーの OutputVertices 実行モードで指定された値は、この制限値以下でなければなりません。
 	uint32_t maxTessellationPatchSize;
-	//! @brief テッセレーション制御シェーダーのステージに入力できる頂点ごとの入力変数コンポーネントの最大数です。
+	//! @brief テッセレーション制御シェーダーで宣言することのできる頂点毎の入力変数の最大数です。
 	uint32_t maxTessellationControlPerVertexInputComponents;
-	//! @brief テッセレーション制御シェーダのステージから出力できる頂点ごとの出力変数コンポーネントの最大数です。
+	//! @brief テッセレーション制御シェーダーで宣言することのできる頂点毎の出力変数の最大数です。
 	uint32_t maxTessellationControlPerVertexOutputComponents;
-	//! @brief テッセレーション制御シェーダのステージから出力できるパッチごとの出力変数コンポーネントの最大数です。
+	//! @brief テッセレーション制御シェーダーで宣言することのできるパッチ毎の出力変数の最大数です。
 	uint32_t maxTessellationControlPerPatchOutputComponents;
-	//! @brief テッセレーション制御シェーダのステージから出力できる頂点ごと 及び パッチごとの出力変数の最大合計数です。
+	//! @brief テッセレーション制御シェーダーで宣言することのできる頂点毎、及びパッチ毎の出力変数の最大合計数です。
 	uint32_t maxTessellationControlTotalOutputComponents;
-	//! @brief テッセレーション評価シェーダのステージに入力できる頂点ごとの入力変数コンポーネントの最大数です。
+	//! @brief テッセレーション評価シェーダーで宣言することのできる頂点毎の入力変数の最大数です。
 	uint32_t maxTessellationEvaluationInputComponents;
-	//! @brief テッセレーション評価シェーダのステージから出力できる頂点ごとの出力変数コンポーネントの最大数です。
+	//! @brief テッセレーション評価シェーダーで宣言することのできる頂点毎の出力変数の最大数です。
 	uint32_t maxTessellationEvaluationOutputComponents;
 
-	//! @brief ジオメトリシェーダでサポートされる最大呼び出し回数です。<br>
+	//! @brief ジオメトリシェーダーの最大呼び出し回数です。<br>
 	//! シェーダーモジュールの Invocations 実行モードで指定された値は、この制限値以下でなければなりません。
 	uint32_t maxGeometryShaderInvocations;
-	//! @brief ジオメトリシェーダのステージに入力できる入力変数のコンポーネントの最大数です。
+	//! @brief ジオメトリシェーダーで宣言することのできる入力変数の最大数です。
 	uint32_t maxGeometryInputComponents;
-	//! @brief ジオメトリシェーダのステージから出力できる出力変数のコンポーネントの最大数です。
+	//! @brief ジオメトリシェーダーで宣言することのできる出力変数の最大数です。
 	uint32_t maxGeometryOutputComponents;
-	//! @brief ジオメトリシェーダによって出力することができる最大頂数です。
+	//! @brief ジオメトリシェーダーが出力することができる頂点の最大数です。
 	uint32_t maxGeometryOutputVertices;
-	//! @brief ジオメトリシェーダのステージから出力できる、すべての頂点にわたるコンポーネントの最大数です。
+	//! @brief ジオメトリシェーダーで宣言することのできる出力変数の最大合計数です。
 	uint32_t maxGeometryTotalOutputComponents;
 
-	//! @brief フラグメントシェーダーに入力することのできる変数の最大数です。
+	//! @brief フラグメントシェーダーで宣言することのできる入力変数の最大数です。
 	uint32_t maxFragmentInputComponents;
 	//! @brief フラグメントシェーダーが出力できるアタッチメントの最大数です。
 	uint32_t maxFragmentOutputAttachments;
 	//! @brief ブレンドが有効で、デュアルソースブレンドモードの1つが使用されているときに、フラグメントシェーダのステージによって書き込まれる出力アタッチメントの最大数です。
 	uint32_t maxFragmentDualSrcAttachments;
-	//! @brief フラグメントシェーダステージで使用できるストレージバッファ、ストレージイメージ、および出力バッファの総数です。
+	//! @brief フラグメントシェーダーで出力できるストレージバッファー、ストレージイメージの総数です。
 	uint32_t maxFragmentCombinedOutputResources;
 
-	//! @brief コンピュートシェーダステージのシェーダーモジュールで WorkgroupLocal ストレージクラスで宣言されたすべての変数の最大合計ストレージサイズをバイト単位で指定します。
+	//! @brief コンピュートシェーダーで WorkgroupLocal ストレージクラスで宣言されたすべての変数の最大合計ストレージサイズをバイト単位で指定します。
 	uint32_t maxComputeSharedMemorySize;
-	//! @brief 次元 ( x y z ) ごとにディスパッチできるグループ数です。
-	uint32_t maxComputeDispatchGroupCount[3];
-	//! @brief 単一のディスパッチグループで呼び出せるコンピュートシェーダーの最大回数です。
+	//! @brief コンピュートシェーダーで次元 ( x y z ) ごとにディスパッチできるグループ数です。
+	V3DPoint3D maxComputeDispatchGroupCount;
+	//! @brief ディスパッチグループで呼び出せるコンピュートシェーダーの最大回数です。
 	uint32_t maxComputeDispatchGroupInvocations;
-	//! @brief 次元 ( x y z ) ごとのディスパッチグループの最大サイズです。
-	uint32_t maxComputeDispatchGroupSize[3];
+	//! @brief コンピュートシェーダーで次元 ( x y z ) ごとのディスパッチグループの最大サイズです。
+	V3DPoint3D maxComputeDispatchGroupSize;
 
 	//! @brief フレームバッファ座標 Xfと Yf におけるサブピクセル精度を表すビット数です。
 	uint32_t subPixelPrecisionBits;
@@ -5264,26 +5212,26 @@ struct V3DDeviceCaps
 	//! この値はイメージの各軸に沿った分割の実際の数です。<br>
 	//! またフィルタリングされた結果を計算するときに、フィルタリングハードウェアがこれらの場所にスナップします。
 	uint32_t subTexelPrecisionBits;
-	//! @brief 各ミップレベルからフィルタリング結果への寄与を決定するときに、フェッチするための LOD 計算がスナップされる分割ビット数です。
+	//! @brief 各ミップレベルからフィルタリング結果への寄与を決定するときに、フェッチするための LOD 計算がスナップされるビット数です。
 	uint32_t mipmapPrecisionBits;
 
 	//! @brief 描画の際にバインドするインデックスバッファに格納できるインデックスの最大値です。
 	uint32_t maxDrawIndexedIndexValue;
 
-	//! @brief LOD バイアスの絶対値です。<br>
+	//! @brief サンプラーの LOD バイアスの絶対値です。<br>
 	//! V3DSamplerDesc::mipLodBias の値は -maxSamplerLodBias ～ +maxSamplerLodBias の間にクランプします。
 	float maxSamplerLodBias;
-	//! @brief 異方性を表す V3DSamplerDesc::maxAnisotropy の最大値です。
+	//! @brief サンプラーの異方性値である V3DSamplerDesc::maxAnisotropy の最大値です。
 	float maxSamplerAnisotropy;
 
 	//! @brief ビューポート、シザリングの最大数です。
 	uint32_t maxViewports;
-	//! @brief ビューポートの最大サイズです。<br>
-	//! maxViewportDimensions[2] のそれぞれの要素は [0]=幅、[1]=高さを表します。
-	uint32_t maxViewportDimensions[2];
-	//! @brief ビューポートの角が含まれていなければならない範囲です。<br>
-	//! viewportBoundsRange[2] のそれぞれの要素は [0]=最小値、[1]=最大値を表します。
-	float viewportBoundsRange[2];
+	//! @brief ビューポートの最大サイズです。
+	V3DSize2D maxViewportDimension;
+	//! @brief ビューポートの角が含まれていなければならない範囲の最小値です。
+	float minViewportBounds;
+	//! @brief ビューポートの角が含まれていなければならない範囲の最大です。
+	float maxViewportBounds;
 	//! @brief ビューポート境界のサブピクセルの精度を表すのビット数です。<br>
 	//! ビューポート境界が判断されるサブピクセルの精度は、この制限によって与えられます。
 	uint32_t viewportSubPixelBits;
@@ -5310,14 +5258,14 @@ struct V3DDeviceCaps
 	float minInterpolationOffset;
 	//! @brief InterpolateAtOffset 拡張命令の Offset オペランドの正の最大オフセット値です。
 	float maxInterpolationOffset;
-	//! @brief InterpolateAtOffset 拡張命令に対する x および y オフセットが固定小数点値として丸められるサブピクセルの部分ビットの数です。
+	//! @brief InterpolateAtOffset 拡張命令に対する x および y オフセットが固定小数点値として丸められるサブピクセルのビット数です。
 	uint32_t subPixelInterpolationOffsetBits;
 
-	//! @brief フレームバッファのアタチメントの幅の最大です。
+	//! @brief フレームバッファーのアタッチメントの幅の最大です。
 	uint32_t maxFrameBufferWidth;
-	//! @brief フレームバッファのアタチメントの高さの最大です。
+	//! @brief フレームバッファーのアタッチメントの高さの最大です。
 	uint32_t maxFrameBufferHeight;
-	//! @brief フレームバッファのアタチメントのレイヤー数の最大です。
+	//! @brief フレームバッファーのアタッチメントのレイヤーの最大数です。
 	uint32_t maxFrameBufferLayers;
 
 	//! @brief フレームバッファーのカラーアタッチメントでサポートされるサンプル数を表す \link V3D_SAMPLE_COUNT_FLAG \endlink 列挙定数の組み合わせです。
@@ -5340,42 +5288,88 @@ struct V3DDeviceCaps
 	//! @brief ストレージとして作成された 2D イメージでサポートされるサンプル数を表す \link V3D_SAMPLE_COUNT_FLAG \endlink 列挙定数の組み合わせです。
 	V3DFlags storageImageSampleCounts;
 
-	//! @brief サブパスで使用することのできるカラーアタッチメントの最大数です。
+	//! @brief サブパスのカラーアタッチメントの最大数です。
 	uint32_t maxColorAttachments;
-	//! @brief SampleMask ビルトイン修飾で宣言された変数の配列の要素の最大数です。
+
+	//! @brief gl_SampleMask 配列の要素の最大数です。
 	uint32_t maxSampleMaskWords;
 
-	//! @brief すべてのグラフィックスとコンピュートキューのタイムスタンプをサポートします。
+	//! @brief すべてのグラフィックスキューとコンピュートキューのタイムスタンプをサポートします。
 	bool timestampComputeAndGraphics;
 	//! @brief タイムスタンプクエリをイクンリメントするために必要な時間をナノ秒単位で指定します。
 	float timestampPeriod;
 
-	//! @brief シェーダステージで使用できる最大クリップ距離の数です。<br>
-	//! シェーダモジュールの ClipDistance 組み込み修飾で宣言された配列のサイズは、この制限値以下でなければなりません。
+	//! @brief gl_ClipDistance 配列の要素の最大数です。
 	uint32_t maxClipDistances;
-	//! @brief シェーダステージで使用できる最大の間引き数です。<br>
-	//! シェーダモジュールの CullDistance 組み込み装飾で宣言された配列のサイズは、この制限値以下でなければなりません。
+	//! @brief gl_CullDistance 配列の要素の最大数です。
 	uint32_t maxCullDistances;
-	//! @brief シェーダステージで使用できるクリップとカリング距離の合計最大数です。<br>
-	//! シェーダモジュールの ClipDistance および CullDistance ビルトイン装飾で宣言された配列のペアの合計は、この制限値以下でなければなりません。
+	//! @brief gl_ClipDistance および gl_CullDistance 配列のペアの合計の最大数です。
 	uint32_t maxCombinedClipAndCullDistances;
 
-	//! @brief サポートされているポイントのサイズの範囲です。<br>
-	//! PointSize で装飾された変数に書き込まれた値は、この pointSizeRange[0] ～ pointSizeRange[1] の間にクランプされます。
-	float pointSizeRange[2];
-	//! @brief サポートされるポイントサイズの粒度です。<br>
-	//! pointSizeRange によって定義された範囲内のすべてのポイントサイズがサポートされるわけではありません。<br>
-	//! この制限は、連続してサポートされるポイントサイズ間の粒度(または増分) を指定します。
+	//! @brief gl_PointSize 最小値です。<br>
+	//! gl_PointSize 変数の値は、minPointSize 以上である必要があります。
+	float minPointSize;
+	//! @brief gl_PointSize の最大値です。<br>
+	//! gl_PointSize 変数の値は、maxPointSize 以下である必要があります。
+	float maxPointSize;
+	//! @brief gl_PointSize の増分です。<br>
+	//! minPointSize ～  maxPointSize によって定義された範囲内のすべてのポイントサイズがサポートされていないことに注意してください。
 	float pointSizeGranularity;
 
 	//! @brief デバイス作成時に指定するキューにスケージューリングとして割り当てることができる個別の優先順位の数です。
 	uint32_t discreteQueuePriorities;
-	//! @brief マルチサンプリングで記述されたラスタライゼーションが標準のサンプル位置を使用します。<br>
-	//! true に設定されている場合、実装は記述されたサンプルの場所を使用します。<br>
-	//! false に設定されている場合、実装は異なるサンプル位置を使用することがあります。
+	//! @brief マルチサンプリングで標準のサンプル位置を使用します。<br>
+	//! 標準のサンプル位置は以下のようになります。<br>
+	//! <br>
+	//! <table>
+	//! <tr><th>V3D_SAMPLE_COUNT_1</th><th>V3D_SAMPLE_COUNT_2</th><th>V3D_SAMPLE_COUNT_4</th><th>V3D_SAMPLE_COUNT_8</th><th>V3D_SAMPLE_COUNT_16</th></tr>
+	//! <tr valign="top">
+	//!   <td>
+	//!   (0.5, 0.5)<br>
+	//!   </td>
+	//!   <td>
+	//!   (0.25,0.25)<br>
+	//!   (0.75,0.75)<br>
+	//!   </td>
+	//!   <td>
+	//!   (0.375, 0.125)<br>
+	//!   (0.875, 0.375)<br>
+	//!   (0.125, 0.625)<br>
+	//!   (0.625, 0.875)<br>
+	//!   </td>
+	//!   <td>
+	//!   (0.5625, 0.3125)<br>
+	//!   (0.4375, 0.6875)<br>
+	//!   (0.8125, 0.5625)<br>
+	//!   (0.3125, 0.1875)<br>
+	//!   (0.1875, 0.8125)<br>
+	//!   (0.0625, 0.4375)<br>
+	//!   (0.6875, 0.9375)<br>
+	//!   (0.9375, 0.0625)<br>
+	//!   </td>
+	//!   <td>
+	//!   (0.5625, 0.5625)<br>
+	//!   (0.4375, 0.3125)<br>
+	//!   (0.3125, 0.625)<br>
+	//!   (0.75, 0.4375)<br>
+	//!   (0.1875, 0.375)<br>
+	//!   (0.625, 0.8125)<br>
+	//!   (0.8125, 0.6875)<br>
+	//!   (0.6875, 0.1875)<br>
+	//!   (0.375, 0.875)<br>
+	//!   (0.5, 0.0625)<br>
+	//!   (0.25, 0.125)<br>
+	//!   (0.125, 0.75)<br>
+	//!   (0.0, 0.5)<br>
+	//!   (0.9375, 0.25)<br>
+	//!   (0.875, 0.9375)<br>
+	//!   (0.0625, 0.0)<br>
+	//!   </td>
+	//! </tr>
+	//! </table>
 	bool standardSampleLocations;
-	//! @brief IV3DCommandBuffer::CopyBufferToImage および IV3DCommandBuffer::CopyImageToBuffer の最適なバッファオフセットアラインメントです。<br>
-	//! テクセルごとのアラインメントが適用されますが、アプリケーションは最適なパフォーマンスと消費電力を得るために最適なアライメントを使用する必要があります。
+	//! @brief IV3DCommandBuffer::CopyBufferToImage および IV3DCommandBuffer::CopyImageToBuffer で指定するバッファーのの最適なオフセットアラインメントです。<br>
+	//! アプリケーションは最適なパフォーマンスを得るために最適なアライメントを使用する必要があります。
 	uint64_t optimalBufferCopyOffsetAlignment;
 	//! @brief ホストでマップされたメモリへの同時アクセスを制限するサイズとアライメントをバイト単位で指定します。
 	uint64_t nonCoherentAtomSize;
@@ -5456,7 +5450,7 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @retval V3D_ERROR_NOT_SUPPORTED
-	//! @note pProperty に nullptr を指定することでフォーマットのサポート状況だけを確認することができます。
+	//! @remarks pProperty に nullptr を指定することでフォーマットのサポート状況だけを確認することができます。
 	virtual V3D_RESULT GetImageFormatDesc(V3D_FORMAT format, V3D_IMAGE_TYPE type, V3D_IMAGE_TILING tiling, V3DFlags usageFlags, V3DImageFormatDesc* pDesc) = 0;
 
 	//! @brief バッファーとして使用するフォーマットが指定した機能をサポートしているかどうかを確認します。
@@ -5522,7 +5516,7 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @retval V3D_ERROR_DEVICE_LOST
-	//! @note
+	//! @remarks
 	//! V3DSwapChainDesc 構造体の imageFormat で指定したフォーマットが見つからなかった場合は、自動でフォーマットを決定します。( \link V3D_FORMAT_UNDEFINED \endlink が指定できるということを表します )<br>
 	//! IV3DSwapChain::GetDesc で取得できる記述は、作成時に指定したものとは異なる場合があるため、必要に応じて取得しなおしてください。<br>
 	//! また IV3DSwapChain::GetImage で取得できるスワップチェイン作成直後のイメージのレイアウトは \link V3D_IMAGE_LAYOUT_UNDEFINED \endlink になっています。<br>
@@ -5556,7 +5550,7 @@ public:
 	//! @retval V3D_ERROR_FAIL
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! 作成することのできるサンプラーは V3DDeviceCaps 構造体の maxSamplerCreateCount の値の数に制限されます。 
 	virtual V3D_RESULT CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** ppSampler, const wchar_t* pDebugName = nullptr) = 0;
 
@@ -5605,7 +5599,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! IV3DDevice::CreateBuffer または IV3DDevice::CreateImage によって作成された直後のリソースにはまだメモリは割り当てられていないため、使用できない状態になっています。<br>
 	//! そのため IV3DDevice::AllocateResourceMemory でメモリを確保した後 IV3DDevice::BindResourceMemory でリソースをメモリにバインドする必要があります。<br>
 	//! また確保することのできるリソースメモリは V3DDeviceCaps 構造体の maxResourceMemoryCount の値の数に制限されます。<br>
@@ -5638,7 +5632,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! リソースをメモリにバインドすることによってメモリへのアクセスができるようになります。<br>
 	//! また一度メモリにバインドするとリソースが解放されるまでバインドを解除することはできません。<br>
 	//! <ul>
@@ -5691,7 +5685,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! バッファーに複数のサブリソースを含める場合は、サブリソースが配置されるメモリオフセットのアライメントに注意してバッファーのサイズを決定する必要があります。<br>
 	//! サブリソースのアライメントは V3DDeviceCaps に記述されており、以下のようになります。<br>
 	//! <br>
@@ -5715,7 +5709,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! イメージの記述である V3DImageDesc 構造体のメンバの値には制限があり、その制限は IV3DDevice::GetImageFormatDesc および IV3DDevice::CheckImageFormatFeature を使用して確認することができます。<br>
 	//! また V3DImageDesc 構造体のメンバである tiling に \link V3D_IMAGE_TILING_LINEAR \endlink を指定した場合、以下の値に限り実装の制限はありません。<br>
 	//! <br>
@@ -5741,7 +5735,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! アクセス先になるバッファーは使用法に \link V3D_BUFFER_USAGE_UNIFORM_TEXEL \endlink または \link V3D_BUFFER_USAGE_STORAGE_TEXEL \endlink のいずれかが含まれている必要があります。<br>
 	//! また、アクセス先のバッファーはリソースメモリにバインドされている必要があります。
 	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView, const wchar_t* pDebugName = nullptr) = 0;
@@ -5755,7 +5749,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note
+	//! @remarks
 	//! アクセス先のイメージはリソースメモリにバインドされている必要があります。
 	virtual V3D_RESULT CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView, const wchar_t* pDebugName = nullptr) = 0;
 
@@ -5791,7 +5785,7 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY
-	//! @note アタッチメントとして使用する全てのイメージビューは 幅 ( width )、高さ ( height )、深さ ( depth )、レイヤー数 ( layerCount ) が一致している必要があります。
+	//! @remarks アタッチメントとして使用する全てのイメージビューは 幅 ( width )、高さ ( height )、深さ ( depth )、レイヤー数 ( layerCount ) が一致している必要があります。
 	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief デスクリプタセットレイアウトを作成します。
@@ -5912,7 +5906,7 @@ enum V3D_LAYER : uint8_t
 	//! <br>
 	//! 使用される Vulkan レイヤー<br>
 	//! VK_LAYER_RENDERDOC_Capture
-	//! @note
+	//! @remarks
 	//! 使用できるキューが一つだけになりますので注意してください。
 	V3D_LAYER_RENDERDOC = 3,
 };
