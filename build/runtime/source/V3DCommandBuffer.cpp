@@ -518,7 +518,52 @@ void V3DCommandBuffer::BarrierImageViews(uint32_t imageVewCount, IV3DImageView**
 		0, nullptr,
 		0, nullptr,
 		imageVewCount, m_Temp.imageMemoryBarriers.data());
+}
+
+void V3DCommandBuffer::FillBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t size, uint32_t data)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
 	}
+
+	if (pDstBuffer == nullptr)
+	{
+		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_FillBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer));
+		return;
+	}
+#endif //_DEBUG
+
+	vkCmdFillBuffer(m_Source.commandBuffer, static_cast<V3DBuffer*>(pDstBuffer)->GetSource().buffer, dstOffset, (size == 0)? VK_WHOLE_SIZE : size, data);
+}
+
+void V3DCommandBuffer::UpdateBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t dataSize, const void* pData)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pDstBuffer == nullptr) || (dataSize == 0) || (pData == nullptr))
+	{
+		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_UpdateBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_NUM_GREATER(dataSize, 0) << V3D_LOG_S_PTR(pData));
+		return;
+	}
+#endif //_DEBUG
+
+	VkBuffer vBuffer = static_cast<V3DBuffer*>(pDstBuffer)->GetSource().buffer;
+
+	do
+	{
+		vkCmdUpdateBuffer(m_Source.commandBuffer, vBuffer, dstOffset, dataSize, pData);
+
+		dstOffset += 65536;
+		dataSize = (dataSize >= 65536) ? (dataSize - 65536) : 0;
+
+	} while (dataSize > 0);
+}
 
 void V3DCommandBuffer::CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size)
 {
@@ -937,7 +982,7 @@ void V3DCommandBuffer::BlitImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImage
 		ToVkFilter(filter));
  }
 
-void V3DCommandBuffer::ResolveImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout)
+void V3DCommandBuffer::BlitImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, const V3DRectangle2D& dstRect, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout, const V3DRectangle2D& srcRect, V3D_FILTER filter)
 {
 #ifdef _DEBUG
 	if (Debug_Command_FirstCheck() == false)
@@ -945,53 +990,166 @@ void V3DCommandBuffer::ResolveImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstIm
 		return;
 	}
 
-	if ((pDstImage == pSrcImage) || (pDstImage == nullptr) || (pSrcImage == nullptr))
+	if ((pDstImageView == nullptr) || (pSrcImageView == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResolveImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage));
+		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BlitImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
 		return;
 	}
 #endif //_DEBUG
 
-	const V3DImageDesc& imageDesc = pDstImage->GetDesc();
+	const V3DImageView::Source& dstSource = static_cast<V3DImageView*>(pDstImageView)->GetSource();
+	const V3DImageView::Source& srcSource = static_cast<V3DImageView*>(pSrcImageView)->GetSource();
 
-	m_Temp.imageResolves.resize(imageDesc.levelCount);
-	VkImageResolve* pDstImageResolve = m_Temp.imageResolves.data();
-	VkImageResolve* pDstImageResolveEnd = pDstImageResolve + imageDesc.levelCount;
+	const VkImageSubresourceRange& dstSubresourceRange = dstSource.imageSubresourceRange;
+	const VkImageSubresourceRange& srcSubresourceRange = srcSource.imageSubresourceRange;
 
-	const IV3DImageBase::Source& dstImageSource = static_cast<IV3DImageBase*>(pDstImage)->GetSource();
-	const IV3DImageBase::Source& srcImageSource = static_cast<IV3DImageBase*>(pSrcImage)->GetSource();
+	uint32_t dstX = dstRect.x;
+	uint32_t dstY = dstRect.y;
+	uint32_t dstWidth = dstRect.width;
+	uint32_t dstHeight = dstRect.height;
 
-	uint32_t levelCount = 0;
+	uint32_t srcX = srcRect.x;
+	uint32_t srcY = srcRect.y;
+	uint32_t srcWidth = srcRect.width;
+	uint32_t srcHeight = srcRect.height;
 
-	while (pDstImageResolve != pDstImageResolveEnd)
+	uint32_t depth = V3D_MIN(dstSource.extent.depth, srcSource.extent.depth);
+
+	uint32_t levelOffset = 0;
+	uint32_t layerCount = V3D_MIN(dstSubresourceRange.layerCount, srcSubresourceRange.layerCount);
+
+	uint32_t blitCount = V3D_MIN(dstSubresourceRange.levelCount, srcSubresourceRange.levelCount);
+	m_Temp.imageBlits.resize(blitCount);
+
+	VkImageBlit* pDst = m_Temp.imageBlits.data();
+	VkImageBlit* pDstEnd = pDst + blitCount;
+
+	while (pDst != pDstEnd)
 	{
-		pDstImageResolve->dstSubresource.aspectMask = dstImageSource.aspectFlags;
-		pDstImageResolve->dstSubresource.mipLevel = levelCount;
-		pDstImageResolve->dstSubresource.baseArrayLayer = 0;
-		pDstImageResolve->dstSubresource.layerCount = imageDesc.layerCount;
-		pDstImageResolve->dstOffset.x = 0;
-		pDstImageResolve->dstOffset.y = 0;
-		pDstImageResolve->dstOffset.z = 0;
-		pDstImageResolve->srcSubresource.aspectMask = srcImageSource.aspectFlags;
-		pDstImageResolve->srcSubresource.mipLevel = levelCount;
-		pDstImageResolve->srcSubresource.baseArrayLayer = 0;
-		pDstImageResolve->srcSubresource.layerCount = imageDesc.layerCount;
-		pDstImageResolve->srcOffset.x = 0;
-		pDstImageResolve->srcOffset.y = 0;
-		pDstImageResolve->srcOffset.z = 0;
-		pDstImageResolve->extent.width = imageDesc.width;
-		pDstImageResolve->extent.height = imageDesc.height;
-		pDstImageResolve->extent.depth = imageDesc.depth;
+		pDst->dstSubresource.aspectMask = dstSubresourceRange.aspectMask;
+		pDst->dstSubresource.mipLevel = dstSubresourceRange.baseMipLevel + levelOffset;
+		pDst->dstSubresource.baseArrayLayer = dstSubresourceRange.baseArrayLayer;
+		pDst->dstSubresource.layerCount = layerCount;
+		pDst->dstOffsets[0].x = dstX;
+		pDst->dstOffsets[0].y = dstY;
+		pDst->dstOffsets[0].z = 0;
+		pDst->dstOffsets[1].x = dstX + dstWidth;
+		pDst->dstOffsets[1].y = dstY + dstHeight;
+		pDst->dstOffsets[1].z = depth;
 
-		levelCount++;
-		pDstImageResolve++;
+		pDst->srcSubresource.aspectMask = srcSubresourceRange.aspectMask;
+		pDst->srcSubresource.mipLevel = srcSubresourceRange.baseMipLevel + levelOffset;
+		pDst->srcSubresource.baseArrayLayer = srcSubresourceRange.baseArrayLayer;
+		pDst->srcSubresource.layerCount =layerCount;
+		pDst->srcOffsets[0].x = srcX;
+		pDst->srcOffsets[0].y = srcY;
+		pDst->srcOffsets[0].z = 0;
+		pDst->srcOffsets[1].x = srcX + srcWidth;
+		pDst->srcOffsets[1].y = srcY + srcHeight;
+		pDst->srcOffsets[1].z = depth;
+
+		pDst++;
+
+		levelOffset++;
+
+		srcX = srcX >> 1;
+		srcY = srcY >> 1;
+		srcWidth = V3D_MAX(1, srcWidth >> 1);
+		srcHeight = V3D_MAX(1, srcHeight >> 1);
+
+		dstX = dstX >> 1;
+		dstY = dstY >> 1;
+		dstWidth = V3D_MAX(1, dstWidth >> 1);
+		dstHeight = V3D_MAX(1, dstHeight >> 1);
 	}
 
-	vkCmdResolveImage(
+	vkCmdBlitImage(
 		m_Source.commandBuffer,
-		srcImageSource.image, ToVkImageLayout(srcImageLayout),
-		dstImageSource.image, ToVkImageLayout(dstImageLayout),
-		levelCount, m_Temp.imageResolves.data());
+		srcSource.image, ToVkImageLayout(srcImageLayout),
+		dstSource.image, ToVkImageLayout(dstImageLayout),
+		blitCount, m_Temp.imageBlits.data(),
+		ToVkFilter(filter));
+}
+
+void V3DCommandBuffer::BlitImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout, V3D_FILTER filter)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pDstImageView == nullptr) || (pSrcImageView == nullptr))
+	{
+		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BlitImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
+		return;
+	}
+#endif //_DEBUG
+
+	const V3DImageView::Source& dstSource = static_cast<V3DImageView*>(pDstImageView)->GetSource();
+	const V3DImageView::Source& srcSource = static_cast<V3DImageView*>(pSrcImageView)->GetSource();
+
+	const VkImageSubresourceRange& dstSubresourceRange = dstSource.imageSubresourceRange;
+	const VkImageSubresourceRange& srcSubresourceRange = srcSource.imageSubresourceRange;
+
+	uint32_t dstWidth = dstSource.extent.width;
+	uint32_t dstHeight = dstSource.extent.height;
+
+	uint32_t srcWidth = srcSource.extent.width;
+	uint32_t srcHeight = srcSource.extent.height;
+
+	uint32_t depth = V3D_MIN(dstSource.extent.depth, srcSource.extent.depth);
+
+	uint32_t levelOffset = 0;
+	uint32_t layerCount = V3D_MIN(dstSubresourceRange.layerCount, srcSubresourceRange.layerCount);
+
+	uint32_t blitCount = V3D_MIN(dstSubresourceRange.levelCount, srcSubresourceRange.levelCount);
+	m_Temp.imageBlits.resize(blitCount);
+
+	VkImageBlit* pDst = m_Temp.imageBlits.data();
+	VkImageBlit* pDstEnd = pDst + blitCount;
+
+	while (pDst != pDstEnd)
+	{
+		pDst->dstSubresource.aspectMask = dstSubresourceRange.aspectMask;
+		pDst->dstSubresource.mipLevel = dstSubresourceRange.baseMipLevel + levelOffset;
+		pDst->dstSubresource.baseArrayLayer = dstSubresourceRange.baseArrayLayer;
+		pDst->dstSubresource.layerCount = layerCount;
+		pDst->dstOffsets[0].x = 0;
+		pDst->dstOffsets[0].y = 0;
+		pDst->dstOffsets[0].z = 0;
+		pDst->dstOffsets[1].x = dstWidth;
+		pDst->dstOffsets[1].y = dstHeight;
+		pDst->dstOffsets[1].z = depth;
+
+		pDst->srcSubresource.aspectMask = srcSubresourceRange.aspectMask;
+		pDst->srcSubresource.mipLevel = srcSubresourceRange.baseMipLevel + levelOffset;
+		pDst->srcSubresource.baseArrayLayer = srcSubresourceRange.baseArrayLayer;
+		pDst->srcSubresource.layerCount = layerCount;
+		pDst->srcOffsets[0].x = 0;
+		pDst->srcOffsets[0].y = 0;
+		pDst->srcOffsets[0].z = 0;
+		pDst->srcOffsets[1].x = srcWidth;
+		pDst->srcOffsets[1].y = srcHeight;
+		pDst->srcOffsets[1].z = depth;
+
+		pDst++;
+
+		levelOffset++;
+
+		srcWidth = V3D_MAX(1, srcWidth >> 1);
+		srcHeight = V3D_MAX(1, srcHeight >> 1);
+
+		dstWidth = V3D_MAX(1, dstWidth >> 1);
+		dstHeight = V3D_MAX(1, dstHeight >> 1);
+	}
+
+	vkCmdBlitImage(
+		m_Source.commandBuffer,
+		srcSource.image, ToVkImageLayout(srcImageLayout),
+		dstSource.image, ToVkImageLayout(dstImageLayout),
+		blitCount, m_Temp.imageBlits.data(),
+		ToVkFilter(filter));
 }
 
 void V3DCommandBuffer::ResolveImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImage* pSrcImage, V3D_IMAGE_LAYOUT srcImageLayout, uint32_t rangeCount, const V3DResolveImageRange* pRanges)
@@ -1049,6 +1207,89 @@ void V3DCommandBuffer::ResolveImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstIm
 		rangeCount, m_Temp.imageResolves.data());
 }
 
+void V3DCommandBuffer::ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, const V3DPoint2D& dstOffset, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout, const V3DPoint2D& srcOffset, const V3DSize2D& size)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pDstImageView == pSrcImageView) || (pDstImageView == nullptr) || (pSrcImageView == nullptr))
+	{
+		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResolveImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
+		return;
+	}
+#endif //_DEBUG
+
+	const V3DImageView::Source& dstSource = static_cast<V3DImageView*>(pDstImageView)->GetSource();
+	const V3DImageView::Source& srcSource = static_cast<V3DImageView*>(pSrcImageView)->GetSource();
+
+	const VkImageSubresourceRange& dstSubresourceRange = dstSource.imageSubresourceRange;
+	const VkImageSubresourceRange& srcSubresourceRange = srcSource.imageSubresourceRange;
+
+	uint32_t dstX = dstOffset.x;
+	uint32_t dstY = dstOffset.y;
+
+	uint32_t srcX = srcOffset.x;
+	uint32_t srcY = srcOffset.y;
+
+	uint32_t width = srcSource.extent.width;
+	uint32_t height = srcSource.extent.height;
+	uint32_t depth = V3D_MIN(dstSource.extent.depth, srcSource.extent.depth);
+
+	uint32_t levelOffset = 0;
+	uint32_t layerCount = V3D_MIN(dstSubresourceRange.layerCount, srcSubresourceRange.layerCount);
+
+	uint32_t resolveCount = V3D_MIN(dstSource.imageSubresourceRange.levelCount, srcSource.imageSubresourceRange.levelCount);
+	m_Temp.imageResolves.resize(resolveCount);
+
+	VkImageResolve* pDst = m_Temp.imageResolves.data();
+	VkImageResolve* pDstEnd = pDst + resolveCount;
+
+	while (pDst != pDstEnd)
+	{
+		pDst->dstSubresource.aspectMask = dstSubresourceRange.aspectMask;
+		pDst->dstSubresource.mipLevel = dstSubresourceRange.baseMipLevel + levelOffset;
+		pDst->dstSubresource.baseArrayLayer = dstSubresourceRange.baseArrayLayer;
+		pDst->dstSubresource.layerCount = layerCount;
+		pDst->dstOffset.x = dstX;
+		pDst->dstOffset.y = dstY;
+		pDst->dstOffset.z = 0;
+
+		pDst->srcSubresource.aspectMask = srcSubresourceRange.aspectMask;
+		pDst->srcSubresource.mipLevel = srcSubresourceRange.baseMipLevel + levelOffset;
+		pDst->srcSubresource.baseArrayLayer = srcSubresourceRange.baseArrayLayer;
+		pDst->srcSubresource.layerCount = layerCount;
+		pDst->srcOffset.x = srcX;
+		pDst->srcOffset.y = srcY;
+		pDst->srcOffset.z = 0;
+
+		pDst->extent.width = width;
+		pDst->extent.height = height;
+		pDst->extent.depth = depth;
+
+		pDst++;
+
+		levelOffset++;
+
+		width = V3D_MAX(1, width >> 1);
+		height = V3D_MAX(1, height >> 1);
+
+		srcX = srcX >> 1;
+		srcY = srcY >> 1;
+
+		dstX = dstX >> 1;
+		dstY = dstY >> 1;
+	}
+
+	vkCmdResolveImage(
+		m_Source.commandBuffer,
+		srcSource.image, ToVkImageLayout(srcImageLayout),
+		dstSource.image, ToVkImageLayout(dstImageLayout),
+		resolveCount, m_Temp.imageResolves.data());
+}
+
 void V3DCommandBuffer::ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout)
 {
 #ifdef _DEBUG
@@ -1067,41 +1308,57 @@ void V3DCommandBuffer::ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_
 	const V3DImageView::Source& dstSource = static_cast<V3DImageView*>(pDstImageView)->GetSource();
 	const V3DImageView::Source& srcSource = static_cast<V3DImageView*>(pSrcImageView)->GetSource();
 
-	m_Temp.imageResolves.resize(dstSource.imageSubresourceRange.levelCount);
-	VkImageResolve* pDstRange = m_Temp.imageResolves.data();
-	VkImageResolve* pDstRangeEnd = pDstRange + dstSource.imageSubresourceRange.levelCount;
+	const VkImageSubresourceRange& dstSubresourceRange = dstSource.imageSubresourceRange;
+	const VkImageSubresourceRange& srcSubresourceRange = srcSource.imageSubresourceRange;
 
-	uint32_t levelCount = 0;
+	uint32_t width = srcSource.extent.width;
+	uint32_t height = srcSource.extent.height;
+	uint32_t depth = srcSource.extent.depth;
 
-	while (pDstRange != pDstRangeEnd)
+	uint32_t levelOffset = 0;
+	uint32_t layerCount = V3D_MIN(dstSubresourceRange.layerCount, srcSubresourceRange.layerCount);
+
+	uint32_t resolveCount = V3D_MIN(dstSubresourceRange.levelCount, srcSubresourceRange.levelCount);
+	m_Temp.imageResolves.resize(resolveCount);
+
+	VkImageResolve* pDst = m_Temp.imageResolves.data();
+	VkImageResolve* pDstEnd = pDst + resolveCount;
+
+	while (pDst != pDstEnd)
 	{
-		pDstRange->dstSubresource.aspectMask = dstSource.imageSubresourceRange.aspectMask;
-		pDstRange->dstSubresource.mipLevel = dstSource.imageSubresourceRange.baseMipLevel + levelCount;
-		pDstRange->dstSubresource.baseArrayLayer = dstSource.imageSubresourceRange.baseArrayLayer;
-		pDstRange->dstSubresource.layerCount = dstSource.imageSubresourceRange.layerCount;
-		pDstRange->dstOffset.x = 0;
-		pDstRange->dstOffset.y = 0;
-		pDstRange->dstOffset.z = 0;
+		pDst->dstSubresource.aspectMask = dstSubresourceRange.aspectMask;
+		pDst->dstSubresource.mipLevel = dstSubresourceRange.baseMipLevel + levelOffset;
+		pDst->dstSubresource.baseArrayLayer = dstSubresourceRange.baseArrayLayer;
+		pDst->dstSubresource.layerCount = layerCount;
+		pDst->dstOffset.x = 0;
+		pDst->dstOffset.y = 0;
+		pDst->dstOffset.z = 0;
 
-		pDstRange->srcSubresource.aspectMask = srcSource.imageSubresourceRange.aspectMask;
-		pDstRange->srcSubresource.mipLevel = srcSource.imageSubresourceRange.baseMipLevel + levelCount;
-		pDstRange->srcSubresource.baseArrayLayer = srcSource.imageSubresourceRange.baseArrayLayer;
-		pDstRange->srcSubresource.layerCount = srcSource.imageSubresourceRange.layerCount;
-		pDstRange->srcOffset.x = 0;
-		pDstRange->srcOffset.y = 0;
-		pDstRange->srcOffset.z = 0;
+		pDst->srcSubresource.aspectMask = srcSubresourceRange.aspectMask;
+		pDst->srcSubresource.mipLevel = srcSubresourceRange.baseMipLevel + levelOffset;
+		pDst->srcSubresource.baseArrayLayer = srcSubresourceRange.baseArrayLayer;
+		pDst->srcSubresource.layerCount = layerCount;
+		pDst->srcOffset.x = 0;
+		pDst->srcOffset.y = 0;
+		pDst->srcOffset.z = 0;
 
-		pDstRange->extent = srcSource.extent;
+		pDst->extent.width = width;
+		pDst->extent.height = height;
+		pDst->extent.depth = depth;
 
-		pDstRange++;
-		levelCount++;
+		pDst++;
+
+		levelOffset++;
+
+		width = V3D_MAX(1, width >> 1);
+		height = V3D_MAX(1, height >> 1);
 	}
 
 	vkCmdResolveImage(
 		m_Source.commandBuffer,
 		srcSource.image, ToVkImageLayout(srcImageLayout),
 		dstSource.image, ToVkImageLayout(dstImageLayout),
-		levelCount, m_Temp.imageResolves.data());
+		resolveCount, m_Temp.imageResolves.data());
 }
 
 void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea)
@@ -1123,13 +1380,13 @@ void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuf
 	const V3DRenderPass::Source& renserPassSource = pInternalRenderPass->GetSource();
 
 	V3DFrameBuffer* pInternalFrameBuffer = static_cast<V3DFrameBuffer*>(pFrameBuffer);
-	const V3DFrameBuffer::Source& renderAttachmentContainerSource = pInternalFrameBuffer->GetSource();
+	const V3DFrameBuffer::Source& frameBufferSource = pInternalFrameBuffer->GetSource();
 
 	VkRenderPassBeginInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	info.pNext = nullptr;
 	info.renderPass = renserPassSource.renderPass;
-	info.framebuffer = renderAttachmentContainerSource.framebuffer;
+	info.framebuffer = frameBufferSource.framebuffer;
 
 	if (pRenderArea != nullptr)
 	{
@@ -1142,7 +1399,7 @@ void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuf
 	{
 		info.renderArea.offset.x = 0;
 		info.renderArea.offset.y = 0;
-		info.renderArea.extent = renderAttachmentContainerSource.extent;
+		info.renderArea.extent = frameBufferSource.extent;
 	}
 
 	info.clearValueCount = renserPassSource.clearValueCount;
