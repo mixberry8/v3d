@@ -22,9 +22,9 @@ build/runtime/solutions/vs2017/bin/
 build/runtime/solutions/vs2017/ipch/
 build/runtime/solutions/vs2017/obj/
 build/runtime/solutions/vs2017/projects/test/data/
-build/runtime/solutions/vs2017/projects/test/screenshot.bmp
 
 build/test/data/
+build/test/screenshot.bmp
 
 build/resource/
 
