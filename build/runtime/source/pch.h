@@ -137,6 +137,7 @@ static constexpr T* ToAddRef(T* obj)
 /* ‚»‚Ì‘¼ */
 /**********/
 
+#define V3D_MIN(a, b) ((a) > (b))? (b) : (a)
 #define V3D_MAX(a, b) ((a) < (b))? (b) : (a)
 
 #define V3D_FLOAT_EPSILON 1.192092896e-07F
