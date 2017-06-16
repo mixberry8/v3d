@@ -73,7 +73,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	m_DebugFunctionNameMap["vkCmdCopyImage"] = "IV3DCommandBuffer::CopyImage ( vkCmdCopyImage )";
 	m_DebugFunctionNameMap["vkCmdCopyBufferToImage"] = "IV3DCommandBuffer::CopyBufferToImage ( vkCmdCopyBufferToImage )";
 	m_DebugFunctionNameMap["vkCmdCopyImageToBuffer"] = "IV3DCommandBuffer::CopyImageToBuffer ( vkCmdCopyImageToBuffer )";
-	m_DebugFunctionNameMap["vkCmdBlitImage"] = "IV3DCommandBuffer::BlitImage ( vkCmdBlitImage )";
+	m_DebugFunctionNameMap["vkCmdBlitImage"] = "IV3DCommandBuffer::BlitImage??? ( vkCmdBlitImage )";
 	m_DebugFunctionNameMap["vkCmdResolveImage"] = "IV3DCommandBuffer::ResolveImage??? ( vkCmdResolveImage )";
 	m_DebugFunctionNameMap["vkCmdBeginRenderPass"] = "IV3DCommandBuffer::BeginRenderPass ( vkCmdBeginRenderPass )";
 	m_DebugFunctionNameMap["vkCmdEndRenderPass"] = "IV3DCommandBuffer::EndRenderPass ( vkCmdEndRenderPass )";
@@ -215,15 +215,15 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	// インスタンスを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	VkApplicationInfo appInfo = {};
-	VkInstanceCreateInfo instInfo = {};
+	VkApplicationInfo appInfo{};
+	VkInstanceCreateInfo instInfo{};
 
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
 	appInfo.pApplicationName = "v3d";
-	appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 4);
+	appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 5);
 	appInfo.pEngineName = "v3d";
-	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 4);
+	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 5);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
 	instInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
