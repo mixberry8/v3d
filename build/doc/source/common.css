@@ -1,0 +1,58 @@
+﻿/* ************************************************ */
+
+table.basic {
+  border: 1px solid #a8b8d9;
+  border-collapse: collapse;
+}
+
+table.basic tr {
+  border: 1px solid #a8b8d9;
+}
+
+table.basic th {
+  border: 1px solid #a8b8d9;
+  padding: 4px 8px;
+  background: #dfe5f1;
+  color: #4665a2;
+  text-align: center;
+  font-size: 16px;
+}
+
+table.basic td {
+  border: 1px solid #a8b8d9;
+  padding: 4px 8px;
+  background: #fff;
+  color: #111;
+  text-align: left;
+  font-size: 14px;
+}
+
+/* ************************************************ */
+
+table.cmdbuff {
+  border: 1px solid #a8b8d9;
+  border-collapse: collapse;
+  width: 1280px;
+}
+
+table.cmdbuff tr {
+  border: 1px solid #a8b8d9;
+}
+
+table.cmdbuff th {
+  border: 1px solid #a8b8d9;
+  padding: 4px 8px;
+  background: #dfe5f1;
+  color: #4665a2;
+  text-align: center;
+  font-size: 16px;
+}
+
+table.cmdbuff td {
+  border: 1px solid #a8b8d9;
+  padding: 4px 8px;
+  background: #fff;
+  color: #111;
+  text-align: left;
+  font-size: 14px;
+}
