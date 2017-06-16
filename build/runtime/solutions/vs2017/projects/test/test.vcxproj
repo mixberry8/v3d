@@ -367,6 +367,7 @@
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Plane.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\ResourceHeap.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Sphere.h" />
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\ViewCameraWindow.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Window.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Matrix3x3.h" />
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Matrix4x4.h" />
@@ -509,6 +510,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\ViewCameraWindow.cpp" />
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Window.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)common\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug_Static|x64'">$(IntDir)common\</ObjectFileName>

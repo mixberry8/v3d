@@ -117,6 +117,9 @@
     <ClInclude Include="..\..\..\..\..\test\source\pch.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\example\source\common\ViewCameraWindow.h">
+      <Filter>source\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Matrix3x3.cpp">
@@ -211,6 +214,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\test\source\pch.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\example\source\common\ViewCameraWindow.cpp">
+      <Filter>source\common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
