@@ -21,6 +21,8 @@
 #define V3D_COMPUTE_SHADER_STAGE_MAX 1 // コンピュートシェーダーステージの数
 #define V3D_INSTANCE_LAYER_COUNT 2 // インスタンスのレイヤー数
 
+#define V3D_PUSH_DESCRIPTOR_MAX 64 // プッシュできるデスクリプタの最大数
+
 static constexpr char* V3D_LAYER_LUNARG_standard_validation = "VK_LAYER_LUNARG_standard_validation";
 static constexpr char* V3D_LAYER_NV_nsight = "VK_LAYER_NV_nsight";
 static constexpr char* V3D_LAYER_RENDERDOC_Capture = "VK_LAYER_RENDERDOC_Capture";
