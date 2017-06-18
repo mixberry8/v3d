@@ -76,6 +76,8 @@ static constexpr wchar_t* Log_Error_CommandBufferAlreadyBegin = L"IV3DCommandBuf
 static constexpr wchar_t* Log_Error_CommandBufferAlreadyEnd = L"IV3DCommandBuffer::End : %s : コマンドバッファーは記録は既に終了されています。";
 static constexpr wchar_t* Log_Error_CommandBufferNotBegin = L"IV3DCommandBuffer : %s : コマンドバッファーが開始されていないのにコマンドを書き込もうとしました。";
 static constexpr wchar_t* Log_Error_CommandBufferRenderPassContinue = L"IV3DCommandBuffer::Begin : %s : コマンドバッファーの使用法に V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE を指定した場合は pRenderPass と subpass は必ず指定してください、";
+static constexpr wchar_t* Log_Error_NotStandardDescriptorSet = L"IV3DCommandBuffer::BindDescriptorSets : %s[%u] はスタンダードデスクリプタセットではありません。";
+static constexpr wchar_t* Log_Error_NotPushDescriptorSet = L"IV3DCommandBuffer::PushDescriptorSets : %s[%u] はプッシュデスクリプタセットではありません。";
 static constexpr wchar_t* Log_Error_NotSecondaryCommandBuffer = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : コマンドバッファ %s[%u] はセカンダリではありません。";
 static constexpr wchar_t* Log_Error_SecondaryCommandBufferNotEnd = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : コマンドバッファ %s[%u] は IV3DCommandBuffer::End で終了されていません";
 static constexpr wchar_t* Log_Error_CommandBuffersSimultaneousUse = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : プライマリコマンドバッファーの使用法に V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE が指定されている場合は、セカンダリコマンドバッファーも同様にこの使用法を指定する必要があります。";
@@ -99,5 +101,6 @@ static constexpr wchar_t* Log_Error_PrimaryCommandBufferNotEnd = L"IV3DCommandQu
 /********************/
 
 static constexpr wchar_t* Log_Error_DescriptorNotSet = L"IV3DDescriptorSet::Update : %s : バインディング %u にリソース ( %s ) がセットされていません。";
+static constexpr wchar_t* Log_Error_DescriptorSetNoNeedUpdate = L"IV3DDescriptorSet::Update : プッシュデスクリプタセットは更新する必要はありません。";
 
 #endif //_DEBUG
