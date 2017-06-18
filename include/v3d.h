@@ -783,7 +783,7 @@ enum V3D_SAMPLE_COUNT_FLAG : V3DFlags
 };
 
 //! @enum V3D_COMPARE_OP
-//! @brief 比較オペレーター
+//! @brief 比較演算子
 //! @sa V3DSamplerDesc::compareOp
 //! @sa V3DPipelineStencilOpDesc::compareOp
 //! @sa V3DPipelineDepthStencilDesc::depthCompareOp
@@ -877,9 +877,14 @@ struct V3DRectangle3D
 //! @remarks 深度は minDepth < maxDepth である必要があります。
 struct V3DViewport
 {
-	V3DRectangle2D rect; //!< ビューポートの領域です。
-	float minDepth; //!< 最小深度を 0.0f～1.0f の間で指定します。
-	float maxDepth; //!< 最大深度を 0.0f～1.0f の間で指定します。
+	//! @brief ビューポートの領域です。
+	V3DRectangle2D rect;
+	//! @brief 最小深度です。<br>
+	//! 値は { 0.0f <= minDepth <= 1.0f } の範囲に制限されます。
+	float minDepth;
+	//! @brief 最大深度です。<br>
+	//! 値は { minDepth <= maxDepth <= 1.0f } の範囲に制限されます。
+	float maxDepth;
 };
 
 //! @union V3DClearColorValue
@@ -895,8 +900,11 @@ union V3DClearColorValue
 //! @brief デプスステンシルのクリア値
 struct V3DClearDepthStencilValue
 {
-	float depth; //!< 深度を 0.0f～1.0f の間で指定します。
-	uint32_t stencil; //!< ステンシルです。
+	//! @brief 深度をクリアする値です。<br>
+	//! この値は { 0.0f <= depth <= 1.0f } の範囲に制限されます。
+	float depth;
+	//! @brief ステンシルをクリアする値です。
+	uint32_t stencil;
 };
 
 //! @union V3DClearValue
@@ -1698,7 +1706,7 @@ struct V3DSamplerDesc
 	bool anisotropyEnable; //!< 異方性フィルタリングを有効にするかどうかを指定します。<br>この値は V3DDeviceCaps::flags に ::V3D_CAP_SAMPLER_ANISOTROPY が含まれている場合にのみ true を指定することができます。
 	float maxAnisotropy; //!< 異方性値をクランプする値です。<br>この値は anisotropyEnable が true のときに有効になり V3DDeviceCaps::maxSamplerAnisotropy 以下に制限されます。
 	bool compareEnable; //!< 比較オペーレーターである compareOp を有効にするかどうかを指定します。
-	V3D_COMPARE_OP compareOp; //!< 比較オペレーターです。<br>::V3D_COMPARE_OP の説明にある R はサンプラーによって入力される値であり、S はアタッチメントのテクセルの値を表します。
+	V3D_COMPARE_OP compareOp; //!< 比較演算子です。<br>::V3D_COMPARE_OP の説明にある R はサンプラーによって入力される値であり、S はアタッチメントのテクセルの値を表します。
 	float minLod; //!< ミップマップのレベルをクランプする最小値です。<br>通常この値は最初のミップマップのレベルを指定します。
 	float maxLod; //!< ミップマップのレベルをクランプする最大値です。<br>通常この値は最後ミップマップのレベルの数を指定します。
 	V3D_BORDER_COLOR borderColor; //!< 境界線の色です。
@@ -1735,7 +1743,7 @@ protected:
 //! @{
 
 //! @enum V3D_ATTACHMENT_LOAD_OP
-//! @brief アタッチメントのロードオペレーター
+//! @brief アタッチメントのロード操作
 enum V3D_ATTACHMENT_LOAD_OP : uint8_t
 {
 	//! @brief レンダーパスの開始時 ( IV3DCommandBuffer::BeginRenderPass ) にアタッチメントの以前の内容が保持されている必要がないことを表します。<br>
@@ -1750,7 +1758,7 @@ enum V3D_ATTACHMENT_LOAD_OP : uint8_t
 };
 
 //! @enum V3D_ATTACHMENT_STORE_OP
-//! @brief アタッチメントのストアオペレーター
+//! @brief アタッチメントのストア操作
 enum V3D_ATTACHMENT_STORE_OP : uint8_t
 {
 	//! @brief レンダーパスの終了時 ( IV3DCommandBuffer::EndRenderPass ) にアタッチメントの内容が保存されず、破棄される可能性があることを表します。<br>
@@ -1777,16 +1785,16 @@ struct V3DAttachmentDesc
 	//! @brief イメージのサンプル数です。<br>
 	//! @sa V3DImageDesc::samples
 	V3D_SAMPLE_COUNT_FLAG samples;
-	//! @brief レンダリングパスのロードオペレーターです。
+	//! @brief レンダリングパスのロード操作です。
 	//! @sa IV3DCommandBuffer::BeginRenderPass
 	V3D_ATTACHMENT_LOAD_OP loadOp;
-	//! @brief レンダリングパスのストアオペレーターです。
+	//! @brief レンダリングパスのストア操作です。
 	//! @sa IV3DCommandBuffer::EndRenderPass
 	V3D_ATTACHMENT_STORE_OP storeOp;
-	//! @brief レンダリングパスのステンシルのロードオペレーターです。
+	//! @brief レンダリングパスのステンシルのロード操作です。
 	//! @sa IV3DCommandBuffer::BeginRenderPass
 	V3D_ATTACHMENT_LOAD_OP stencilLoadOp;
-	//! @brief レンダリングパスのステンシルのストアオペレーターです。
+	//! @brief レンダリングパスのステンシルのストア操作です。
 	//! @sa IV3DCommandBuffer::EndRenderPass
 	V3D_ATTACHMENT_STORE_OP stencilStoreOp;
 	//! @brief レンダリングパス開始時のレイアウトです。<br>
@@ -2314,7 +2322,7 @@ enum V3D_CULL_MODE : uint8_t
 };
 
 //! @enum V3D_STENCIL_OP
-//! @brief ステンシルオペレーター
+//! @brief ステンシルオペレーション
 enum V3D_STENCIL_OP : uint8_t
 {
 	V3D_STENCIL_OP_KEEP = 0, //!< 現在の値を保持します。
@@ -2423,7 +2431,7 @@ enum V3D_BLEND_FACTOR : uint8_t
 };
 
 //! @enum V3D_BLEND_OP
-//! @brief ブレンドオペレーター<br>
+//! @brief ブレンド演算子<br>
 //! <table class="basic">
 //! <tr><td>Cs</td><td>入力元のインプットアタッチメントなどのカラー</td></tr>
 //! <tr><td>Cd</td><td>出力先になるカラーアタッチメントのカラー</td></tr>
@@ -2452,7 +2460,7 @@ enum V3D_COLOR_COMPONENT_FLAG : V3DFlags
 };
 
 //! @enum V3D_LOGIC_OP
-//! @brief 論理オペレーター<br>
+//! @brief 論理演算子<br>
 //! <table class="basic">
 //! <tr><td>s</td><td>フラグメントによって出力される RGBA 成分です。</td></tr>
 //! <tr><td>d</td><td>カラーアタッチメントによって入力される RGBA 成分です。</td></tr>
@@ -2651,7 +2659,7 @@ struct V3DPipelineMultisampleDesc
 };
 
 //! @struct V3DPipelineStencilOpDesc
-//! @brief パイプラインのステンシルオペレーターの記述
+//! @brief パイプラインのステンシルオペレーションの記述
 //! @remarks
 //! デフォルト値<br>
 //! <table class="basic">
@@ -2660,23 +2668,23 @@ struct V3DPipelineMultisampleDesc
 //! <tr><td>passOp</td><td>V3D_STENCIL_OP_KEEP</td></tr>
 //! <tr><td>depthFailOp</td><td>V3D_STENCIL_OP_KEEP</td></tr>
 //! <tr><td>compareOP</td><td>V3D_COMPARE_OP_ALWAYS</td></tr>
-//! <tr><td>compareMask</td><td>0x000000FF</td></tr>
-//! <tr><td>writeMask</td><td>0x000000FF</td></tr>
+//! <tr><td>readMask</td><td>0x00000000</td></tr>
+//! <tr><td>writeMask</td><td>0x00000000</td></tr>
 //! </table>
 //! <br>
 struct V3DPipelineStencilOpDesc
 {
-	V3D_STENCIL_OP failOp; //!< ステンシルテストに失敗したサンプルに対して実行されるアクションです。
-	V3D_STENCIL_OP passOp; //!< 深さテストとステンシルテストの両方に合格したサンプルに対して実行されるアクションです。
-	V3D_STENCIL_OP depthFailOp; //!< ステンシルテストに合格し、深度テストに合格しなかったサンプルに対して実行されるアクションです。
+	V3D_STENCIL_OP failOp; //!< ステンシルテストに失敗したサンプルに対して実行されるオペレーションです。。
+	V3D_STENCIL_OP passOp; //!< 深さテストとステンシルテストの両方に合格したサンプルに対して実行されるオペレーションです。
+	V3D_STENCIL_OP depthFailOp; //!< ステンシルテストに合格し、深度テストに合格しなかったサンプルに対して実行されるオペレーションです。
 
-	//! @brief ステンシルテストで使用される比較オペレーターです。<br>
+	//! @brief ステンシルテストで使用される比較演算子です。<br>
 	//! ::V3D_COMPARE_OP の説明にある R はマスクされた IV3DCommandBuffer::SetStencilReference で設定された値であり、S はマスクされたステンシルの値を表します。
 	V3D_COMPARE_OP compareOp;
 
-	//! @brief ステンシルテストによって読み込まれる値のビットマスクを指定します。
+	//! @brief ステンシルテストによって読み込まれる値のビットマスクです。
 	uint32_t readMask;
-	//! @brief ステンシルテストによって書き込まれる値のビットマスクを指定します。
+	//! @brief ステンシルテストによって書き込まれる値のビットマスクです。
 	uint32_t writeMask;
 };
 
@@ -2703,15 +2711,15 @@ struct V3DPipelineDepthStencilDesc
 	bool depthTestEnable;
 	//! @brief 深度を書き込むかどうかを指定します。
 	bool depthWriteEnable;
-	//! @brief 深度テストの比較オペレーターを指定します。<br>
+	//! @brief 深度テストの比較演算子です。<br>
 	//! ::V3D_COMPARE_OP の説明にある R は入力される深度であり、S はアタッチメントの深度を表します。
 	V3D_COMPARE_OP depthCompareOp;
 
 	//! @brief ステンシルテストをするかどうかを指定します。
 	bool stencilTestEnable;
-	//! @brief ステンシルの前面のオペレーターです。
+	//! @brief ステンシル前面のオペレーションです。
 	V3DPipelineStencilOpDesc stencilFront;
-	//! @brief ステンシルテストの後面のオペレーターです。
+	//! @brief ステンシル後面のオペレーションです。
 	V3DPipelineStencilOpDesc stencilBack;
 
 	//! @brief 深度の境界テストをするかどうかを指定します。<br>
@@ -2746,10 +2754,10 @@ struct V3DPipelineColorBlendAttachment
 	bool blendEnable; //!< ブレンドを有効にするかどうかを指定します。
 	V3D_BLEND_FACTOR srcColorFactor; //!< ブレンド元のRGB成分のブレンド係数です。
 	V3D_BLEND_FACTOR dstColorFactor; //!< ブレンド先のRGB成分のブレンド係数です。
-	V3D_BLEND_OP colorOp; //!< RGB成分のブレンドオペレーターです。
+	V3D_BLEND_OP colorOp; //!< RGB成分のブレンド演算子です。
 	V3D_BLEND_FACTOR srcAlphaFactor; //!< ブレンド元のA成分のブレンド係数です。
 	V3D_BLEND_FACTOR dstAlphaFactor; //!< ブレンド先のA成分のブレンド係数です。
-	V3D_BLEND_OP alphaOp; //!< A成分のブレンドオペレーターです。
+	V3D_BLEND_OP alphaOp; //!< A成分のブレンド演算子です。
 	V3DFlags writeMask; //!< カラーの書き込みマスクを表す ::V3D_COLOR_COMPONENT_FLAG 列挙定数の組み合わせです。
 };
 
@@ -4276,9 +4284,9 @@ public:
 	//! </table>
 	virtual void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) = 0;
 
-	//! @brief ステンシルの比較オペレーターで使用される値を設定します。
+	//! @brief ステンシルの比較演算子で使用される値を設定します。
 	//! @param[in] faceMask 設定するフェイスを表す ::V3D_STENCIL_FACE_FLAG 列挙定数の組み合わせです。
-	//! @param[in] reference 比較オペレーターで使用される値です。<br>
+	//! @param[in] reference 比較演算子で使用される値です。<br>
 	//! ステンシルのビット数を超える値を指定することはできません。
 	//! @remarks
 	//! <table class="cmdbuff">
@@ -4774,9 +4782,11 @@ enum V3D_QUERY_CAP_FLAG : V3DFlags
 	V3D_QUERY_CAP_OCCLUSION_QUERY_PRECISE = 0x00000001,
 	//! @brief パイプラインの統計クエリである ::V3D_QUERY_TYPE_PIPELINE_STATISTICS をサポートします。
 	V3D_QUERY_CAP_PIPELINE_STATISTICS_QUERY = 0x00000002,
+	//! @brief すべてのグラフィックスキューとコンピュートキューのタイムスタンプをサポートします。
+	V3D_QUERY_CAP_TIMESTAMP_QUERY_GRAPHICS_AND_COMPUTE = 0x00000004,
 	//! @brief プライマリコマンドバッファーでオクルージョンクエリがアクティブになっている間 ( IV3DCommandBuffer::BeginQuery ～ IV3DCommandBuffer::EndQuery ) で実行される
 	//! セカンダリコマンドバッファー ( IV3DCommandBuffer::ExecuteCommandBuffers ) がクエリを引き継ぎ、その結果を取得することができます。
-	V3D_QUERY_CAP_INHERITED_QUERIES = 0x00000004,
+	V3D_QUERY_CAP_INHERITED_QUERIES = 0x00000008,
 };
 
 //! @enum V3D_IMAGE_CAP_FLAG
@@ -5041,7 +5051,7 @@ enum V3D_COLOR_BLEND_CAP_FLAG : V3DFlags
 	//! ::V3D_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA<br>
 	//! @sa V3DPipelineColorBlendAttachment
 	V3D_COLOR_BLEND_CAP_DUAL_SRC = 0x00000002,
-	//! @brief カラーブレンドでの論理オペレーターをサポートします。
+	//! @brief カラーのブレンドで論理演算子をサポートします。
 	//! @sa V3DPipelineColorBlendDesc::logicOpEnable
 	//! @sa V3DPipelineColorBlendDesc::logicOp
 	V3D_COLOR_BLEND_CAP_LOGIC_OP = 0x00000004,
@@ -5335,8 +5345,6 @@ struct V3DDeviceCaps
 	//! @brief gl_SampleMask 配列の要素の最大数です。
 	uint32_t maxSampleMaskWords;
 
-	//! @brief すべてのグラフィックスキューとコンピュートキューのタイムスタンプをサポートします。
-	bool timestampComputeAndGraphics;
 	//! @brief タイムスタンプクエリをイクンリメントするために必要な時間をナノ秒単位で指定します。
 	float timestampPeriod;
 
@@ -5471,7 +5479,8 @@ public:
 	//! @return キューファミリーの数を返します。
 	virtual uint32_t GetQueueFamilyCount() const = 0;
 	//! @brief キューファミリーの記述を取得します。
-	//! @param[in] family キューファミリーのインデックスです。
+	//! @param[in] family キューファミリーのインデックスです。<br>
+	//! この値は { 0 <= family < IV3DDevice::GetQueueFamilyCount } の範囲に制限されます。
 	//! @return キューファミリの記述を返します。
 	virtual const V3DDeviceQueueFamilyDesc& GetQueueFamilyDesc(uint32_t family) const = 0;
 	//! @brief キューを取得します。
@@ -5599,7 +5608,7 @@ public:
 
 	//! @brief シェーダーモジュールを作成します。
 	//! @param[in] codeSize シェーダコードのサイズをバイト単位で指定します。<br>
-	//! この値は 4 Byte 境界にアライメントされている必要があります。
+	//! この値は 4 の整数倍である必要があります。
 	//! @param[in] pCode シェーダコードです。
 	//! @param[out] ppShaderModule 作成したシェーダーモジュールを渡す IV3DShaderModule インターフェースのポインタのアドレスです。
 	//! @param[in] pDebugName デバッグ名です。
@@ -5619,8 +5628,10 @@ public:
 	virtual V3D_RESULT CheckResourceMemoryProperty(V3DFlags memoryPropertyFlags, IV3DResource* pResource) const = 0;
 	//! @brief 指定したメモリ特性をリソースがサポートしているかどうかを確認します。
 	//! @param[in] memoryPropertyFlags リソースのメモリ特性を表す ::V3D_MEMORY_PROPERTY_FLAG 列挙定数の組み合わせです。
-	//! @param[in] resourceCount メモリ特性を確認するリソースの数です。
-	//! @param[in] ppResources resourceCount の値の数の要素を持つ IV3DResource インターフェースのポインタの配列です。
+	//! @param[in] resourceCount メモリ特性を確認するリソースの数です。<br>
+	//! この値は、1以上である必要があります。
+	//! @param[in] ppResources メモリ特性を確認するリソースの配列です。<br>
+	//! 配列の要素数は resourceCount である必要があります。
 	//! @retval V3D_OK 全てのリソースは指定したメモリ特性をサポートしています。
 	//! @retval V3D_ERROR_NOT_SUPPORTED 一部または全てのリソースは指定したメモリ特性をサポートしていません。
 	//! @retval V3D_ERROR_INVALID_ARGUMENT @copydoc V3D_ERROR_INVALID_ARGUMENT
@@ -5639,7 +5650,7 @@ public:
 	//! @remarks
 	//! IV3DDevice::CreateBuffer または IV3DDevice::CreateImage によって作成された直後のリソースは、メモリが割り当てられていないため、使用できない状態になっています。<br>
 	//! そのため IV3DDevice::AllocateResourceMemory でメモリを確保した後 IV3DDevice::BindResourceMemory でリソースをメモリにバインドする必要があります。<br>
-	//! また確保することのできるリソースメモリは V3DDeviceCaps 構造体の maxResourceMemoryCount の値の数に制限されます。<br>
+	//! また確保することのできるリソースメモリは V3DDeviceCaps::maxResourceMemoryCount 以下に制限されます。<br>
 	//! <ul>
 	//!   <li>メモリ特性</li><br>
 	//!   memoryPropertyFlags に指定できるフラグの組み合わせは以下のものに限定されます。<br>
@@ -5723,7 +5734,7 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @remarks
-	//! バッファーに複数のサブリソースを含める場合は、サブリソースが配置されるメモリオフセットのアライメントに注意してバッファーのサイズを決定する必要があります。<br>
+	//! バッファーに複数のサブリソースを含める場合は、サブリソースを配置するメモリオフセットのアライメントに注意してバッファーのサイズを決定する必要があります。<br>
 	//! サブリソースのアライメントは V3DDeviceCaps に記述されており、以下のようになります。<br>
 	//! <br>
 	//! <table class="basic">
@@ -5792,11 +5803,14 @@ public:
 
 	//! @brief レンダーパスを作成します。
 	//! @param[in] attachmentCount アタッチメントの数です。
-	//! @param[in] pAttachments attachmentCount の値の数の要素を持つ V3DAttachmentDesc 構造体の配列です。
+	//! @param[in] pAttachments アタッチメントの配列です。<br>
+	//! 配列の要素数は attachmentCount である必要があります。
 	//! @param[in] subpassCount サブパスの数です。
-	//! @param[in] pSubpasses subpassCount の値の数の要素を持つ V3DSubpassDesc 構造体の配列です。
+	//! @param[in] pSubpasses サブパスの配列です。<br>
+	//! 配列の要素数は subpassCount である必要があります。
 	//! @param[in] subpassDependencyCount サブパスの依存性の数です。
-	//! @param[in] pSubpassDependencies subpassDependencyCount の値の数の要素を持つ V3DSubpassDependencyDesc 構造体の配列です。
+	//! @param[in] pSubpassDependencies サブパスの依存性の配列です。<br>
+	//! 配列の要素数は subpassDependencyCount である必要があります。
 	//! @param[out] ppRenderPass 作成したレンダーパスを表す IV3DRenderPass インターフェースのポインタのアドレスです。
 	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK レンダーパスを作成しました。
@@ -5814,7 +5828,8 @@ public:
 	//! @brief フレームバッファーを作成します。
 	//! @param[in] pRenderPass レンダーパスです。
 	//! @param[in] attachmentCount アタッチメントの数です。
-	//! @param[in] ppAttachments attachmentCount の値の数の要素を持つ IV3DImageView インターフェースのポインタの配列です。
+	//! @param[in] ppAttachments アタッチメントとして使用するイメージビューの配列です。<br>
+	//! 配列の要素数は attachmentCount である必要があります。
 	//! @param[out] ppFrameBuffer 作成したフレームバッファを渡す IV3DFrameBuffer インターフェースのポインタのアドレスです。
 	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK フレームバッファーを作成しました。
@@ -5823,12 +5838,13 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @remarks
-	//! アタッチメントとして使用する全てのイメージビューは 幅 ( width )、高さ ( height )、深さ ( depth )、レイヤー数 ( layerCount ) が一致している必要があります。
+	//! アタッチメントとして使用する全てのイメージビューは 幅、高さ、深さ、レイヤー数が一致している必要があります。
 	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief デスクリプタセットレイアウトを作成します。
 	//! @param[in] descriptorCount デスクリプタの数です。
-	//! @param[in] pDescriptors descriptorCount の値の数の要素を持つ V3DDescriptorDesc 構造体の配列です。
+	//! @param[in] pDescriptors デスクリプタの配列です。<br>
+	//! 配列の要素数は descriptorCount である必要があります。
 	//! @param[in] poolSize デスクリプタセットのプールの初期サイズです。
 	//! @param[in] poolResizeStep デスクリプタセットのプールのリサイズステップです。
 	//! @param[out] ppDescriptorSetLayout 作成したデスクリプタセットレイアウトを渡す IV3DDescriptorSetLayout インターフェースのポインタのアドレスです。
@@ -5859,13 +5875,23 @@ public:
 	//! @retval V3D_ERROR_INVALID_ARGUMENT @copydoc V3D_ERROR_INVALID_ARGUMENT
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
+	//! @remarks
+	//! 作成されるデスクリプタセットは、指定されたデスクリプタセットレイアウトのタイプ ( IV3DDescriptorSetLayout::GetType ) によってコマンドバッファーへの設定方法が異なりますので注意してください。<br>
+	//! <table class="basic">
+	//!   <tr><th>タイプ</th><th>設定方法</th></tr>
+	//!   <tr><td>スタンダードデスクリプタセット<br> ( ::V3D_DESCRIPTOR_SET_TYPE_STANDARD )</td><td>IV3DCommandBuffer::BindDescriptorSets</td></tr>
+	//!   <tr><td>プッシュデスクリプタセット<br> ( ::V3D_DESCRIPTOR_SET_TYPE_PUSH )</td><td>IV3DCommandBuffer::PushDescriptorSets</td></tr>
+	//! </table>
 	virtual V3D_RESULT CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief パイプラインレイアウトを作成します。
-	//! @param[in] constantCount 定数の数です。
-	//! @param[in] pConstants constantCount の値の数だけ要素を持つ V3DConstantDesc 構造体の配列です。
+	//! @param[in] constantCount プッシュ定数の数です。
+	//! @param[in] pConstants constantCount プッシュ定数の配列です。<br>
+	//! 配列の要素数は constantCount である必要があります。<br>
+	//! またプッシュ定数のサイズ ( V3DConstantDesc::offset + V3DConstantDesc::size の最大値 ) は V3DDeviceCaps::maxPushConstantsSize 以下に制限されます。
 	//! @param[in] descriptorSetLayoutCount デスクリプタセットレイアウトの数です。
-	//! @param[in] ppDescriptorSetLayouts デスクリプタレイアウトを表す descriptorSetLayoutCount の値の数だけ要素を持つ IV3DDescriptorSetLayout インターフェースのポインタの配列です。
+	//! @param[in] ppDescriptorSetLayouts デスクリプタレイアウトの配列です。<br>
+	//! 配列の要素数は descriptorSetLayoutCount である必要があります。
 	//! @param[out] ppPipelineLayout 作成したパイプラインレイアウトを表す IV3DPipelineLayout インターフェースのポインタのアドレスです。
 	//! @param[in] pDebugName デバッグ名です。
 	//! @retval V3D_OK パイプラインレイアウトを作成しました。
@@ -6056,7 +6082,8 @@ public:
 	//! @return アダプタの数を返します。
 	virtual uint32_t GetAdapterCount() const = 0;
 	//! @brief アダプタを取得します。
-	//! @param[in] adapterIndex アダプタのインデックスです。
+	//! @param[in] adapterIndex アダプタのインデックスです。<br>
+	//! この値は { 0 <= adapterIndex < IV3DInstance::GetAdapterCount } の範囲に制限されます。
 	//! @param[out] ppAdapter 取得したアダプタを渡す IV3DAdapter インターフェースのポインタのアドレスです。
 	virtual void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) = 0;
 
