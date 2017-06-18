@@ -265,19 +265,19 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #define V3D_LOG_INIT(flags, pFunction, pUserData) InitializeLog(flags, pFunction, pUserData)
 #define V3D_LOG_FIN() FinalizeLog()
 
-#define V3D_LOG_A(type, format, ...) PrintLogA(type, format, __VA_ARGS__)
-#define V3D_LOG_INFO_A(format, ...) PrintLogA(V3D_LOG_INFORMATION, format, __VA_ARGS__)
-#define V3D_LOG_WARNING_A(format, ...) PrintLogA(V3D_LOG_WARNING, format, __VA_ARGS__)
-#define V3D_LOG_ERROR_A(format, ...) PrintLogA(V3D_LOG_ERROR, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_A(type, format, ...) PrintLogA(type, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_INFO_A(format, ...) PrintLogA(V3D_LOG_INFORMATION, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_WARNING_A(format, ...) PrintLogA(V3D_LOG_WARNING, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_ERROR_A(format, ...) PrintLogA(V3D_LOG_ERROR, format, __VA_ARGS__)
 
-#define V3D_LOG_W(type, format, ...) PrintLogW(type, format, __VA_ARGS__)
-#define V3D_LOG_INFO_W(format, ...) PrintLogW(V3D_LOG_INFORMATION, format, __VA_ARGS__)
-#define V3D_LOG_WARNING_W(format, ...) PrintLogW(V3D_LOG_WARNING, format, __VA_ARGS__)
-#define V3D_LOG_ERROR_W(format, ...) PrintLogW(V3D_LOG_ERROR, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_W(type, format, ...) PrintLogW(type, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_INFO_W(format, ...) PrintLogW(V3D_LOG_INFORMATION, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_WARNING_W(format, ...) PrintLogW(V3D_LOG_WARNING, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_ERROR_W(format, ...) PrintLogW(V3D_LOG_ERROR, format, __VA_ARGS__)
 
-#define V3D_LOG_INFO(format, ...) PrintLogW(V3D_LOG_INFORMATION, format, __VA_ARGS__)
-#define V3D_LOG_WARNING(format, ...) PrintLogW(V3D_LOG_WARNING, format, __VA_ARGS__)
-#define V3D_LOG_ERROR(format, ...) PrintLogW(V3D_LOG_ERROR, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_INFO(format, ...) PrintLogW(V3D_LOG_INFORMATION, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_WARNING(format, ...) PrintLogW(V3D_LOG_WARNING, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_ERROR(format, ...) PrintLogW(V3D_LOG_ERROR, format, __VA_ARGS__)
 
 #define V3D_LOG_TYPE_A(type) #type
 #define V3D_LOG_S_STR_A(str) " \"" << str << "\""
@@ -312,40 +312,40 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #define V3D_LOG_S_RANGE_EQUAL(num, minNum, maxNum) V3D_LOG_S_RANGE_EQUAL_W(num, minNum, maxNum)
 #define V3D_LOG_S_DEBUG_NAME(str) V3D_LOG_S_STR_W(str)
 
-#define V3D_LOG_S_ERROR_A(stream) \
+#define V3D_LOG_S_PRINT_ERROR_A(stream) \
 	{ \
 		STLStringStreamA message; \
 		message << stream; \
 		PrintLogA(V3D_LOG_ERROR, message.str().c_str()); \
 	}
 
-#define V3D_LOG_S_ERROR_W(stream) \
+#define V3D_LOG_S_PRINT_ERROR_W(stream) \
 	{ \
 		STLStringStreamW message; \
 		message << stream; \
 		PrintLogW(V3D_LOG_ERROR, message.str().c_str()); \
 	}
 
-#define V3D_LOG_S_ERROR(stream) V3D_LOG_S_ERROR_W(stream)
+#define V3D_LOG_S_PRINT_ERROR(stream) V3D_LOG_S_PRINT_ERROR_W(stream)
 
 #else //_DEBUG
 
 #define V3D_LOG_INIT(flags, pFunction, pUserData)
 #define V3D_LOG_FIN()
 
-#define V3D_LOG_A(type, format, ...)
-#define V3D_LOG_INFO_A(format, ...)
-#define V3D_LOG_WARNING_A(format, ...)
-#define V3D_LOG_ERROR_A(format, ...)
+#define V3D_LOG_PRINT_A(type, format, ...)
+#define V3D_LOG_PRINT_INFO_A(format, ...)
+#define V3D_LOG_PRINT_WARNING_A(format, ...)
+#define V3D_LOG_PRINT_ERROR_A(format, ...)
 
-#define V3D_LOG_W(type, format, ...)
-#define V3D_LOG_INFO_W(format, ...)
-#define V3D_LOG_WARNING_W(format, ...)
-#define V3D_LOG_ERROR_W(format, ...)
+#define V3D_LOG_PRINT_W(type, format, ...)
+#define V3D_LOG_PRINT_INFO_W(format, ...)
+#define V3D_LOG_PRINT_WARNING_W(format, ...)
+#define V3D_LOG_PRINT_ERROR_W(format, ...)
 
-#define V3D_LOG_INFO(format, ...)
-#define V3D_LOG_WARNING(format, ...)
-#define V3D_LOG_ERROR(format, ...)
+#define V3D_LOG_PRINT_INFO(format, ...)
+#define V3D_LOG_PRINT_WARNING(format, ...)
+#define V3D_LOG_PRINT_ERROR(format, ...)
 
 #define V3D_LOG_TYPE_A(type)
 #define V3D_LOG_S_PTR_A(ptr)
@@ -374,9 +374,9 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #define V3D_LOG_S_NUM_GREATER_EQUAL(num0, num1)
 #define V3D_LOG_S_RANGE_EQUAL(num, minNum, maxNum)
 
-#define V3D_LOG_S_ERROR_A(stream)
-#define V3D_LOG_S_ERROR_W(stream)
-#define V3D_LOG_S_ERROR(stream)
+#define V3D_LOG_S_PRINT_ERROR_A(stream)
+#define V3D_LOG_S_PRINT_ERROR_W(stream)
+#define V3D_LOG_S_PRINT_ERROR(stream)
 
 #endif //_DEBUG
 

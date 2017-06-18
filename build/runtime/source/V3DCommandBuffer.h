@@ -153,7 +153,7 @@ private:
 	{
 		if (m_Debug.isBegin == false)
 		{
-			V3D_LOG_ERROR(Log_Error_CommandBufferNotBegin, m_DebugName.c_str());
+			V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferNotBegin, m_DebugName.c_str());
 			return false;
 		}
 

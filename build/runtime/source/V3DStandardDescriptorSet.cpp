@@ -73,7 +73,7 @@ void V3DStandardDescriptorSet::Update()
 		case V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
 			if (writeDescSet.pBufferInfo->buffer == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"Buffer");
+				V3D_LOG_PRINT_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"Buffer");
 				debugErrorCount++;
 			}
 			break;
@@ -82,7 +82,7 @@ void V3DStandardDescriptorSet::Update()
 		case V3D_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
 			if (writeDescSet.pTexelBufferView == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"BufferView");
+				V3D_LOG_PRINT_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"BufferView");
 				debugErrorCount++;
 			}
 			break;
@@ -92,21 +92,21 @@ void V3DStandardDescriptorSet::Update()
 		case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT: // image -------
 			if (writeDescSet.pImageInfo->imageView == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"ImageView");
+				V3D_LOG_PRINT_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"ImageView");
 				debugErrorCount++;
 			}
 			break;
 		case VK_DESCRIPTOR_TYPE_SAMPLER: // ----  sampler
 			if (writeDescSet.pImageInfo->sampler == VK_NULL_HANDLE)
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"Sampler");
+				V3D_LOG_PRINT_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"Sampler");
 				debugErrorCount++;
 			}
 			break;
 		case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: // image sampler
 			if ((writeDescSet.pImageInfo->sampler == VK_NULL_HANDLE) || (writeDescSet.pImageInfo->imageView == VK_NULL_HANDLE))
 			{
-				V3D_LOG_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"ImageView And Sampler");
+				V3D_LOG_PRINT_ERROR(Log_Error_DescriptorNotSet, m_DebugName.c_str(), writeDescSet.dstBinding, L"ImageView And Sampler");
 				debugErrorCount++;
 			}
 			break;

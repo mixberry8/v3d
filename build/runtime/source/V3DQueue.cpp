@@ -58,7 +58,7 @@ V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppC
 #ifdef _DEBUG
 	if ((commandBufferCount == 0) || (ppCommandBuffers == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
 
@@ -66,13 +66,13 @@ V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppC
 	{
 		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_PRIMARY)
 		{
-			V3D_LOG_ERROR(Log_Error_NotPrimaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_NotPrimaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 
 		if (static_cast<V3DCommandBuffer*>(ppCommandBuffers[i])->GetDebug().isBegin == true)
 		{
-			V3D_LOG_ERROR(Log_Error_PrimaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_PrimaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
@@ -111,7 +111,7 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCou
 #ifdef _DEBUG
 	if ((pSwapChain == nullptr) || (commandBufferCount == 0) || (ppCommandBuffers == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pSwapChain) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pSwapChain) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
 
@@ -119,13 +119,13 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCou
 	{
 		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_PRIMARY)
 		{
-			V3D_LOG_ERROR(Log_Error_NotPrimaryCommandBuffer, V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_NotPrimaryCommandBuffer, V3D_LOG_TYPE(ppCommandBuffers), i);
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 
 		if (static_cast<V3DCommandBuffer*>(ppCommandBuffers[i])->GetDebug().isBegin == true)
 		{
-			V3D_LOG_ERROR(Log_Error_PrimaryCommandBufferNotEnd, V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_PrimaryCommandBufferNotEnd, V3D_LOG_TYPE(ppCommandBuffers), i);
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
@@ -166,7 +166,7 @@ V3D_RESULT V3DQueue::Present(IV3DSwapChain* pSwapChain)
 #ifdef _DEBUG
 	if (pSwapChain == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DQueue_Present << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pSwapChain));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Present << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pSwapChain));
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
 #endif //_DEBUG

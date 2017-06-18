@@ -295,12 +295,14 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	// ----------------------------------------------------------------------------------------------------
 
 	const VkPhysicalDeviceFeatures vPDFeatures = m_Source.deviceFeatures;
+	const VkPhysicalDeviceLimits& vPDLimits = m_Source.deviceProps.limits;
 
 	if (vPDFeatures.fullDrawIndexUint32 == VK_TRUE) { m_Caps.flags |= V3D_CAP_FULL_DRAW_INDEX_UINT32; }
 	if (vPDFeatures.samplerAnisotropy == VK_TRUE) { m_Caps.flags |= V3D_CAP_SAMPLER_ANISOTROPY; }
 
 	if (vPDFeatures.occlusionQueryPrecise == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_OCCLUSION_QUERY_PRECISE; }
 	if (vPDFeatures.pipelineStatisticsQuery == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_PIPELINE_STATISTICS_QUERY; }
+	if (vPDLimits.timestampComputeAndGraphics == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_TIMESTAMP_QUERY_GRAPHICS_AND_COMPUTE; }
 	if (vPDFeatures.inheritedQueries == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_INHERITED_QUERIES; }
 
 	if (vPDFeatures.imageCubeArray == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_CUBE_ARRAY; }
@@ -348,8 +350,6 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	if (vPDFeatures.logicOp == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_LOGIC_OP; }
 
 	m_Caps.extensionFlags = extensionFlags;
-
-	const VkPhysicalDeviceLimits& vPDLimits = m_Source.deviceProps.limits;
 
 	m_Caps.maxImageDimension1D = vPDLimits.maxImageDimension1D;
 	m_Caps.maxImageDimension2D = vPDLimits.maxImageDimension2D;
@@ -447,7 +447,6 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	m_Caps.storageImageSampleCounts = ToVkSampleCountFlags(vPDLimits.storageImageSampleCounts);
 	m_Caps.maxColorAttachments = vPDLimits.maxColorAttachments;
 	m_Caps.maxSampleMaskWords = vPDLimits.maxSampleMaskWords;
-	m_Caps.timestampComputeAndGraphics = ToV3DBool(vPDLimits.timestampComputeAndGraphics);
 	m_Caps.timestampPeriod = vPDLimits.timestampPeriod;
 	m_Caps.maxClipDistances = vPDLimits.maxClipDistances;
 	m_Caps.maxCullDistances = vPDLimits.maxCullDistances;

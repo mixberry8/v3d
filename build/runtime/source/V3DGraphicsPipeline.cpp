@@ -27,13 +27,13 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 #ifdef _DEBUG
 	if (renderPassSource.debug.subpasses.size() <= pipelineDesc.subpass)
 	{
-		V3D_LOG_ERROR(Log_Error_InvalidSubpass, V3D_SAFE_NAME(this, pDebugName), pipelineDesc.subpass);
+		V3D_LOG_PRINT_ERROR(Log_Error_InvalidSubpass, V3D_SAFE_NAME(this, pDebugName), pipelineDesc.subpass);
 		return V3D_ERROR_FAIL;
 	}
 
 	if (renderPassSource.debug.subpasses[pipelineDesc.subpass].colorAttachments.size() != pipelineDesc.colorBlend.attachmentCount)
 	{
-		V3D_LOG_ERROR(Log_Error_MismatchSubpassColorAttachmentCount, V3D_SAFE_NAME(this, pDebugName), m_pRenderPass->GetDebugName(), pipelineDesc.subpass);
+		V3D_LOG_PRINT_ERROR(Log_Error_MismatchSubpassColorAttachmentCount, V3D_SAFE_NAME(this, pDebugName), m_pRenderPass->GetDebugName(), pipelineDesc.subpass);
 		return V3D_ERROR_FAIL;
 	}
 #endif //_DEBUG

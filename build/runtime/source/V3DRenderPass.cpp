@@ -164,7 +164,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 		{
 			if (attachmentCount <= pSrcSubpass->pInputAttachments[i].attachment)
 			{
-				V3D_LOG_ERROR(Log_Error_OutOfInputAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pInputAttachments[i].attachment, attachmentCount);
+				V3D_LOG_PRINT_ERROR(Log_Error_OutOfInputAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pInputAttachments[i].attachment, attachmentCount);
 				debugErrorCount++;
 			}
 
@@ -180,7 +180,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 		{
 			if (attachmentCount <= pSrcSubpass->pColorAttachments[i].attachment)
 			{
-				V3D_LOG_ERROR(Log_Error_OutOfColorAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pColorAttachments[i].attachment, attachmentCount);
+				V3D_LOG_PRINT_ERROR(Log_Error_OutOfColorAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pColorAttachments[i].attachment, attachmentCount);
 				debugErrorCount++;
 			}
 
@@ -198,7 +198,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 			{
 				if (attachmentCount <= pSrcSubpass->pResolveAttachments[i].attachment)
 				{
-					V3D_LOG_ERROR(Log_Error_OutOfResolveAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pResolveAttachments[i].attachment, attachmentCount);
+					V3D_LOG_PRINT_ERROR(Log_Error_OutOfResolveAttachment, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pResolveAttachments[i].attachment, attachmentCount);
 					debugErrorCount++;
 				}
 
@@ -208,7 +208,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 				debugAttachment.samples = pAttachments[debugAttachment.attachment].samples;
 				if (debugAttachment.samples != V3D_SAMPLE_COUNT_1)
 				{
-					V3D_LOG_ERROR(Log_Error_MismatchResolveAttachmentSamples, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pResolveAttachments[i].attachment);
+					V3D_LOG_PRINT_ERROR(Log_Error_MismatchResolveAttachmentSamples, m_DebugName.c_str(), debugSubpassCount, i, pSrcSubpass->pResolveAttachments[i].attachment);
 					debugErrorCount++;
 				}
 

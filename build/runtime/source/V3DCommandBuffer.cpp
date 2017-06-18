@@ -164,7 +164,7 @@ V3D_RESULT V3DCommandBuffer::Begin()
 #ifdef _DEBUG
 	if (m_Debug.isBegin == true)
 	{
-		V3D_LOG_ERROR(Log_Error_CommandBufferAlreadyBegin, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferAlreadyBegin, m_DebugName.c_str());
 		return V3D_ERROR_FAIL;
 	}
 #endif //_DEBUG
@@ -191,7 +191,7 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 #ifdef _DEBUG
 	if (m_Debug.isBegin == true)
 	{
-		V3D_LOG_ERROR(Log_Error_CommandBufferAlreadyBegin, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferAlreadyBegin, m_DebugName.c_str());
 		return V3D_ERROR_FAIL;
 	}
 
@@ -199,12 +199,12 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 	{
 		if (m_Type == V3D_COMMAND_BUFFER_TYPE_PRIMARY)
 		{
-			V3D_LOG_WARNING(Log_Warning_CommandBufferRenderPassContinue, m_DebugName.c_str());
+			V3D_LOG_PRINT_WARNING(Log_Warning_CommandBufferRenderPassContinue, m_DebugName.c_str());
 		}
 
 		if (pRenderPass == nullptr)
 		{
-			V3D_LOG_ERROR(Log_Error_CommandBufferRenderPassContinue, m_DebugName.c_str());
+			V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferRenderPassContinue, m_DebugName.c_str());
 			return V3D_ERROR_FAIL;
 		}
 	}
@@ -245,7 +245,7 @@ V3D_RESULT V3DCommandBuffer::End()
 #ifdef _DEBUG
 	if (m_Debug.isBegin == false)
 	{
-		V3D_LOG_ERROR(Log_Error_CommandBufferAlreadyEnd, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferAlreadyEnd, m_DebugName.c_str());
 		return V3D_ERROR_FAIL;
 	}
 #endif //_DEBUG
@@ -273,7 +273,7 @@ void V3DCommandBuffer::BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBuffer
 
 	if (pBuffer == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BarrierBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pBuffer));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BarrierBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pBuffer));
 		return;
 	}
 #endif //_DEBUG
@@ -311,7 +311,7 @@ void V3DCommandBuffer::BarrierBufferView(IV3DBufferView* pBufferView, const V3DB
 
 	if (pBufferView == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BarrierBufferView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pBufferView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BarrierBufferView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pBufferView));
 		return;
 	}
 #endif //_DEBUG
@@ -349,7 +349,7 @@ void V3DCommandBuffer::BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferVi
 
 	if ((bufferViewCount == 0) || (ppBufferViews == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BarrierBufferViews << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(bufferViewCount, 0) << V3D_LOG_S_PTR(ppBufferViews));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BarrierBufferViews << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(bufferViewCount, 0) << V3D_LOG_S_PTR(ppBufferViews));
 		return;
 	}
 #endif //_DEBUG
@@ -398,7 +398,7 @@ void V3DCommandBuffer::BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc
 
 	if (pImage == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BarrierImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImage));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BarrierImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImage));
 		return;
 	}
 #endif //_DEBUG
@@ -442,7 +442,7 @@ void V3DCommandBuffer::BarrierImageView(IV3DImageView* pImageView, const V3DBarr
 
 	if (pImageView == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BarrierImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImageView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BarrierImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImageView));
 		return;
 	}
 #endif //_DEBUG
@@ -481,7 +481,7 @@ void V3DCommandBuffer::BarrierImageViews(uint32_t imageVewCount, IV3DImageView**
 
 	if ((imageVewCount == 0) || (ppImageViews == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BarrierImageViews << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument <<  V3D_LOG_S_NUM_GREATER(imageVewCount, 0) << V3D_LOG_S_PTR(ppImageViews));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BarrierImageViews << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument <<  V3D_LOG_S_NUM_GREATER(imageVewCount, 0) << V3D_LOG_S_PTR(ppImageViews));
 		return;
 	}
 #endif //_DEBUG
@@ -531,7 +531,7 @@ void V3DCommandBuffer::FillBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, ui
 
 	if (pDstBuffer == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_FillBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_FillBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer));
 		return;
 	}
 #endif //_DEBUG
@@ -549,7 +549,7 @@ void V3DCommandBuffer::UpdateBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, 
 
 	if ((pDstBuffer == nullptr) || (dataSize == 0) || (pData == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_UpdateBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_NUM_GREATER(dataSize, 0) << V3D_LOG_S_PTR(pData));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_UpdateBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_NUM_GREATER(dataSize, 0) << V3D_LOG_S_PTR(pData));
 		return;
 	}
 #endif //_DEBUG
@@ -576,7 +576,7 @@ void V3DCommandBuffer::CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV
 
 	if ((pDstBuffer == nullptr) || (pSrcBuffer == nullptr) || (size == 0))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcBuffer) << V3D_LOG_S_NUM_GREATER(size, 0));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcBuffer) << V3D_LOG_S_NUM_GREATER(size, 0));
 		return;
 	}
 #endif //_DEBUG
@@ -599,7 +599,7 @@ void V3DCommandBuffer::CopyBuffer(IV3DBuffer* pDstBuffer, IV3DBuffer* pSrcBuffer
 
 	if ((pDstBuffer == nullptr) || (pSrcBuffer == nullptr) || (rangeCount == 0) || (pRanges == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcBuffer) << V3D_LOG_S_NUM(rangeCount) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcBuffer) << V3D_LOG_S_NUM(rangeCount) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -637,7 +637,7 @@ void V3DCommandBuffer::CopyImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImage
 
 	if ((pDstImage == nullptr) || (pDstImage == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage));
 		return;
 	}
 #endif //_DEBUG
@@ -695,7 +695,7 @@ void V3DCommandBuffer::CopyImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImage
 
 	if ((pDstImage == nullptr) || (pDstImage == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -752,7 +752,7 @@ void V3DCommandBuffer::CopyBufferToImage(
 
 	if ((pDstImage == nullptr) || (pSrcBuffer == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyBufferToImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcBuffer));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyBufferToImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcBuffer));
 		return;
 	}
 #endif //_DEBUG
@@ -793,7 +793,7 @@ void V3DCommandBuffer::CopyBufferToImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT 
 
 	if ((pDstImage == nullptr) || (pSrcBuffer == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyBufferToImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcBuffer) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyBufferToImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcBuffer) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -845,7 +845,7 @@ void V3DCommandBuffer::CopyImageToBuffer(IV3DBuffer* pDstBuffer, uint32_t dstBuf
 
 	if ((pDstBuffer == nullptr) || (pSrcImage == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyImageToBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcImage));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyImageToBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcImage));
 		return;
 	}
 #endif //_DEBUG
@@ -885,7 +885,7 @@ void V3DCommandBuffer::CopyImageToBuffer(IV3DBuffer* pDstBuffer, IV3DImage* pSrc
 
 	if ((pDstBuffer == nullptr) || (pSrcImage == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_CopyImageToBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyImageToBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstBuffer) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -933,7 +933,7 @@ void V3DCommandBuffer::BlitImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstImage
 
 	if ((pDstImage == nullptr) || (pDstImage == nullptr) || (rangeCount == 0) || (pRanges == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BlitImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BlitImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -993,7 +993,7 @@ void V3DCommandBuffer::BlitImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAY
 
 	if ((pDstImageView == nullptr) || (pSrcImageView == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BlitImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BlitImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
 		return;
 	}
 #endif //_DEBUG
@@ -1082,7 +1082,7 @@ void V3DCommandBuffer::BlitImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAY
 
 	if ((pDstImageView == nullptr) || (pSrcImageView == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BlitImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BlitImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
 		return;
 	}
 #endif //_DEBUG
@@ -1163,7 +1163,7 @@ void V3DCommandBuffer::ResolveImage(IV3DImage* pDstImage, V3D_IMAGE_LAYOUT dstIm
 
 	if ((pDstImage == nullptr) || (pSrcImage == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResolveImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ResolveImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImage) << V3D_LOG_S_PTR(pSrcImage) << V3D_LOG_S_NUM_GREATER(rangeCount, 0) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -1218,7 +1218,7 @@ void V3DCommandBuffer::ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_
 
 	if ((pDstImageView == pSrcImageView) || (pDstImageView == nullptr) || (pSrcImageView == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResolveImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ResolveImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
 		return;
 	}
 #endif //_DEBUG
@@ -1301,7 +1301,7 @@ void V3DCommandBuffer::ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_
 
 	if ((pDstImageView == pSrcImageView) || (pDstImageView == nullptr) || (pSrcImageView == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResolveImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ResolveImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pDstImageView) << V3D_LOG_S_PTR(pSrcImageView));
 		return;
 	}
 #endif //_DEBUG
@@ -1372,7 +1372,7 @@ void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuf
 
 	if ((pRenderPass == nullptr) || (pFrameBuffer == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BeginRenderPass << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pRenderPass) << V3D_LOG_S_PTR(pFrameBuffer));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BeginRenderPass << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pRenderPass) << V3D_LOG_S_PTR(pFrameBuffer));
 		return;
 	}
 #endif //_DEBUG
@@ -1443,7 +1443,7 @@ void V3DCommandBuffer::ClearImage(IV3DImage* pImage, V3D_IMAGE_LAYOUT imageLayou
 
 	if (pImage == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ClearImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImage));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ClearImage << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImage));
 		return;
 	}
 #endif //_DEBUG
@@ -1488,7 +1488,7 @@ void V3DCommandBuffer::ClearImageView(IV3DImageView* pImageView, V3D_IMAGE_LAYOU
 
 	if (pImageView == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ClearImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImageView));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ClearImageView << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pImageView));
 		return;
 	}
 #endif //_DEBUG
@@ -1529,7 +1529,7 @@ void V3DCommandBuffer::ClearAttachments(uint32_t colorAttachmentCount, const V3D
 #ifdef _DEBUG
 	if ((attachmentCount == 0) || (rangeCount == 0 ) || (pRanges == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ClearAttachments << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM(rangeCount) << V3D_LOG_S_PTR(pRanges));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ClearAttachments << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM(rangeCount) << V3D_LOG_S_PTR(pRanges));
 		return;
 	}
 #endif //_DEBUG
@@ -1601,7 +1601,7 @@ void V3DCommandBuffer::BindPipeline(IV3DPipeline* pPipeline)
 
 	if (pPipeline == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BindPipeline << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BindPipeline << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline));
 		return;
 	}
 #endif //_DEBUG
@@ -1622,7 +1622,7 @@ void V3DCommandBuffer::BindDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 
 	if ((pPipelineLayout == nullptr) || (descriptorSetCount == 0) || (ppDescriptorSets == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BindDescriptorSets << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM_GREATER(descriptorSetCount, 0) << V3D_LOG_S_PTR(ppDescriptorSets));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BindDescriptorSets << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM_GREATER(descriptorSetCount, 0) << V3D_LOG_S_PTR(ppDescriptorSets));
 		return;
 	}
 
@@ -1632,7 +1632,7 @@ void V3DCommandBuffer::BindDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 	{
 		if (ppDescriptorSets[i]->GetType() != V3D_DESCRIPTOR_SET_TYPE_STANDARD)
 		{
-			V3D_LOG_ERROR(Log_Error_NotStandardDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_NotStandardDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
 			debugErrorCount++;
 		}
 	}
@@ -1672,7 +1672,7 @@ void V3DCommandBuffer::BindVertexBuffers(uint32_t firstBinding, uint32_t binding
 
 	if ((bindingCount == 0) || (ppBuffers == nullptr) || (pOffsets == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BindVertexBuffers << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument <<  V3D_LOG_S_NUM_GREATER(bindingCount, 0) << V3D_LOG_S_PTR(ppBuffers) << V3D_LOG_S_PTR(pOffsets));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BindVertexBuffers << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument <<  V3D_LOG_S_NUM_GREATER(bindingCount, 0) << V3D_LOG_S_PTR(ppBuffers) << V3D_LOG_S_PTR(pOffsets));
 		return;
 	}
 #endif //_DEBUG
@@ -1701,7 +1701,7 @@ void V3DCommandBuffer::BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D
 
 	if (pBuffer == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BindIndexBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pBuffer));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BindIndexBuffer << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pBuffer));
 		return;
 	}
 #endif //_DEBUG
@@ -1719,13 +1719,13 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 
 	if ((pPipelineLayout == nullptr) || (pData == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_PTR(pData));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_PTR(pData));
 		return;
 	}
 
 	if (pPipelineLayout->GetConstantCount() <= slot)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(slot, pPipelineLayout->GetConstantCount()));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(slot, pPipelineLayout->GetConstantCount()));
 	}
 #endif //_DEBUG
 
@@ -1744,7 +1744,7 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 
 	if ((pPipelineLayout == nullptr) || (size == 0) || (pData == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM(size) << V3D_LOG_S_PTR(pData));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM(size) << V3D_LOG_S_PTR(pData));
 		return;
 	}
 #endif //_DEBUG
@@ -1754,7 +1754,7 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 #ifdef _DEBUG
 	if ((pPipelineLayout->GetConstantCount() <= slot) || (constantDesc.size < (offset + size)))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(slot, pPipelineLayout->GetConstantCount()) << V3D_LOG_S_NUM_LESS_EQUAL((offset + size), constantDesc.size));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(slot, pPipelineLayout->GetConstantCount()) << V3D_LOG_S_NUM_LESS_EQUAL((offset + size), constantDesc.size));
 		return;
 	}
 #endif //_DEBUG
@@ -1766,7 +1766,7 @@ void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 {
 	if (m_pPushDescriptorSetFunction == nullptr)
 	{
-		V3D_LOG_ERROR(Log_Error_UnavailablePushDescriptorSets, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_UnavailablePushDescriptorSets, m_DebugName.c_str());
 		return;
 	}
 
@@ -1778,7 +1778,7 @@ void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 
 	if ((pPipelineLayout == nullptr) || (descriptorSetCount == 0) || (ppDescriptorSets == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushDescriptorSets << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_PTR(ppDescriptorSets));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushDescriptorSets << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_PTR(ppDescriptorSets));
 		return;
 	}
 
@@ -1788,7 +1788,7 @@ void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 	{
 		if (ppDescriptorSets[i]->GetType() != V3D_DESCRIPTOR_SET_TYPE_PUSH)
 		{
-			V3D_LOG_ERROR(Log_Error_NotPushDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_NotPushDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
 			debugErrorCount++;
 		}
 	}
@@ -1869,7 +1869,7 @@ void V3DCommandBuffer::SetViewport(uint32_t firstViewport, uint32_t viewportCoun
 
 	if ((viewportCount == 0) || (pViewports == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_SetViewport << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(viewportCount, 0) << V3D_LOG_S_PTR(pViewports));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_SetViewport << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(viewportCount, 0) << V3D_LOG_S_PTR(pViewports));
 		return;
 	}
 #endif //_DEBUG
@@ -1906,7 +1906,7 @@ void V3DCommandBuffer::SetScissor(uint32_t firstScissor, uint32_t scissorCount, 
 
 	if ((scissorCount == 0) || (pScissors == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_SetScissor << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(scissorCount, 0) << V3D_LOG_S_PTR(pScissors));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_SetScissor << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(scissorCount, 0) << V3D_LOG_S_PTR(pScissors));
 		return;
 	}
 #endif //__DEBUG
@@ -1965,14 +1965,14 @@ void V3DCommandBuffer::ResetQueryPool(IV3DQueryPool* pQueryPool, uint32_t firstQ
 
 	if (pQueryPool == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResetQueryPool << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ResetQueryPool << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
 		return;
 	}
 
 	const V3DQueryPoolDesc& desc = pQueryPool->GetDesc();
 	if ((desc.queryCount <= firstQuery) || (desc.queryCount < (firstQuery + queryCount)))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ResetQueryPool << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(firstQuery, desc.queryCount) << V3D_LOG_S_NUM_LESS_EQUAL((firstQuery + queryCount), desc.queryCount));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ResetQueryPool << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(firstQuery, desc.queryCount) << V3D_LOG_S_NUM_LESS_EQUAL((firstQuery + queryCount), desc.queryCount));
 		return;
 	}
 #endif //_DEBUG
@@ -1990,13 +1990,13 @@ void V3DCommandBuffer::BeginQuery(IV3DQueryPool* pQueryPool, uint32_t query)
 
 	if (pQueryPool == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BeginQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BeginQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
 		return;
 	}
 
 	if (pQueryPool->GetDesc().queryCount <= query)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BeginQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(query, pQueryPool->GetDesc().queryCount));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BeginQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(query, pQueryPool->GetDesc().queryCount));
 		return;
 	}
 #endif //_DEBUG
@@ -2016,13 +2016,13 @@ void V3DCommandBuffer::EndQuery(IV3DQueryPool* pQueryPool, uint32_t query)
 
 	if (pQueryPool == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_EndQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_EndQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
 		return;
 	}
 
 	if (pQueryPool->GetDesc().queryCount <= query)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_EndQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(query, pQueryPool->GetDesc().queryCount));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_EndQuery << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(query, pQueryPool->GetDesc().queryCount));
 		return;
 	}
 #endif //_DEBUG
@@ -2040,7 +2040,7 @@ void V3DCommandBuffer::WriteTimestamp(IV3DQueryPool* pQueryPool, V3D_PIPELINE_ST
 
 	if (pQueryPool == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_WriteTimestamp << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_WriteTimestamp << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool));
 		return;
 	}
 
@@ -2048,7 +2048,7 @@ void V3DCommandBuffer::WriteTimestamp(IV3DQueryPool* pQueryPool, V3D_PIPELINE_ST
 
 	if (desc.queryCount <= query)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_WriteTimestamp << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(query, desc.queryCount));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_WriteTimestamp << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(query, desc.queryCount));
 		return;
 	}
 #endif //_DEBUG
@@ -2066,7 +2066,7 @@ void V3DCommandBuffer::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32
 
 	if ((vertexCount == 0) || (instanceCount == 0))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_Draw << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(vertexCount, 0) << V3D_LOG_S_NUM_GREATER(instanceCount, 0));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_Draw << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(vertexCount, 0) << V3D_LOG_S_NUM_GREATER(instanceCount, 0));
 		return;
 	}
 #endif //_DEBUG
@@ -2084,7 +2084,7 @@ void V3DCommandBuffer::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, 
 
 	if ((indexCount == 0) || (instanceCount == 0))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_DrawIndexed << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(indexCount, 0) << V3D_LOG_S_NUM_GREATER(instanceCount, 0));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_DrawIndexed << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(indexCount, 0) << V3D_LOG_S_NUM_GREATER(instanceCount, 0));
 		return;
 	}
 #endif //_DEBUG
@@ -2102,7 +2102,7 @@ void V3DCommandBuffer::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint
 
 	if ((groupCountX == 0) || (groupCountY == 0) || (groupCountZ == 0))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_Dispatch << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(groupCountX, 0) << V3D_LOG_S_NUM_GREATER(groupCountY, 0) << V3D_LOG_S_NUM_GREATER(groupCountZ, 0));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_Dispatch << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(groupCountX, 0) << V3D_LOG_S_NUM_GREATER(groupCountY, 0) << V3D_LOG_S_NUM_GREATER(groupCountZ, 0));
 		return;
 	}
 #endif //_DEBUG
@@ -2120,7 +2120,7 @@ void V3DCommandBuffer::ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCo
 
 	if ((commandBufferCount == 0) || (ppCommandBuffers == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_ExecuteCommandBuffers << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_ExecuteCommandBuffers << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
 		return;
 	}
 
@@ -2130,7 +2130,7 @@ void V3DCommandBuffer::ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCo
 	{
 		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_SECONDARY)
 		{
-			V3D_LOG_ERROR(Log_Error_NotSecondaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_NotSecondaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			degbuErrorCount++;
 		}
 
@@ -2138,14 +2138,14 @@ void V3DCommandBuffer::ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCo
 
 		if (pInternalCommandBuffer->m_Debug.isBegin == true)
 		{
-			V3D_LOG_ERROR(Log_Error_SecondaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_SecondaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			degbuErrorCount++;
 		}
 
 		if ((m_Source.commandBufferBeginInfo.flags & VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT) &&
 			((pInternalCommandBuffer->GetSource().commandBufferBeginInfo.flags & VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT) == 0))
 		{
-			V3D_LOG_ERROR(Log_Error_CommandBuffersSimultaneousUse, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			V3D_LOG_PRINT_ERROR(Log_Error_CommandBuffersSimultaneousUse, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
 			degbuErrorCount++;
 		}
 	}
@@ -2174,7 +2174,7 @@ void V3DCommandBuffer::BeginDebugMarker(const char* pName, const float color[4])
 {
 	if (m_pDebugMarkerBeginFunction == nullptr)
 	{
-		V3D_LOG_ERROR(Log_Error_UnavailableBeginDebugMarker, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_UnavailableBeginDebugMarker, m_DebugName.c_str());
 		return;
 	}
 
@@ -2186,7 +2186,7 @@ void V3DCommandBuffer::BeginDebugMarker(const char* pName, const float color[4])
 
 	if (pName == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BeginDebugMarker << V3D_LOG_S_PTR(pName));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BeginDebugMarker << V3D_LOG_S_PTR(pName));
 		return;
 	}
 #endif //_DEBUG
@@ -2207,7 +2207,7 @@ void V3DCommandBuffer::EndDebugMarker()
 {
 	if (m_pDebugMarkerEndFunction == nullptr)
 	{
-		V3D_LOG_ERROR(Log_Error_UnavailableEndDebugMarker, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_UnavailableEndDebugMarker, m_DebugName.c_str());
 		return;
 	}
 
@@ -2225,7 +2225,7 @@ void V3DCommandBuffer::InsertDebugMarker(const char* pName, const float color[4]
 {
 	if (m_pDebugMarkerInsertFunction == nullptr)
 	{
-		V3D_LOG_ERROR(Log_Error_UnavailableInsertDebugMarker, m_DebugName.c_str());
+		V3D_LOG_PRINT_ERROR(Log_Error_UnavailableInsertDebugMarker, m_DebugName.c_str());
 		return;
 	}
 
@@ -2237,7 +2237,7 @@ void V3DCommandBuffer::InsertDebugMarker(const char* pName, const float color[4]
 
 	if (pName == nullptr)
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_InsertDebugMarker << V3D_LOG_S_PTR(pName));
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_InsertDebugMarker << V3D_LOG_S_PTR(pName));
 		return;
 	}
 #endif //_DEBUG
