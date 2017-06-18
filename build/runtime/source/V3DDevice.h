@@ -59,7 +59,7 @@ public:
 	virtual V3D_RESULT CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateRenderPass(uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, IV3DRenderPass** ppRenderPass, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass,	uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer, const wchar_t* pDebugName) override;
-	virtual V3D_RESULT CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout, const wchar_t* pDebugName) override;
+	virtual V3D_RESULT CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* pDescriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreatePipelineLayout(uint32_t constantCount, V3DConstantDesc* pConstants, uint32_t descriptorSetLayoutCount, IV3DDescriptorSetLayout** ppDescriptorSetLayouts, IV3DPipelineLayout** ppPipelineLayout, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateGraphicsPipeline(IV3DPipelineLayout* pPipelineLayout, const V3DGraphicsPipelineDesc& pipelineDesc, IV3DPipeline** ppPipeline, const wchar_t* pDebugName) override;

@@ -132,7 +132,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	STLVector<const char*> enableLayers;
 	switch (m_Layer)
 	{
-	case V3D_LAYER_STANDARD:
+	case V3D_LAYER_VALIDATION:
 		if (std::find_if(layerProps.begin(), layerProps.end(), V3DFindLayer(V3D_LAYER_LUNARG_standard_validation)) != layerProps.end())
 		{
 			enableLayers.push_back(V3D_LAYER_LUNARG_standard_validation);
@@ -160,6 +160,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 
 	const char* EXTENSION_surface = VK_KHR_SURFACE_EXTENSION_NAME;
 	const char* EXTENSION_win32_surface = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+	const char* EXTENSION_get_physical_device_properties2 = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME;
 #ifdef _DEBUG
 	const char* EXTENSION_debug_report = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 #endif //_DEBUG
@@ -196,6 +197,15 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(EXTENSION_win32_surface)) != extensionProps.end())
 	{
 		enabledExtensions.push_back(EXTENSION_win32_surface);
+	}
+	else
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(EXTENSION_get_physical_device_properties2)) != extensionProps.end())
+	{
+		enabledExtensions.push_back(EXTENSION_get_physical_device_properties2);
 	}
 	else
 	{

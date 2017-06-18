@@ -16,8 +16,10 @@
 #include "V3DSampler.h"
 #include "V3DRenderPass.h"
 #include "V3DFrameBuffer.h"
-#include "V3DDescriptorSetLayout.h"
-#include "V3DDescriptorSet.h"
+#include "V3DStandardDescriptorSetLayout.h"
+#include "V3DPushDescriptorSetLayout.h"
+#include "V3DStandardDescriptorSet.h"
+#include "V3DPushDescriptorSet.h"
 #include "V3DPipelineLayout.h"
 #include "V3DGraphicsPipeline.h"
 #include "V3DComputePipeline.h"
@@ -64,7 +66,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	STLVector<const char*> vkEnableLayers;
 	switch (m_pInstance->GetLayerType())
 	{
-	case V3D_LAYER_STANDARD:
+	case V3D_LAYER_VALIDATION:
 		if (std::find_if(vkLayerProps.begin(), vkLayerProps.end(), V3DFindLayer(V3D_LAYER_LUNARG_standard_validation)) != vkLayerProps.end())
 		{
 			vkEnableLayers.push_back(V3D_LAYER_LUNARG_standard_validation);
@@ -82,35 +84,47 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	// エクステンションの列挙
 	// ----------------------------------------------------------------------------------------------------
 
-	uint32_t vkExtensionCount;
-	VkResult vkResult = vkEnumerateDeviceExtensionProperties(adapterSource.physicalDevice, nullptr, &vkExtensionCount, nullptr);
-	if (vkResult != VK_SUCCESS)
+	uint32_t vExtensionCount;
+	VkResult vResult = vkEnumerateDeviceExtensionProperties(adapterSource.physicalDevice, nullptr, &vExtensionCount, nullptr);
+	if (vResult != VK_SUCCESS)
 	{
 		return V3D_ERROR_FAIL;
 	}
 
-	STLVector<VkExtensionProperties> vkExtensionProps;
-	vkExtensionProps.resize(vkExtensionCount);
-	vkResult = vkEnumerateDeviceExtensionProperties(adapterSource.physicalDevice, nullptr, &vkExtensionCount, vkExtensionProps.data());
-	if (vkResult != VK_SUCCESS)
+	STLVector<VkExtensionProperties> vExtensionProps;
+	vExtensionProps.resize(vExtensionCount);
+	vResult = vkEnumerateDeviceExtensionProperties(adapterSource.physicalDevice, nullptr, &vExtensionCount, vExtensionProps.data());
+	if (vResult != VK_SUCCESS)
 	{
 		return V3D_ERROR_FAIL;
 	}
 
-	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) == vkExtensionProps.end())
+	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) == vExtensionProps.end())
 	{
 		return V3D_ERROR_FAIL;
 	}
 
-	STLVector<const char*> vkEnableExtensions;
-	vkEnableExtensions.reserve(vkExtensionCount);
-	for (uint32_t i = 0; i < vkExtensionCount; i++)
+	const char* VK_KHX_NAME = "VK_KHX";
+	const char* VK_NVX_NAME = "VK_NVX";
+
+	STLVector<const char*> vEnableExtensions;
+	vEnableExtensions.reserve(vExtensionCount);
+
+	for (uint32_t i = 0; i < vExtensionCount; i++)
 	{
-		vkEnableExtensions.push_back(vkExtensionProps[i].extensionName);
+		const char* pExtensionName = vExtensionProps[i].extensionName;
+
+		// 実験的なものは除外する
+		if ((strncmp(pExtensionName, VK_KHX_NAME, strlen(VK_KHX_NAME)) != 0) &&
+			(strncmp(pExtensionName, VK_NVX_NAME, strlen(VK_NVX_NAME)) != 0))
+		{
+			vEnableExtensions.push_back(pExtensionName);
+		}
 	}
 
 	V3DFlags extensionFlags = 0;
-	if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) != vkExtensionProps.end())
+
+	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) != vExtensionProps.end())
 	{
 		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS;
 	}
@@ -118,66 +132,88 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	V3D_LAYER layer = m_pInstance->GetLayer();
 	if ((layer == V3D_LAYER_NSIGHT) || (layer == V3D_LAYER_RENDERDOC))
 	{
-		if (std::find_if(vkExtensionProps.begin(), vkExtensionProps.end(), V3DFindExtension(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) != vkExtensionProps.end())
+		if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) != vExtensionProps.end())
 		{
 			extensionFlags |= V3D_DEVICE_EXTENSION_DEBUG_MARKER;
 		}
 	}
 
 	// ----------------------------------------------------------------------------------------------------
-	// デバイスの特性を取得
+	// デバイス情報を取得
 	// ----------------------------------------------------------------------------------------------------
 
-	vkGetPhysicalDeviceProperties(m_pAdapter->GetSource().physicalDevice, &m_Source.deviceProps);
-	vkGetPhysicalDeviceFeatures(m_pAdapter->GetSource().physicalDevice, &m_Source.deviceFeatures);
+	VkPhysicalDevicePushDescriptorPropertiesKHR devicePushDescProp{};
+
+	// 特性を取得
+	PFN_vkGetPhysicalDeviceProperties2KHR pGetPhysicalDeviceProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(vkGetInstanceProcAddr(m_pInstance->GetSource().instance, "vkGetPhysicalDeviceProperties2KHR"));
+	if (pGetPhysicalDeviceProperties2KHR != nullptr)
+	{
+		VkPhysicalDeviceProperties2KHR devicePropsExt{};
+
+		devicePushDescProp.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR;
+		devicePushDescProp.pNext = nullptr;
+
+		devicePropsExt.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
+		devicePropsExt.pNext = &devicePushDescProp;
+		pGetPhysicalDeviceProperties2KHR(adapterSource.physicalDevice, &devicePropsExt);
+
+		m_Source.deviceProps = devicePropsExt.properties;
+	}
+	else
+	{
+		vkGetPhysicalDeviceProperties(adapterSource.physicalDevice, &m_Source.deviceProps);
+	}
+
+	// 機能を取得
+	vkGetPhysicalDeviceFeatures(adapterSource.physicalDevice, &m_Source.deviceFeatures);
 
 	// ----------------------------------------------------------------------------------------------------
 	// キューファミリーの取得
 	// キューの作成情報リストを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	uint32_t vkQueueFamilyPropCount;
-	vkGetPhysicalDeviceQueueFamilyProperties(adapterSource.physicalDevice, &vkQueueFamilyPropCount, nullptr);
+	uint32_t vQueueFamilyPropCount;
+	vkGetPhysicalDeviceQueueFamilyProperties(adapterSource.physicalDevice, &vQueueFamilyPropCount, nullptr);
 
-	STLVector<VkQueueFamilyProperties> vkQueueFamilyProps;
-	vkQueueFamilyProps.resize(vkQueueFamilyPropCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(adapterSource.physicalDevice, &vkQueueFamilyPropCount, vkQueueFamilyProps.data());
+	STLVector<VkQueueFamilyProperties> vQueueFamilyProps;
+	vQueueFamilyProps.resize(vQueueFamilyPropCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(adapterSource.physicalDevice, &vQueueFamilyPropCount, vQueueFamilyProps.data());
 
 	uint32_t totalQueueCount = 0;
-	for (uint32_t i = 0; i < vkQueueFamilyPropCount; i++)
+	for (uint32_t i = 0; i < vQueueFamilyPropCount; i++)
 	{
-		const VkQueueFamilyProperties& vkProps = vkQueueFamilyProps[i];
-		totalQueueCount += vkProps.queueCount;
+		const VkQueueFamilyProperties& vProps = vQueueFamilyProps[i];
+		totalQueueCount += vProps.queueCount;
 	}
 
 	STLVector<float> vkQueuePriorities;
 	vkQueuePriorities.resize(totalQueueCount, 0.0f);
 
-	STLVector<VkDeviceQueueCreateInfo> vkQueueCreateInfos;
-	vkQueueCreateInfos.reserve(vkQueueFamilyPropCount);
+	STLVector<VkDeviceQueueCreateInfo> vQueueCreateInfos;
+	vQueueCreateInfos.reserve(vQueueFamilyPropCount);
 
 	uint32_t firstQueuePriority = 0;
 
-	m_QueueFamilies.reserve(vkQueueFamilyPropCount);
-	for (uint32_t i = 0; i < vkQueueFamilyPropCount; i++)
+	m_QueueFamilies.reserve(vQueueFamilyPropCount);
+	for (uint32_t i = 0; i < vQueueFamilyPropCount; i++)
 	{
-		const VkQueueFamilyProperties& vkProps = vkQueueFamilyProps[i];
+		const VkQueueFamilyProperties& vProps = vQueueFamilyProps[i];
 
-		V3DDevice::QueueFamily queueFamily{};
-		queueFamily.desc.queueFlags = ToV3DQueueFlags(vkProps.queueFlags);
-		queueFamily.desc.queueCount = vkProps.queueCount;
+		V3DDevice::QueueFamily queueFamily;
+		queueFamily.desc.queueFlags = ToV3DQueueFlags(vProps.queueFlags);
+		queueFamily.desc.queueCount = vProps.queueCount;
 		m_QueueFamilies.push_back(queueFamily);
 
-		VkDeviceQueueCreateInfo vkQueueCreateInfo{};
-		vkQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		vkQueueCreateInfo.pNext = nullptr;
-		vkQueueCreateInfo.flags = 0;
-		vkQueueCreateInfo.queueCount = vkProps.queueCount;
-		vkQueueCreateInfo.queueFamilyIndex = i;
-		vkQueueCreateInfo.pQueuePriorities = &vkQueuePriorities[firstQueuePriority];
-		vkQueueCreateInfos.push_back(vkQueueCreateInfo);
+		VkDeviceQueueCreateInfo vQueueCreateInfo;
+		vQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		vQueueCreateInfo.pNext = nullptr;
+		vQueueCreateInfo.flags = 0;
+		vQueueCreateInfo.queueCount = vProps.queueCount;
+		vQueueCreateInfo.queueFamilyIndex = i;
+		vQueueCreateInfo.pQueuePriorities = &vkQueuePriorities[firstQueuePriority];
+		vQueueCreateInfos.push_back(vQueueCreateInfo);
 
-		firstQueuePriority += vkProps.queueCount;
+		firstQueuePriority += vProps.queueCount;
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -188,16 +224,16 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	devInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	devInfo.pNext = nullptr;
 	devInfo.flags = 0;
-	devInfo.queueCreateInfoCount = static_cast<uint32_t>(vkQueueCreateInfos.size());
-	devInfo.pQueueCreateInfos = vkQueueCreateInfos.data();
+	devInfo.queueCreateInfoCount = static_cast<uint32_t>(vQueueCreateInfos.size());
+	devInfo.pQueueCreateInfos = vQueueCreateInfos.data();
 	devInfo.enabledLayerCount = 0;// static_cast<uint32_t>(vkEnableLayers.size());
 	devInfo.ppEnabledLayerNames = nullptr;// vkEnableLayers.data();
-	devInfo.enabledExtensionCount = static_cast<uint32_t>(vkEnableExtensions.size());
-	devInfo.ppEnabledExtensionNames = vkEnableExtensions.data();
+	devInfo.enabledExtensionCount = static_cast<uint32_t>(vEnableExtensions.size());
+	devInfo.ppEnabledExtensionNames = vEnableExtensions.data();
 	devInfo.pEnabledFeatures = &m_Source.deviceFeatures;
 
-	vkResult = vkCreateDevice(adapterSource.physicalDevice, &devInfo, nullptr, &m_Source.device);
-	if (vkResult != VK_SUCCESS)
+	vResult = vkCreateDevice(adapterSource.physicalDevice, &devInfo, nullptr, &m_Source.device);
+	if (vResult != VK_SUCCESS)
 	{
 		return V3D_ERROR_FAIL;
 	}
@@ -217,15 +253,15 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	// キューを取得
 	// ----------------------------------------------------------------------------------------------------
 
-	for (uint32_t i = 0; i < vkQueueFamilyPropCount; i++)
+	for (uint32_t i = 0; i < vQueueFamilyPropCount; i++)
 	{
 		V3DDevice::QueueFamily& queueFamily = m_QueueFamilies[i];
 		queueFamily.queues.reserve(queueFamily.desc.queueCount);
 
 		for (uint32_t j = 0; j < queueFamily.desc.queueCount; j++)
 		{
-			VkQueue srcQueue;
-			vkGetDeviceQueue(m_Source.device, i, j, &srcQueue);
+			VkQueue vSrcQueue;
+			vkGetDeviceQueue(m_Source.device, i, j, &vSrcQueue);
 
 			V3DQueue* pQueue = V3DQueue::Create();
 			if (pQueue == nullptr)
@@ -239,9 +275,9 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 
 			STLStringW debugString = debugStringStream.str();
 
-			V3D_RESULT result = pQueue->Initialize(this, i, srcQueue, debugString.c_str());
+			V3D_RESULT result = pQueue->Initialize(this, i, vSrcQueue, debugString.c_str());
 #else //_DEBUG
-			V3D_RESULT result = pQueue->Initialize(this, i, srcQueue, nullptr);
+			V3D_RESULT result = pQueue->Initialize(this, i, vSrcQueue, nullptr);
 #endif //_DEBUG
 
 			if (result != V3D_OK)
@@ -258,170 +294,171 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	// デバイスの能力
 	// ----------------------------------------------------------------------------------------------------
 
-	const VkPhysicalDeviceFeatures vkPDFeatures = m_Source.deviceFeatures;
+	const VkPhysicalDeviceFeatures vPDFeatures = m_Source.deviceFeatures;
 
-	if (vkPDFeatures.fullDrawIndexUint32 == VK_TRUE) { m_Caps.flags |= V3D_CAP_FULL_DRAW_INDEX_UINT32; }
-	if (vkPDFeatures.samplerAnisotropy == VK_TRUE) { m_Caps.flags |= V3D_CAP_SAMPLER_ANISOTROPY; }
+	if (vPDFeatures.fullDrawIndexUint32 == VK_TRUE) { m_Caps.flags |= V3D_CAP_FULL_DRAW_INDEX_UINT32; }
+	if (vPDFeatures.samplerAnisotropy == VK_TRUE) { m_Caps.flags |= V3D_CAP_SAMPLER_ANISOTROPY; }
 
-	if (vkPDFeatures.occlusionQueryPrecise == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_OCCLUSION_QUERY_PRECISE; }
-	if (vkPDFeatures.pipelineStatisticsQuery == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_PIPELINE_STATISTICS_QUERY; }
-	if (vkPDFeatures.inheritedQueries == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_INHERITED_QUERIES; }
+	if (vPDFeatures.occlusionQueryPrecise == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_OCCLUSION_QUERY_PRECISE; }
+	if (vPDFeatures.pipelineStatisticsQuery == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_PIPELINE_STATISTICS_QUERY; }
+	if (vPDFeatures.inheritedQueries == VK_TRUE) { m_Caps.queryFlags |= V3D_QUERY_CAP_INHERITED_QUERIES; }
 
-	if (vkPDFeatures.imageCubeArray == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_CUBE_ARRAY; }
-	if (vkPDFeatures.textureCompressionETC2 == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_COMPRESSION_ETC2; }
-	if (vkPDFeatures.textureCompressionASTC_LDR == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_COMPRESSION_ASTC_LDR; }
-	if (vkPDFeatures.textureCompressionBC == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_COMPRESSION_BC; }
+	if (vPDFeatures.imageCubeArray == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_CUBE_ARRAY; }
+	if (vPDFeatures.textureCompressionETC2 == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_COMPRESSION_ETC2; }
+	if (vPDFeatures.textureCompressionASTC_LDR == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_COMPRESSION_ASTC_LDR; }
+	if (vPDFeatures.textureCompressionBC == VK_TRUE) { m_Caps.imageFlags |= V3D_IMAGE_CAP_COMPRESSION_BC; }
 
-	if (vkPDFeatures.geometryShader == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_GEOMETRY; }
-	if (vkPDFeatures.tessellationShader == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_TESSELLATION; }
-	if (vkPDFeatures.robustBufferAccess == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_ROBUST_BUFFER_ACCESS; }
-	if (vkPDFeatures.vertexPipelineStoresAndAtomics == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_VERTEX_PIPELINE_STORES_AND_ATOMICS; }
-	if (vkPDFeatures.fragmentStoresAndAtomics == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_FRAGMENT_STORES_AND_ATOMICS; }
-	if (vkPDFeatures.largePoints == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_LARGE_POINTS; }
-	if (vkPDFeatures.shaderTessellationAndGeometryPointSize == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_TESSELLATION_AND_GEOMETRY_POINTSIZE; }
-	if (vkPDFeatures.shaderImageGatherExtended == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_IMAGE_GATHER_EXTENDED; }
-	if (vkPDFeatures.shaderStorageImageExtendedFormats == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_EXTENDED_FORMATS; }
-	if (vkPDFeatures.shaderStorageImageMultisample == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_MULTISAMPLE; }
-	if (vkPDFeatures.shaderStorageImageReadWithoutFormat == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_READ_WITH_OUT_FORMAT; }
-	if (vkPDFeatures.shaderStorageImageWriteWithoutFormat == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_WRITE_WITH_OUT_FORMAT; }
-	if (vkPDFeatures.shaderUniformBufferArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_UNIFORM_BUFFER_ARRAY_DYNAMIC_INDEXING; }
-	if (vkPDFeatures.shaderSampledImageArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_SAMPLED_IMAGE_ARRAY_DYNAMIC_INDEXING; }
-	if (vkPDFeatures.shaderStorageBufferArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_BUFFER_ARRAY_DYNAMIC_INDEXING; }
-	if (vkPDFeatures.shaderStorageImageArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_ARRAY_DYNAMIC_INDEXING; }
-	if (vkPDFeatures.shaderClipDistance == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_CLIP_DISTANCE; }
-	if (vkPDFeatures.shaderCullDistance == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_CULL_DISTANCE; }
-	if (vkPDFeatures.shaderFloat64 == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_FLOAT64; }
-	if (vkPDFeatures.shaderInt64 == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_INT64; }
-	if (vkPDFeatures.shaderInt16 == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_INT16; }
-	if (vkPDFeatures.shaderResourceResidency == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_RESOURCE_RESIDENCY; }
-	if (vkPDFeatures.shaderResourceMinLod == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_RESOURCE_MIN_LOD; }
+	if (vPDFeatures.geometryShader == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_GEOMETRY; }
+	if (vPDFeatures.tessellationShader == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_TESSELLATION; }
+	if (vPDFeatures.robustBufferAccess == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_ROBUST_BUFFER_ACCESS; }
+	if (vPDFeatures.vertexPipelineStoresAndAtomics == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_VERTEX_PIPELINE_STORES_AND_ATOMICS; }
+	if (vPDFeatures.fragmentStoresAndAtomics == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_FRAGMENT_STORES_AND_ATOMICS; }
+	if (vPDFeatures.largePoints == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_LARGE_POINTS; }
+	if (vPDFeatures.shaderTessellationAndGeometryPointSize == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_TESSELLATION_AND_GEOMETRY_POINTSIZE; }
+	if (vPDFeatures.shaderImageGatherExtended == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_IMAGE_GATHER_EXTENDED; }
+	if (vPDFeatures.shaderStorageImageExtendedFormats == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_EXTENDED_FORMATS; }
+	if (vPDFeatures.shaderStorageImageMultisample == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_MULTISAMPLE; }
+	if (vPDFeatures.shaderStorageImageReadWithoutFormat == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_READ_WITH_OUT_FORMAT; }
+	if (vPDFeatures.shaderStorageImageWriteWithoutFormat == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_WRITE_WITH_OUT_FORMAT; }
+	if (vPDFeatures.shaderUniformBufferArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_UNIFORM_BUFFER_ARRAY_DYNAMIC_INDEXING; }
+	if (vPDFeatures.shaderSampledImageArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_SAMPLED_IMAGE_ARRAY_DYNAMIC_INDEXING; }
+	if (vPDFeatures.shaderStorageBufferArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_BUFFER_ARRAY_DYNAMIC_INDEXING; }
+	if (vPDFeatures.shaderStorageImageArrayDynamicIndexing == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_STORAGE_IMAGE_ARRAY_DYNAMIC_INDEXING; }
+	if (vPDFeatures.shaderClipDistance == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_CLIP_DISTANCE; }
+	if (vPDFeatures.shaderCullDistance == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_CULL_DISTANCE; }
+	if (vPDFeatures.shaderFloat64 == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_FLOAT64; }
+	if (vPDFeatures.shaderInt64 == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_INT64; }
+	if (vPDFeatures.shaderInt16 == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_INT16; }
+	if (vPDFeatures.shaderResourceResidency == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_RESOURCE_RESIDENCY; }
+	if (vPDFeatures.shaderResourceMinLod == VK_TRUE) { m_Caps.shaderFlags |= V3D_SHADER_CAP_RESOURCE_MIN_LOD; }
 
-	if (vkPDFeatures.multiViewport == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_MULTI_VIEWPORT; }
-	if (vkPDFeatures.fillModeNonSolid == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_FILL_MODE_NON_SOLID; }
-	if (vkPDFeatures.depthClamp == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_DEPTH_CLAMP; }
-	if (vkPDFeatures.depthBiasClamp == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_DEPTH_BIAS_CLAMP; }
+	if (vPDFeatures.multiViewport == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_MULTI_VIEWPORT; }
+	if (vPDFeatures.fillModeNonSolid == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_FILL_MODE_NON_SOLID; }
+	if (vPDFeatures.depthClamp == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_DEPTH_CLAMP; }
+	if (vPDFeatures.depthBiasClamp == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_RASTERIZER_CAP_DEPTH_BIAS_CLAMP; }
 
-	if (vkPDFeatures.variableMultisampleRate == VK_TRUE) { m_Caps.multisampleFlags |= V3D_MULTISAMPLE_CAP_VARIABLE_RATE; }
-	if (vkPDFeatures.sampleRateShading == VK_TRUE) { m_Caps.multisampleFlags |= V3D_MULTISAMPLE_CAP_SAMPLE_RATE_SHADING; }
-	if (vkPDFeatures.alphaToOne == VK_TRUE) { m_Caps.multisampleFlags |= V3D_MULTISAMPLE_CAP_ALPHA_TO_ONE; }
+	if (vPDFeatures.variableMultisampleRate == VK_TRUE) { m_Caps.multisampleFlags |= V3D_MULTISAMPLE_CAP_VARIABLE_RATE; }
+	if (vPDFeatures.sampleRateShading == VK_TRUE) { m_Caps.multisampleFlags |= V3D_MULTISAMPLE_CAP_SAMPLE_RATE_SHADING; }
+	if (vPDFeatures.alphaToOne == VK_TRUE) { m_Caps.multisampleFlags |= V3D_MULTISAMPLE_CAP_ALPHA_TO_ONE; }
 
-	if (vkPDFeatures.depthBounds == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_DEPTH_STENCIL_CAP_DEPTH_BOUNDS; }
+	if (vPDFeatures.depthBounds == VK_TRUE) { m_Caps.depthStencilFlags |= V3D_DEPTH_STENCIL_CAP_DEPTH_BOUNDS; }
 
-	if (vkPDFeatures.independentBlend == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_INDEPENDENT; }
-	if (vkPDFeatures.dualSrcBlend == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_DUAL_SRC; }
-	if (vkPDFeatures.logicOp == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_LOGIC_OP; }
+	if (vPDFeatures.independentBlend == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_INDEPENDENT; }
+	if (vPDFeatures.dualSrcBlend == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_DUAL_SRC; }
+	if (vPDFeatures.logicOp == VK_TRUE) { m_Caps.colorBlendFlags |= V3D_COLOR_BLEND_CAP_LOGIC_OP; }
 
 	m_Caps.extensionFlags = extensionFlags;
 
-	const VkPhysicalDeviceLimits& vkPDLimits = m_Source.deviceProps.limits;
+	const VkPhysicalDeviceLimits& vPDLimits = m_Source.deviceProps.limits;
 
-	m_Caps.maxImageDimension1D = vkPDLimits.maxImageDimension1D;
-	m_Caps.maxImageDimension2D = vkPDLimits.maxImageDimension2D;
-	m_Caps.maxImageDimension3D = vkPDLimits.maxImageDimension3D;
-	m_Caps.maxImageDimensionCube = vkPDLimits.maxImageDimensionCube;
-	m_Caps.maxImageLayers = vkPDLimits.maxImageArrayLayers;
-	m_Caps.maxTexelBufferElements = vkPDLimits.maxTexelBufferElements;
-	m_Caps.maxUniformBufferSize = vkPDLimits.maxUniformBufferRange;
-	m_Caps.maxStorageBufferSize = vkPDLimits.maxStorageBufferRange;
-	m_Caps.maxPushConstantsSize = vkPDLimits.maxPushConstantsSize;
-	m_Caps.maxResourceMemoryCount = vkPDLimits.maxMemoryAllocationCount;
-	m_Caps.maxSamplerCreateCount = vkPDLimits.maxSamplerAllocationCount;
-	m_Caps.bufferImageGranularity = vkPDLimits.bufferImageGranularity;
-	m_Caps.maxBoundDescriptorSets = vkPDLimits.maxBoundDescriptorSets;
-	m_Caps.maxPerStageDescriptorSamplers = vkPDLimits.maxPerStageDescriptorSamplers;
-	m_Caps.maxPerStageDescriptorUniformBuffers = vkPDLimits.maxPerStageDescriptorUniformBuffers;
-	m_Caps.maxPerStageDescriptorStorageBuffers = vkPDLimits.maxPerStageDescriptorStorageBuffers;
-	m_Caps.maxPerStageDescriptorSampledImages = vkPDLimits.maxPerStageDescriptorSampledImages;
-	m_Caps.maxPerStageDescriptorStorageImages = vkPDLimits.maxPerStageDescriptorStorageImages;
-	m_Caps.maxPerStageDescriptorInputAttachments = vkPDLimits.maxPerStageDescriptorInputAttachments;
-	m_Caps.maxPerStageResources = vkPDLimits.maxPerStageResources;
-	m_Caps.maxDescriptorSetSamplers = vkPDLimits.maxDescriptorSetSamplers;
-	m_Caps.maxDescriptorSetUniformBuffers = vkPDLimits.maxDescriptorSetUniformBuffers;
-	m_Caps.maxDescriptorSetUniformBuffersDynamic = vkPDLimits.maxDescriptorSetUniformBuffersDynamic;
-	m_Caps.maxDescriptorSetStorageBuffers = vkPDLimits.maxDescriptorSetStorageBuffers;
-	m_Caps.maxDescriptorSetStorageBuffersDynamic = vkPDLimits.maxDescriptorSetStorageBuffersDynamic;
-	m_Caps.maxDescriptorSetSampledImages = vkPDLimits.maxDescriptorSetSampledImages;
-	m_Caps.maxDescriptorSetStorageImages = vkPDLimits.maxDescriptorSetStorageImages;
-	m_Caps.maxDescriptorSetInputAttachments = vkPDLimits.maxDescriptorSetInputAttachments;
-	m_Caps.maxVertexInputElements = vkPDLimits.maxVertexInputAttributes;
-	m_Caps.maxVertexInputBindings = vkPDLimits.maxVertexInputBindings;
-	m_Caps.maxVertexInputElementOffset = vkPDLimits.maxVertexInputAttributeOffset;
-	m_Caps.maxVertexInputBindingStride = vkPDLimits.maxVertexInputBindingStride;
-	m_Caps.maxVertexOutputComponents = vkPDLimits.maxVertexOutputComponents;
-	m_Caps.maxTessellationGenerationLevel = vkPDLimits.maxTessellationGenerationLevel;
-	m_Caps.maxTessellationPatchSize = vkPDLimits.maxTessellationPatchSize;
-	m_Caps.maxTessellationControlPerVertexInputComponents = vkPDLimits.maxTessellationControlPerVertexInputComponents;
-	m_Caps.maxTessellationControlPerVertexOutputComponents = vkPDLimits.maxTessellationControlPerVertexOutputComponents;
-	m_Caps.maxTessellationControlPerPatchOutputComponents = vkPDLimits.maxTessellationControlPerPatchOutputComponents;
-	m_Caps.maxTessellationControlTotalOutputComponents = vkPDLimits.maxTessellationControlTotalOutputComponents;
-	m_Caps.maxTessellationEvaluationInputComponents = vkPDLimits.maxTessellationEvaluationInputComponents;
-	m_Caps.maxTessellationEvaluationOutputComponents = vkPDLimits.maxTessellationEvaluationOutputComponents;
-	m_Caps.maxGeometryShaderInvocations = vkPDLimits.maxGeometryShaderInvocations;
-	m_Caps.maxGeometryInputComponents = vkPDLimits.maxGeometryInputComponents;
-	m_Caps.maxGeometryOutputComponents = vkPDLimits.maxGeometryOutputComponents;
-	m_Caps.maxGeometryOutputVertices = vkPDLimits.maxGeometryOutputVertices;
-	m_Caps.maxGeometryTotalOutputComponents = vkPDLimits.maxGeometryTotalOutputComponents;
-	m_Caps.maxFragmentInputComponents = vkPDLimits.maxFragmentInputComponents;
-	m_Caps.maxFragmentOutputAttachments = vkPDLimits.maxFragmentOutputAttachments;
-	m_Caps.maxFragmentDualSrcAttachments = vkPDLimits.maxFragmentDualSrcAttachments;
-	m_Caps.maxFragmentCombinedOutputResources = vkPDLimits.maxFragmentCombinedOutputResources;
-	m_Caps.maxComputeSharedMemorySize = vkPDLimits.maxComputeSharedMemorySize;
-	m_Caps.maxComputeDispatchGroupCount.x = vkPDLimits.maxComputeWorkGroupCount[0];
-	m_Caps.maxComputeDispatchGroupCount.y = vkPDLimits.maxComputeWorkGroupCount[1];
-	m_Caps.maxComputeDispatchGroupCount.z = vkPDLimits.maxComputeWorkGroupCount[2];
-	m_Caps.maxComputeDispatchGroupInvocations = vkPDLimits.maxComputeWorkGroupInvocations;
-	m_Caps.maxComputeDispatchGroupSize.x = vkPDLimits.maxComputeWorkGroupSize[0];
-	m_Caps.maxComputeDispatchGroupSize.y = vkPDLimits.maxComputeWorkGroupSize[1];
-	m_Caps.maxComputeDispatchGroupSize.z = vkPDLimits.maxComputeWorkGroupSize[2];
-	m_Caps.subPixelPrecisionBits = vkPDLimits.subPixelPrecisionBits;
-	m_Caps.subTexelPrecisionBits = vkPDLimits.subTexelPrecisionBits;
-	m_Caps.mipmapPrecisionBits = vkPDLimits.mipmapPrecisionBits;
-	m_Caps.maxDrawIndexedIndexValue = vkPDLimits.maxDrawIndexedIndexValue;
-	m_Caps.maxSamplerLodBias = vkPDLimits.maxSamplerLodBias;
-	m_Caps.maxSamplerAnisotropy = vkPDLimits.maxSamplerAnisotropy;
-	m_Caps.maxViewports = vkPDLimits.maxViewports;
-	m_Caps.maxViewportDimension.width = vkPDLimits.maxViewportDimensions[0];
-	m_Caps.maxViewportDimension.height = vkPDLimits.maxViewportDimensions[1];
-	m_Caps.minViewportBounds = vkPDLimits.viewportBoundsRange[0];
-	m_Caps.maxViewportBounds = vkPDLimits.viewportBoundsRange[1];
-	m_Caps.viewportSubPixelBits = vkPDLimits.viewportSubPixelBits;
-	m_Caps.minMemoryMapAlignment = vkPDLimits.minMemoryMapAlignment;
-	m_Caps.minTexelBufferOffsetAlignment = vkPDLimits.minTexelBufferOffsetAlignment;
-	m_Caps.minUniformBufferOffsetAlignment = vkPDLimits.minUniformBufferOffsetAlignment;
-	m_Caps.minStorageBufferOffsetAlignment = vkPDLimits.minStorageBufferOffsetAlignment;
-	m_Caps.minTexelOffset = vkPDLimits.minTexelOffset;
-	m_Caps.maxTexelOffset = vkPDLimits.maxTexelOffset;
-	m_Caps.minTexelGatherOffset = vkPDLimits.minTexelGatherOffset;
-	m_Caps.maxTexelGatherOffset = vkPDLimits.maxTexelGatherOffset;
-	m_Caps.minInterpolationOffset = vkPDLimits.minInterpolationOffset;
-	m_Caps.maxInterpolationOffset = vkPDLimits.maxInterpolationOffset;
-	m_Caps.subPixelInterpolationOffsetBits = vkPDLimits.subPixelInterpolationOffsetBits;
-	m_Caps.maxFrameBufferWidth = vkPDLimits.maxFramebufferWidth;
-	m_Caps.maxFrameBufferHeight = vkPDLimits.maxFramebufferHeight;
-	m_Caps.maxFrameBufferLayers = vkPDLimits.maxFramebufferLayers;
-	m_Caps.framebufferColorSampleCounts = ToVkSampleCountFlags(vkPDLimits.framebufferColorSampleCounts);
-	m_Caps.framebufferDepthSampleCounts = ToVkSampleCountFlags(vkPDLimits.framebufferDepthSampleCounts);
-	m_Caps.framebufferStencilSampleCounts = ToVkSampleCountFlags(vkPDLimits.framebufferStencilSampleCounts);
-	m_Caps.framebufferNoAttachmentsSampleCounts = ToVkSampleCountFlags(vkPDLimits.framebufferNoAttachmentsSampleCounts);
-	m_Caps.sampledImageColorSampleCounts = ToVkSampleCountFlags(vkPDLimits.sampledImageColorSampleCounts);
-	m_Caps.sampledImageIntegerSampleCounts = ToVkSampleCountFlags(vkPDLimits.sampledImageIntegerSampleCounts);
-	m_Caps.sampledImageDepthSampleCounts = ToVkSampleCountFlags(vkPDLimits.sampledImageDepthSampleCounts);
-	m_Caps.sampledImageStencilSampleCounts = ToVkSampleCountFlags(vkPDLimits.sampledImageStencilSampleCounts);
-	m_Caps.storageImageSampleCounts = ToVkSampleCountFlags(vkPDLimits.storageImageSampleCounts);
-	m_Caps.maxColorAttachments = vkPDLimits.maxColorAttachments;
-	m_Caps.maxSampleMaskWords = vkPDLimits.maxSampleMaskWords;
-	m_Caps.timestampComputeAndGraphics = ToV3DBool(vkPDLimits.timestampComputeAndGraphics);
-	m_Caps.timestampPeriod = vkPDLimits.timestampPeriod;
-	m_Caps.maxClipDistances = vkPDLimits.maxClipDistances;
-	m_Caps.maxCullDistances = vkPDLimits.maxCullDistances;
-	m_Caps.maxCombinedClipAndCullDistances = vkPDLimits.maxCombinedClipAndCullDistances;
-	m_Caps.minPointSize = vkPDLimits.pointSizeRange[0];
-	m_Caps.maxPointSize = vkPDLimits.pointSizeRange[1];
-	m_Caps.pointSizeGranularity = vkPDLimits.pointSizeGranularity;
-	m_Caps.discreteQueuePriorities = vkPDLimits.discreteQueuePriorities;
-	m_Caps.standardSampleLocations = ToV3DBool(vkPDLimits.standardSampleLocations);
-	m_Caps.optimalBufferCopyOffsetAlignment = vkPDLimits.optimalBufferCopyOffsetAlignment;
-	m_Caps.nonCoherentAtomSize = vkPDLimits.nonCoherentAtomSize;
+	m_Caps.maxImageDimension1D = vPDLimits.maxImageDimension1D;
+	m_Caps.maxImageDimension2D = vPDLimits.maxImageDimension2D;
+	m_Caps.maxImageDimension3D = vPDLimits.maxImageDimension3D;
+	m_Caps.maxImageDimensionCube = vPDLimits.maxImageDimensionCube;
+	m_Caps.maxImageLayers = vPDLimits.maxImageArrayLayers;
+	m_Caps.maxTexelBufferElements = vPDLimits.maxTexelBufferElements;
+	m_Caps.maxUniformBufferSize = vPDLimits.maxUniformBufferRange;
+	m_Caps.maxStorageBufferSize = vPDLimits.maxStorageBufferRange;
+	m_Caps.maxPushConstantsSize = vPDLimits.maxPushConstantsSize;
+	m_Caps.maxPushDescriptors = V3D_MIN(devicePushDescProp.maxPushDescriptors, V3D_PUSH_DESCRIPTOR_MAX);
+	m_Caps.maxResourceMemoryCount = vPDLimits.maxMemoryAllocationCount;
+	m_Caps.maxSamplerCreateCount = vPDLimits.maxSamplerAllocationCount;
+	m_Caps.bufferImageGranularity = vPDLimits.bufferImageGranularity;
+	m_Caps.maxBoundDescriptorSets = vPDLimits.maxBoundDescriptorSets;
+	m_Caps.maxPerStageDescriptorSamplers = vPDLimits.maxPerStageDescriptorSamplers;
+	m_Caps.maxPerStageDescriptorUniformBuffers = vPDLimits.maxPerStageDescriptorUniformBuffers;
+	m_Caps.maxPerStageDescriptorStorageBuffers = vPDLimits.maxPerStageDescriptorStorageBuffers;
+	m_Caps.maxPerStageDescriptorSampledImages = vPDLimits.maxPerStageDescriptorSampledImages;
+	m_Caps.maxPerStageDescriptorStorageImages = vPDLimits.maxPerStageDescriptorStorageImages;
+	m_Caps.maxPerStageDescriptorInputAttachments = vPDLimits.maxPerStageDescriptorInputAttachments;
+	m_Caps.maxPerStageResources = vPDLimits.maxPerStageResources;
+	m_Caps.maxDescriptorSetSamplers = vPDLimits.maxDescriptorSetSamplers;
+	m_Caps.maxDescriptorSetUniformBuffers = vPDLimits.maxDescriptorSetUniformBuffers;
+	m_Caps.maxDescriptorSetUniformBuffersDynamic = vPDLimits.maxDescriptorSetUniformBuffersDynamic;
+	m_Caps.maxDescriptorSetStorageBuffers = vPDLimits.maxDescriptorSetStorageBuffers;
+	m_Caps.maxDescriptorSetStorageBuffersDynamic = vPDLimits.maxDescriptorSetStorageBuffersDynamic;
+	m_Caps.maxDescriptorSetSampledImages = vPDLimits.maxDescriptorSetSampledImages;
+	m_Caps.maxDescriptorSetStorageImages = vPDLimits.maxDescriptorSetStorageImages;
+	m_Caps.maxDescriptorSetInputAttachments = vPDLimits.maxDescriptorSetInputAttachments;
+	m_Caps.maxVertexInputElements = vPDLimits.maxVertexInputAttributes;
+	m_Caps.maxVertexInputBindings = vPDLimits.maxVertexInputBindings;
+	m_Caps.maxVertexInputElementOffset = vPDLimits.maxVertexInputAttributeOffset;
+	m_Caps.maxVertexInputBindingStride = vPDLimits.maxVertexInputBindingStride;
+	m_Caps.maxVertexOutputComponents = vPDLimits.maxVertexOutputComponents;
+	m_Caps.maxTessellationGenerationLevel = vPDLimits.maxTessellationGenerationLevel;
+	m_Caps.maxTessellationPatchSize = vPDLimits.maxTessellationPatchSize;
+	m_Caps.maxTessellationControlPerVertexInputComponents = vPDLimits.maxTessellationControlPerVertexInputComponents;
+	m_Caps.maxTessellationControlPerVertexOutputComponents = vPDLimits.maxTessellationControlPerVertexOutputComponents;
+	m_Caps.maxTessellationControlPerPatchOutputComponents = vPDLimits.maxTessellationControlPerPatchOutputComponents;
+	m_Caps.maxTessellationControlTotalOutputComponents = vPDLimits.maxTessellationControlTotalOutputComponents;
+	m_Caps.maxTessellationEvaluationInputComponents = vPDLimits.maxTessellationEvaluationInputComponents;
+	m_Caps.maxTessellationEvaluationOutputComponents = vPDLimits.maxTessellationEvaluationOutputComponents;
+	m_Caps.maxGeometryShaderInvocations = vPDLimits.maxGeometryShaderInvocations;
+	m_Caps.maxGeometryInputComponents = vPDLimits.maxGeometryInputComponents;
+	m_Caps.maxGeometryOutputComponents = vPDLimits.maxGeometryOutputComponents;
+	m_Caps.maxGeometryOutputVertices = vPDLimits.maxGeometryOutputVertices;
+	m_Caps.maxGeometryTotalOutputComponents = vPDLimits.maxGeometryTotalOutputComponents;
+	m_Caps.maxFragmentInputComponents = vPDLimits.maxFragmentInputComponents;
+	m_Caps.maxFragmentOutputAttachments = vPDLimits.maxFragmentOutputAttachments;
+	m_Caps.maxFragmentDualSrcAttachments = vPDLimits.maxFragmentDualSrcAttachments;
+	m_Caps.maxFragmentCombinedOutputResources = vPDLimits.maxFragmentCombinedOutputResources;
+	m_Caps.maxComputeSharedMemorySize = vPDLimits.maxComputeSharedMemorySize;
+	m_Caps.maxComputeDispatchGroupCount.x = vPDLimits.maxComputeWorkGroupCount[0];
+	m_Caps.maxComputeDispatchGroupCount.y = vPDLimits.maxComputeWorkGroupCount[1];
+	m_Caps.maxComputeDispatchGroupCount.z = vPDLimits.maxComputeWorkGroupCount[2];
+	m_Caps.maxComputeDispatchGroupInvocations = vPDLimits.maxComputeWorkGroupInvocations;
+	m_Caps.maxComputeDispatchGroupSize.x = vPDLimits.maxComputeWorkGroupSize[0];
+	m_Caps.maxComputeDispatchGroupSize.y = vPDLimits.maxComputeWorkGroupSize[1];
+	m_Caps.maxComputeDispatchGroupSize.z = vPDLimits.maxComputeWorkGroupSize[2];
+	m_Caps.subPixelPrecisionBits = vPDLimits.subPixelPrecisionBits;
+	m_Caps.subTexelPrecisionBits = vPDLimits.subTexelPrecisionBits;
+	m_Caps.mipmapPrecisionBits = vPDLimits.mipmapPrecisionBits;
+	m_Caps.maxDrawIndexedIndexValue = vPDLimits.maxDrawIndexedIndexValue;
+	m_Caps.maxSamplerLodBias = vPDLimits.maxSamplerLodBias;
+	m_Caps.maxSamplerAnisotropy = vPDLimits.maxSamplerAnisotropy;
+	m_Caps.maxViewports = vPDLimits.maxViewports;
+	m_Caps.maxViewportDimension.width = vPDLimits.maxViewportDimensions[0];
+	m_Caps.maxViewportDimension.height = vPDLimits.maxViewportDimensions[1];
+	m_Caps.minViewportBounds = vPDLimits.viewportBoundsRange[0];
+	m_Caps.maxViewportBounds = vPDLimits.viewportBoundsRange[1];
+	m_Caps.viewportSubPixelBits = vPDLimits.viewportSubPixelBits;
+	m_Caps.minMemoryMapAlignment = vPDLimits.minMemoryMapAlignment;
+	m_Caps.minTexelBufferOffsetAlignment = vPDLimits.minTexelBufferOffsetAlignment;
+	m_Caps.minUniformBufferOffsetAlignment = vPDLimits.minUniformBufferOffsetAlignment;
+	m_Caps.minStorageBufferOffsetAlignment = vPDLimits.minStorageBufferOffsetAlignment;
+	m_Caps.minTexelOffset = vPDLimits.minTexelOffset;
+	m_Caps.maxTexelOffset = vPDLimits.maxTexelOffset;
+	m_Caps.minTexelGatherOffset = vPDLimits.minTexelGatherOffset;
+	m_Caps.maxTexelGatherOffset = vPDLimits.maxTexelGatherOffset;
+	m_Caps.minInterpolationOffset = vPDLimits.minInterpolationOffset;
+	m_Caps.maxInterpolationOffset = vPDLimits.maxInterpolationOffset;
+	m_Caps.subPixelInterpolationOffsetBits = vPDLimits.subPixelInterpolationOffsetBits;
+	m_Caps.maxFrameBufferWidth = vPDLimits.maxFramebufferWidth;
+	m_Caps.maxFrameBufferHeight = vPDLimits.maxFramebufferHeight;
+	m_Caps.maxFrameBufferLayers = vPDLimits.maxFramebufferLayers;
+	m_Caps.framebufferColorSampleCounts = ToVkSampleCountFlags(vPDLimits.framebufferColorSampleCounts);
+	m_Caps.framebufferDepthSampleCounts = ToVkSampleCountFlags(vPDLimits.framebufferDepthSampleCounts);
+	m_Caps.framebufferStencilSampleCounts = ToVkSampleCountFlags(vPDLimits.framebufferStencilSampleCounts);
+	m_Caps.framebufferNoAttachmentsSampleCounts = ToVkSampleCountFlags(vPDLimits.framebufferNoAttachmentsSampleCounts);
+	m_Caps.sampledImageColorSampleCounts = ToVkSampleCountFlags(vPDLimits.sampledImageColorSampleCounts);
+	m_Caps.sampledImageIntegerSampleCounts = ToVkSampleCountFlags(vPDLimits.sampledImageIntegerSampleCounts);
+	m_Caps.sampledImageDepthSampleCounts = ToVkSampleCountFlags(vPDLimits.sampledImageDepthSampleCounts);
+	m_Caps.sampledImageStencilSampleCounts = ToVkSampleCountFlags(vPDLimits.sampledImageStencilSampleCounts);
+	m_Caps.storageImageSampleCounts = ToVkSampleCountFlags(vPDLimits.storageImageSampleCounts);
+	m_Caps.maxColorAttachments = vPDLimits.maxColorAttachments;
+	m_Caps.maxSampleMaskWords = vPDLimits.maxSampleMaskWords;
+	m_Caps.timestampComputeAndGraphics = ToV3DBool(vPDLimits.timestampComputeAndGraphics);
+	m_Caps.timestampPeriod = vPDLimits.timestampPeriod;
+	m_Caps.maxClipDistances = vPDLimits.maxClipDistances;
+	m_Caps.maxCullDistances = vPDLimits.maxCullDistances;
+	m_Caps.maxCombinedClipAndCullDistances = vPDLimits.maxCombinedClipAndCullDistances;
+	m_Caps.minPointSize = vPDLimits.pointSizeRange[0];
+	m_Caps.maxPointSize = vPDLimits.pointSizeRange[1];
+	m_Caps.pointSizeGranularity = vPDLimits.pointSizeGranularity;
+	m_Caps.discreteQueuePriorities = vPDLimits.discreteQueuePriorities;
+	m_Caps.standardSampleLocations = ToV3DBool(vPDLimits.standardSampleLocations);
+	m_Caps.optimalBufferCopyOffsetAlignment = vPDLimits.optimalBufferCopyOffsetAlignment;
+	m_Caps.nonCoherentAtomSize = vPDLimits.nonCoherentAtomSize;
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -1152,26 +1189,50 @@ V3D_RESULT V3DDevice::CreateFrameBuffer(IV3DRenderPass* pRenderPass, uint32_t at
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout, const wchar_t* pDebugName)
+V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* pDescriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout, const wchar_t* pDebugName)
 {
-	if ((descriptorCount == 0) || (descriptors == nullptr))
+	if ((descriptorCount == 0) || (pDescriptors == nullptr))
 	{
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
 
-	V3DDescriptorSetLayout* pDescriptorSetLayout = V3DDescriptorSetLayout::Create();
-	if (pDescriptorSetLayout == nullptr)
+	if ((poolSize == 0) && (poolResizeStep == 0))
 	{
-		return V3D_ERROR_OUT_OF_HOST_MEMORY;
-	}
+		if ((m_Caps.extensionFlags & V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS) == 0)
+		{
+			return V3D_ERROR_NOT_SUPPORTED;
+		}
 
-	V3D_RESULT result = pDescriptorSetLayout->Initialize(this, descriptorCount, descriptors, poolSize, poolResizeStep, pDebugName);
-	if (result != V3D_OK)
+		V3DPushDescriptorSetLayout* pDescriptorSetLayout = V3DPushDescriptorSetLayout::Create();
+		if (pDescriptorSetLayout == nullptr)
+		{
+			return V3D_ERROR_OUT_OF_HOST_MEMORY;
+		}
+
+		V3D_RESULT result = pDescriptorSetLayout->Initialize(this, descriptorCount, pDescriptors, pDebugName);
+		if (result != V3D_OK)
+		{
+			return result;
+		}
+
+		(*ppDescriptorSetLayout) = pDescriptorSetLayout;
+	}
+	else
 	{
-		return result;
-	}
+		V3DStandardDescriptorSetLayout* pDescriptorSetLayout = V3DStandardDescriptorSetLayout::Create();
+		if (pDescriptorSetLayout == nullptr)
+		{
+			return V3D_ERROR_OUT_OF_HOST_MEMORY;
+		}
 
-	(*ppDescriptorSetLayout) = pDescriptorSetLayout;
+		V3D_RESULT result = pDescriptorSetLayout->Initialize(this, descriptorCount, pDescriptors, poolSize, poolResizeStep, pDebugName);
+		if (result != V3D_OK)
+		{
+			return result;
+		}
+
+		(*ppDescriptorSetLayout) = pDescriptorSetLayout;
+	}
 
 	return V3D_OK;
 }
@@ -1183,19 +1244,44 @@ V3D_RESULT V3DDevice::CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3D
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
 
-	V3DDescriptorSet* pDescriptorSet = V3DDescriptorSet::Create();
-	if (pDescriptorSet == nullptr)
-	{
-		return V3D_ERROR_OUT_OF_HOST_MEMORY;
-	}
+	V3D_DESCRIPTOR_SET_TYPE type = pLayout->GetType();
 
-	V3D_RESULT result = pDescriptorSet->Initialize(this, pLayout, pDebugName);
-	if (result != V3D_OK)
+	if (type == V3D_DESCRIPTOR_SET_TYPE_STANDARD)
 	{
-		return result;
-	}
+		V3DStandardDescriptorSet* pDescriptorSet = V3DStandardDescriptorSet::Create();
+		if (pDescriptorSet == nullptr)
+		{
+			return V3D_ERROR_OUT_OF_HOST_MEMORY;
+		}
 
-	(*ppDescriptorSet) = pDescriptorSet;
+		V3D_RESULT result = pDescriptorSet->Initialize(this, pLayout, pDebugName);
+		if (result != V3D_OK)
+		{
+			return result;
+		}
+
+		(*ppDescriptorSet) = pDescriptorSet;
+	}
+	else if (type == V3D_DESCRIPTOR_SET_TYPE_PUSH)
+	{
+		V3DPushDescriptorSet* pDescriptorSet = V3DPushDescriptorSet::Create();
+		if (pDescriptorSet == nullptr)
+		{
+			return V3D_ERROR_OUT_OF_HOST_MEMORY;
+		}
+
+		V3D_RESULT result = pDescriptorSet->Initialize(this, pLayout, pDebugName);
+		if (result != V3D_OK)
+		{
+			return result;
+		}
+
+		(*ppDescriptorSet) = pDescriptorSet;
+	}
+	else
+	{
+		V3D_ASSERT(0);
+	}
 
 	return V3D_OK;
 }

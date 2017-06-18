@@ -10,7 +10,8 @@
 #include "V3DFrameBuffer.h"
 #include "IV3DPipelineBase.h"
 #include "V3DPipelineLayout.h"
-#include "V3DDescriptorSet.h"
+#include "V3DStandardDescriptorSet.h"
+#include "V3DPushDescriptorSet.h"
 #include "V3DQueryPool.h"
 
 /*****************************/
@@ -48,7 +49,7 @@ V3D_RESULT V3DCommandBuffer::Initialize(IV3DDevice* pDevice, IV3DCommandPool* pC
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
 
-	VkCommandBufferAllocateInfo allocInfo = {};
+	VkCommandBufferAllocateInfo allocInfo;
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.pNext = nullptr;
 	allocInfo.commandPool = m_pCommandPool->GetSource().commandPool;
@@ -1624,13 +1625,29 @@ void V3DCommandBuffer::BindDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_BindDescriptorSets << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM_GREATER(descriptorSetCount, 0) << V3D_LOG_S_PTR(ppDescriptorSets));
 		return;
 	}
+
+	uint32_t debugErrorCount = 0;
+
+	for (uint32_t i = 0; i < descriptorSetCount; i++)
+	{
+		if (ppDescriptorSets[i]->GetType() != V3D_DESCRIPTOR_SET_TYPE_STANDARD)
+		{
+			V3D_LOG_ERROR(Log_Error_NotStandardDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
+			debugErrorCount++;
+		}
+	}
+
+	if (debugErrorCount > 0)
+	{
+		return;
+	}
 #endif //_DEBUG
 
 	m_Temp.descriptorSets.resize(descriptorSetCount);
 	VkDescriptorSet* pDstDescriptorSet = m_Temp.descriptorSets.data();
 
-	V3DDescriptorSet** ppSrcDescriptorSet = reinterpret_cast<V3DDescriptorSet**>(ppDescriptorSets);
-	V3DDescriptorSet** ppSrcDescriptorSetEnd = ppSrcDescriptorSet + descriptorSetCount;
+	V3DStandardDescriptorSet** ppSrcDescriptorSet = reinterpret_cast<V3DStandardDescriptorSet**>(ppDescriptorSets);
+	V3DStandardDescriptorSet** ppSrcDescriptorSetEnd = ppSrcDescriptorSet + descriptorSetCount;
 
 	while (ppSrcDescriptorSet != ppSrcDescriptorSetEnd)
 	{
@@ -1745,7 +1762,7 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 	vkCmdPushConstants(m_Source.commandBuffer, static_cast<V3DPipelineLayout*>(pPipelineLayout)->GetSource().pipelineLayout, ToVkShaderStageFlags(constantDesc.shaderStageFlags), constantDesc.offset + offset, size, pData);
 }
 
-void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets)
+void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets)
 {
 	if (m_pPushDescriptorSetFunction == nullptr)
 	{
@@ -1761,28 +1778,84 @@ void V3DCommandBuffer::PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPi
 
 	if ((pPipelineLayout == nullptr) || (descriptorSetCount == 0) || (ppDescriptorSets == nullptr))
 	{
-		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushDescriptorSets << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_NUM_GREATER(descriptorSetCount, 0) <<  V3D_LOG_S_PTR(ppDescriptorSets));
+		V3D_LOG_S_ERROR(Log_IV3DCommandBuffer_PushDescriptorSets << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipelineLayout) << V3D_LOG_S_PTR(ppDescriptorSets));
 		return;
 	}
 
-#endif //_DEBUG
+	uint32_t debugErrorCount = 0;
 
-	V3DDescriptorSet** pSrc = reinterpret_cast<V3DDescriptorSet**>(ppDescriptorSets);
-	V3DDescriptorSet** pSrcEnd = pSrc + descriptorSetCount;
+	for (uint32_t i = 0; i < descriptorSetCount; i++)
+	{
+		if (ppDescriptorSets[i]->GetType() != V3D_DESCRIPTOR_SET_TYPE_PUSH)
+		{
+			V3D_LOG_ERROR(Log_Error_NotPushDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
+			debugErrorCount++;
+		}
+	}
+
+	if (debugErrorCount > 0)
+	{
+		return;
+	}
+#endif //_DEBUG
 
 	VkPipelineBindPoint vkPipelineBindPoint = ToVkPipelineBindPoint(pipelineType);
 	VkPipelineLayout vkPipelineLayout = static_cast<V3DPipelineLayout*>(pPipelineLayout)->GetSource().pipelineLayout;
 
-	while (pSrc != pSrcEnd)
+	V3DPushDescriptorSet** ppSrcDescriptorSet = reinterpret_cast<V3DPushDescriptorSet**>(ppDescriptorSets);
+	V3DPushDescriptorSet** ppSrcDescriptorSetEnd = ppSrcDescriptorSet + descriptorSetCount;
+
+	uint32_t setIndex = firstSet;
+
+	const VkWriteDescriptorSet* pSrcWrite;
+	const VkWriteDescriptorSet* pSrcWriteEnd;
+
+	VkDescriptorBufferInfo* pDstBufferInfoBegin = m_Temp.descriptorBufferInfos;
+	VkWriteDescriptorSet* pDstWriteBegin = m_Temp.writeDescriptors;
+
+	VkDescriptorBufferInfo* pDstBufferInfo;
+	VkWriteDescriptorSet* pDstWrite;
+
+	uint64_t dynamicBufferBit;
+
+	while (ppSrcDescriptorSet != ppSrcDescriptorSetEnd)
 	{
-		const V3DDescriptorSet::Source& source = (*pSrc)->GetSource();
+		const V3DBaseDescriptorSet::Source& srcSetSource = (*ppSrcDescriptorSet)->GetSource();
+		const uint64_t& dynamicBufferMask = srcSetSource.dynamicBufferMask;
+
+		pSrcWrite = srcSetSource.pWriteDescriptors;
+		pSrcWriteEnd = pSrcWrite + srcSetSource.descriptorCount;
+
+		pDstBufferInfo = pDstBufferInfoBegin;
+		pDstWrite = pDstWriteBegin;
+
+		dynamicBufferBit = 0x1;
+
+		while (pSrcWrite != pSrcWriteEnd)
+		{
+			*pDstWrite = *pSrcWrite;
+
+			if (dynamicBufferMask & dynamicBufferBit)
+			{
+				*pDstBufferInfo = *pSrcWrite->pBufferInfo;
+				pDstBufferInfo->offset = *pDynamicOffsets++;
+
+				pDstWrite->pBufferInfo = pDstBufferInfo++;
+			}
+
+			dynamicBufferBit <<= 1;
+
+			pDstWrite++;
+			pSrcWrite++;
+		}
 
 		m_pPushDescriptorSetFunction(
 			m_Source.commandBuffer,
 			vkPipelineBindPoint, vkPipelineLayout,
-			firstSet, source.descriptorCount, source.pWriteDescriptors);
+			setIndex, srcSetSource.descriptorCount, pDstWriteBegin);
 
-		pSrc++;
+		setIndex++;
+		ppSrcDescriptorSet++;
 	}
 }
 
@@ -2222,6 +2295,8 @@ V3DCommandBuffer::V3DCommandBuffer() :
 	m_pDevice(nullptr),
 	m_Type(V3D_COMMAND_BUFFER_TYPE_PRIMARY),
 	m_pCommandPool(nullptr),
+	m_Source({}),
+	m_Temp({}),
 	m_pPushDescriptorSetFunction(nullptr),
 	m_pDebugMarkerBeginFunction(nullptr),
 	m_pDebugMarkerEndFunction(nullptr),

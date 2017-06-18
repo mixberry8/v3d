@@ -77,7 +77,7 @@ public:
 	virtual void BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D_INDEX_TYPE indexType) override;
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, const void* pData) override;
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) override;
-	virtual void PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets) override;
+	virtual void PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
 	virtual void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const V3DViewport* pViewports) override;
 	virtual void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) override;
 	virtual void SetBlendConstants(const float blendConstants[4]) override;
@@ -124,6 +124,8 @@ private:
 		STLVector<VkImageResolve> imageResolves;
 		STLVector<VkBufferImageCopy> bufferImageCopies;
 		STLVector<VkCommandBuffer> commandBuffers;
+		VkDescriptorBufferInfo descriptorBufferInfos[V3D_PUSH_DESCRIPTOR_MAX];
+		VkWriteDescriptorSet writeDescriptors[V3D_PUSH_DESCRIPTOR_MAX];
 	};
 
 	ReferenceCounter m_RefCounter;

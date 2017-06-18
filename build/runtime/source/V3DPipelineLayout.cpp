@@ -1,6 +1,6 @@
 #include "V3DPipelineLayout.h"
 #include "V3DDevice.h"
-#include "V3DDescriptorSetLayout.h"
+#include "V3DBaseDescriptorSetLayout.h"
 
 /******************************/
 /* public - V3DPipelineLayout */
@@ -55,7 +55,7 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 
 		for (uint32_t i = 0; i < descriptorSetLayoutCount; i++)
 		{
-			V3DDescriptorSetLayout* pInternalDescriptorSet = static_cast<V3DDescriptorSetLayout*>(ppDescriptorSetLayouts[i]);
+			V3DBaseDescriptorSetLayout* pInternalDescriptorSet = static_cast<V3DBaseDescriptorSetLayout*>(ppDescriptorSetLayouts[i]);
 
 			vkDescriptorSetLayouts.push_back(pInternalDescriptorSet->GetSource().descriptorSetLayout);
 			m_DescriptorSetLayouts.push_back(V3D_TO_ADD_REF(pInternalDescriptorSet));
