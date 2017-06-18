@@ -22,7 +22,7 @@ V3D_RESULT V3DCheckLayer(V3D_LAYER layer)
 
 	switch (layer)
 	{
-	case V3D_LAYER_STANDARD:
+	case V3D_LAYER_VALIDATION:
 		pLayerName = V3D_LAYER_LUNARG_standard_validation;
 		break;
 
