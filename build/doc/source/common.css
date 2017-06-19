@@ -1,5 +1,45 @@
 ﻿/* ************************************************ */
 
+ul,ol {
+  background: #f3f3f3;
+  margin: 4px 0px 8px 0px;
+  padding: 4px 4px 4px 32px;
+}
+
+/* ************************************************ */
+
+table.access {
+  border: 1px solid #a8b8d9;
+  border-collapse: collapse;
+}
+
+table.access tr {
+  border: 1px solid #a8b8d9;
+}
+
+table.access th.stage,th.usage,th.queue {
+  border: 1px solid #a8b8d9;
+}
+
+table.access th.stage{
+  width: 472px;
+}
+
+table.access th.usage{
+  width: 398px;
+}
+
+table.access th.queue{
+  width: 192px;
+}
+
+table.access td {
+  border: 1px solid #a8b8d9;
+  height: 24px;
+}
+
+/* ************************************************ */
+
 table.basic {
   border: 1px solid #a8b8d9;
   border-collapse: collapse;
