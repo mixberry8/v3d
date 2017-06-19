@@ -98,7 +98,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	{
 		return V3D_ERROR_FAIL;
 	}
-
+/*
 	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) == vExtensionProps.end())
 	{
 		return V3D_ERROR_FAIL;
@@ -107,33 +107,62 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	const char* VK_KHX_NAME = "VK_KHX";
 	const char* VK_NVX_NAME = "VK_NVX";
 
-	STLVector<const char*> vEnableExtensions;
-	vEnableExtensions.reserve(vExtensionCount);
-
 	for (uint32_t i = 0; i < vExtensionCount; i++)
 	{
 		const char* pExtensionName = vExtensionProps[i].extensionName;
 
-		// 実験的なものは除外する
-		if ((strncmp(pExtensionName, VK_KHX_NAME, strlen(VK_KHX_NAME)) != 0) &&
-			(strncmp(pExtensionName, VK_NVX_NAME, strlen(VK_NVX_NAME)) != 0))
+		if ((strncmp(pExtensionName, VK_KHX_NAME, strlen(VK_KHX_NAME)) == 0) ||
+			(strncmp(pExtensionName, VK_NVX_NAME, strlen(VK_NVX_NAME)) == 0))
 		{
-			vEnableExtensions.push_back(pExtensionName);
+			// 実験的なものは除外する
+			continue;
 		}
+
+		vEnableExtensions.push_back(pExtensionName);
 	}
+*/
+	const char* KHR_SWAPCHAIN_EXTENSION_NAME = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+	const char* KHR_MAINTENANCE1_EXTENSION_NAME = VK_KHR_MAINTENANCE1_EXTENSION_NAME;
+	const char* KHR_PUSH_DESCRIPTOR_EXTENSION_NAME = VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME;
+	const char* EXT_DEBUG_MARKER_EXTENSION_NAME = VK_EXT_DEBUG_MARKER_EXTENSION_NAME;
+
+	STLVector<const char*> vEnableExtensions;
+	vEnableExtensions.reserve(vExtensionCount);
 
 	V3DFlags extensionFlags = 0;
 
-	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) != vExtensionProps.end())
+	// スワップチェイン
+	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(KHR_SWAPCHAIN_EXTENSION_NAME)) != vExtensionProps.end())
 	{
+		vEnableExtensions.push_back(KHR_SWAPCHAIN_EXTENSION_NAME);
+	}
+	else
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	// メンテナンス１
+	//   これを追加しておくと、なぜかデスクリプタプールが Unable to allocate 1 descriptors of type ??? from pool とかいうエラーをはかない、、、
+	//   デスクリプタ自体は普通に確保されて動いるんだけどね。
+	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(KHR_MAINTENANCE1_EXTENSION_NAME)) != vExtensionProps.end())
+	{
+		vEnableExtensions.push_back(KHR_MAINTENANCE1_EXTENSION_NAME);
+	}
+
+	// プッシュデスクリプター
+	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) != vExtensionProps.end())
+	{
+		vEnableExtensions.push_back(KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
 		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS;
 	}
 
+	// デバッグマーカー
 	V3D_LAYER layer = m_pInstance->GetLayer();
 	if ((layer == V3D_LAYER_NSIGHT) || (layer == V3D_LAYER_RENDERDOC))
 	{
-		if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) != vExtensionProps.end())
+		if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(EXT_DEBUG_MARKER_EXTENSION_NAME)) != vExtensionProps.end())
 		{
+			vEnableExtensions.push_back(EXT_DEBUG_MARKER_EXTENSION_NAME);
 			extensionFlags |= V3D_DEVICE_EXTENSION_DEBUG_MARKER;
 		}
 	}
@@ -220,14 +249,14 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	// デバイスを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	VkDeviceCreateInfo devInfo;
+	VkDeviceCreateInfo devInfo{};
 	devInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	devInfo.pNext = nullptr;
 	devInfo.flags = 0;
 	devInfo.queueCreateInfoCount = static_cast<uint32_t>(vQueueCreateInfos.size());
 	devInfo.pQueueCreateInfos = vQueueCreateInfos.data();
-	devInfo.enabledLayerCount = 0;// static_cast<uint32_t>(vkEnableLayers.size());
-	devInfo.ppEnabledLayerNames = nullptr;// vkEnableLayers.data();
+//	devInfo.enabledLayerCount = static_cast<uint32_t>(vkEnableLayers.size());
+//	devInfo.ppEnabledLayerNames = vkEnableLayers.data();
 	devInfo.enabledExtensionCount = static_cast<uint32_t>(vEnableExtensions.size());
 	devInfo.ppEnabledExtensionNames = vEnableExtensions.data();
 	devInfo.pEnabledFeatures = &m_Source.deviceFeatures;
