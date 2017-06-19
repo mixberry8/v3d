@@ -78,6 +78,7 @@ private:
 #ifdef _DEBUG
 	VkDebugReportCallbackEXT m_DebugReportCallbackEXT;
 
+	STLMap<STLStringA, STLStringA> m_DebugHandleNameMap;
 	STLMap<STLStringA, STLStringA> m_DebugFunctionNameMap;
 	STLMap<STLStringA, STLStringA> m_DebugConstantNameMap;
 

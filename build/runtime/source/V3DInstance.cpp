@@ -62,6 +62,9 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC"] = "V3D_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC";
 	m_DebugConstantNameMap["VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT"] = "V3D_DESCRIPTOR_TYPE_INPUT_ATTACHMENT";
 
+	// オブジェクトハンドル
+	m_DebugHandleNameMap["VkPipeline"] = "IV3DPipeline ( VkPipeline )";
+
 	// 関数 : デスクリプタセット
 	m_DebugFunctionNameMap["vkUpdateDescriptorSets"] = "IV3DDescriptorSet::Update";
 
@@ -584,7 +587,7 @@ LRESULT CALLBACK V3DInstance::WindowProc(HWND windowHandle, UINT message, WPARAM
 	{
 	case WM_DESTROY:
 		V3DInstance::s_pThis->RemoveWindow(pSwapChain);
-break;
+		break;
 
 	case WM_SYSCOMMAND:
 		if (wparam == SC_MAXIMIZE)
@@ -719,12 +722,21 @@ const char* V3DInstance::ConvertDebugString(const char* pString)
 
 	if ((count > 2) && (pString[0] == '0') && (pString[1] == 'x'))
 	{
-		// オブジェクト
+		// オブジェクトのアドレス
 		char* endPtr;
 		uint64_t objectAddr = strtoll(pString, &endPtr, 0);
 		if (objectAddr != 0)
 		{
 			return GetDebugObjectName(objectAddr);
+		}
+	}
+	else if ((count > 2) && (pString[0] == 'V') && (pString[1] == 'k'))
+	{
+		// オブジェクトのハンドル名
+		auto it_name = m_DebugHandleNameMap.find(pString);
+		if (it_name != m_DebugHandleNameMap.end())
+		{
+			return it_name->second.c_str();
 		}
 	}
 	else if ((count > 2) && (pString[0] == 'v') && (pString[1] == 'k'))
