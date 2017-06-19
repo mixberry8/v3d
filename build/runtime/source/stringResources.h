@@ -101,6 +101,6 @@ static constexpr wchar_t* Log_Error_PrimaryCommandBufferNotEnd = L"IV3DCommandQu
 /********************/
 
 static constexpr wchar_t* Log_Error_DescriptorNotSet = L"IV3DDescriptorSet::Update : %s : バインディング %u にリソース ( %s ) がセットされていません。";
-static constexpr wchar_t* Log_Error_DescriptorSetNoNeedUpdate = L"IV3DDescriptorSet::Update : プッシュデスクリプタセットは更新する必要はありません。";
+static constexpr wchar_t* Log_Error_DescriptorSetNoNeedUpdate = L"IV3DDescriptorSet::Update : %s : プッシュデスクリプタセットは更新する必要はありません。";
 
 #endif //_DEBUG
