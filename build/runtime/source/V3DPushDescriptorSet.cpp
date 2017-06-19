@@ -60,7 +60,7 @@ V3D_DESCRIPTOR_SET_TYPE V3DPushDescriptorSet::GetType() const
 
 void V3DPushDescriptorSet::Update()
 {
-	V3D_LOG_PRINT_WARNING(Log_Error_DescriptorSetNoNeedUpdate);
+	V3D_LOG_PRINT_WARNING(Log_Error_DescriptorSetNoNeedUpdate, m_DebugName.c_str());
 }
 
 /**********************************/
