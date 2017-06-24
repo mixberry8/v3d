@@ -22,42 +22,36 @@ Copyright (c) 2017 mixberry<br>
 必ずしもこの動作環境を満たしている必要はありませんが、目安としてお考え下さい。<br>
 また OS が 64Bit 限定になっていますが、ライブラリには 32Bit 版も用意しております。<br>
 ただし 32Bit 環境での動作確認は行っていないため、動作の保証はいたしかねます。
+
 @section prepare_section 準備
 v3d を使用するためには以下のものがインストールされている必要があります。<br>
-<ul>
-  <li>Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3</li>
-  <li>Vulkan SDK 1.0.49.0</li>
-</ul>
+- Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3
+- Vulkan SDK 1.0.49.0
+
 @section structure_section 構成
-<ul>
-  <li>bin</li><br>
-  ライブラリファイルが Visual Studio のバージョン、プラットフォーム、コンフィギュレーションごとにわかれて入っています。
-  <ul>
-    <li>v3d.lib</li><br>
-    動的リンク用の LIB ファイルです。<br>
-    このファイルは "v3d.dll" とセットで使用します。<br>
-    <li>v3d.dll</li><br>
-    動的リンク用の DLL ファイルです。<br>
-    このファイルは "v3d.lib" とセットで使用します。<br>
-    <li>v3d_static.lib</li><br>
-    静的リンク用の LIB ファイルです。<br>
-    このファイルは単体で使用します。
-  </ul>
-  <li>build</li><br>
-  v3d をビルドするのに必要なファイルが入っています。
-  <ul>
-    <li>doc</li><br>
-	ドキュメントを生成するのに必要なファイルが入っています。
-    <li>runtime</li><br>
-	v3d ランタイムのプロジェクト、ソースなどのファイルが入っています。
-  </ul>
-  <li>doc</li><br>
-  今開いているドキュメントのファイルが入っています。
-  <li>example</li><br>
-  サンプルのデータ、プロジェクト、ソースなどのファイルが入っています。
-  <li>include</li><br>
-  v3d のインクルードファイルが入っています。
-</ul>
+- bin
+ライブラリファイルが Visual Studio のバージョン、プラットフォーム、コンフィギュレーションごとにわかれて入っています。
+  - v3d.lib<br>
+  動的リンク用の LIB ファイルです。<br>
+  このファイルは "v3d.dll" とセットで使用します。<br>
+  - v3d.dll<br>
+  動的リンク用の DLL ファイルです。<br>
+  このファイルは "v3d.lib" とセットで使用します。<br>
+  - v3d_static.lib<br>
+  静的リンク用の LIB ファイルです。<br>
+  このファイルは単体で使用します。
+- build<br>
+v3d をビルドするのに必要なファイルが入っています。
+  - doc<br>
+  キュメントを生成するのに必要なファイルが入っています。
+  - runtime<br>
+  v3d ランタイムのプロジェクト、ソースなどのファイルが入っています。
+- doc<br>
+今開いているドキュメントのファイルが入っています。
+- example<br>
+サンプルのデータ、プロジェクト、ソースなどのファイルが入っています。
+- include<br>
+v3d のインクルードファイルが入っています。
 */
 
 /*!
@@ -66,22 +60,18 @@ v3d を使用するためには以下のものがインストールされている必要があります。<br>
 Visual Studio を起動して、メインメニューの「ファイル」→「新規作成」→「プロジェクト」を選択し、ダイアログを開いてください。<br>
 「Win32 コンソールアプリケーション」を選択し、「Windows アプリケーション」を作成します。<br>
 「ソリューションエクスプローラー」のプロジェクトを右クリックしてコンテキストメニューの「プロパティ」を選択し「構成プロパティ」の以下の項目を設定してください。<br>
-<ul>
-  <li>VC++ ディレクトリ</li><br>
-  インクルードディレクトリに "v3d\include" を追加します。<br>
-  ライブラリディレクトリに "v3d\bin\vs2015\$(PlatformTarget)\$(Configuration)" を追加します。
-  <li>リンカー</li>
-  <ul>
-    <li>入力</li><br>
-      追加の依存ファイルに "v3d.lib" または "v3d_static.lib" を追加します。
-  </ul>
-  <li>ビルドイベント</li>
-  <ul>
-    <li>ビルド後のイベント</li><br>
-    コマンドラインに DLL ファイルをコピーする "copy v3d\bin\vs2015\$(PlatformTarget)\$(Configuration)\v3d.dll $(OutDir)" を入力します。<br>
-    ※ この設定は追加の依存ファイルに v3d.lib を指定した場合に必要です。
-  </ul>
-</ul>
+- VC++ ディレクトリ<br>
+インクルードディレクトリに "v3d\include" を追加します。<br>
+ライブラリディレクトリに "v3d\bin\vs2015\$(PlatformTarget)\$(Configuration)" を追加します。<br>
+<br>
+- リンカー
+  - 入力<br>
+  追加の依存ファイルに "v3d.lib" または "v3d_static.lib" を追加します。
+- ビルドイベント
+  - ビルド後のイベント<br>
+  コマンドラインに DLL ファイルをコピーする "copy v3d\bin\vs2015\$(PlatformTarget)\$(Configuration)\v3d.dll $(OutDir)" を入力します。<br>
+  ※ この設定は追加の依存ファイルに v3d.lib を指定した場合に必要です。
+.
 @section create_app_section ライブラリの初期化および解放
 アプリケーションの基礎となるものは @ref example_page にある @ref simpl_section を参考にしてください。<br>
 <br>
@@ -147,5 +137,569 @@ Visual Studio を起動して、メインメニューの「ファイル」→「新規作成」→「プロジェ
 今ではキューの送信直後に現在のフレームのフェンスで待機するようにしていましたが、今回はキューの送信直後は次のフレームのフェンスで待機しています。<br>
 シェーダーバージョン 330<br>
 <table border="0"><tr><td>\image html multithread.png</td></tr></table>
+<br>
+*/
+
+/*!
+@page tips_page ヒント
+
+※ Vulkan のすべてを把握してきれている状態ではなく、説明に誤りがある箇所があるかもしれません。<br>
+そのへんはご了承ください。<br>
+<br>
+
+
+@section buffer_section バッファー
+_ _ _
+@par
+Underconstruction...<br>
+<br>
+
+
+@section image_section イメージ
+_ _ _
+@par
+Underconstruction...<br>
+<br>
+
+
+@section barrier_section バリア
+_ _ _
+@par
+GPU はステージでのコマンドの実行を複数のスレッドを使って処理しています。<br>
+このためしっかりと同期をとっておかないと、データ競合が発生して、リソースハザードが発生してしまいます。<br>
+これを回避するためにバリアを使用します。( Vulkan ではパイプラインバリア )<br>
+<br>
+たとえばどういう時に使用するかというと、オフスクリーンレンダリングしたイメージを画面に表示したいとします。<br>
+この時、オフスクリーンレンダリングを A、画面に表示を B とします。<br>
+もし A の実行が完了していない状態で、B を実行するとどうなるでしょうか。<br>
+B はレンダリング途中の壊れたイメージを表示してしまいます。<br>
+これを回避するために以下のようなことをします。<br>
+<br>
+-# A を実行して、イメージにバリアを張る。
+-# B を実行しようとするが、A の実行が完了しておらず、イメージにバリアが張られているためアクセスできない。
+-# B はしかたなくイメージのバリア解除 ( A の実行完了 ) を待機。
+-# イメージのバリアが解除され B は歓喜、そして実行。
+.
+※ 2 及び 3 に関しては内部的な動作です。<br>
+<br>
+こんな感じでしょうか。<br>
+<br>
+上記の説明にある A と B はそれぞれ異なるステージで実行されています。<br>
+ステージには以下のようなものがあります。<br>
+<br>
+<table class="basic">
+<tr><td> ::V3D_PIPELINE_STAGE_TOP_OF_PIPE</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_VERTEX_INPUT</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_VERTEX_SHADER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_GEOMETRY_SHADER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_COMPUTE_SHADER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_TRANSFER</td></tr>
+<tr><td> ::V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE</td></tr>
+</table>
+<br>
+A は ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT 、B は ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER といったところです。<br>
+<br>
+他にも ::V3D_PIPELINE_STAGE_HOST 、複数のステージを組み合わせた ::V3D_PIPELINE_STAGE_ALL_GRAPHICS 及び ::V3D_PIPELINE_STAGE_ALL_COMMANDS などがあります。<br>
+これらは疑似ステージ？と呼ばれているらしいのですが、どういうものなのかよくわかんないので、今回は省略させていただきます。<br>
+<br>
+ステージを移行する際は基本的にバリアを張ります。<br>
+またリソースの種類によってバリア張る際に使用する構造体、メソッドが異なります。<br>
+- V3DBarrierBufferDesc<br>
+IV3DCommandBuffer::BarrierBuffer 使用して IV3DBuffer の指定された範囲 ( offset、size ) にバリアを張る構造体です。
+.
+- V3DBarrierBufferViewDesc<br>
+IV3DCommandBuffer::BarrierBufferView 使用して IV3DBufferView の全体にバリアを張る構造体です。
+.
+- V3DBarrierImageDesc<br>
+IV3DCommandBuffer::BarrierImage 使用して IV3DImage の指定された範囲 ( baseLevel、levelCount、baseLayer、layerCount ) にバリアを張る構造体です。
+.
+- V3DBarrierImageViewDesc<br>
+IV3DCommandBuffer::BarrierImageView 使用して IV3DImageView の全体にバリアを張る構造体です。
+.
+<br>
+これらの構造体の主要メンバは以下の通りです。<br>
+- srcStageMask, dstStageMask ※1<br>
+ステージの変更を指定します。<br>
+ステージは srcStageMask から dstStageMask に移行することになります。
+.
+- dependencyFlags<br>
+現在指定できるものはないので 0 になります。
+.
+- srcAccessMask, dstAccessMask ※2<br>
+アクセス方法の変更を指定します。<br>
+srcAccessMask には移行元ステージで使用していたアクセス方法、dstAccessMask には移行先ステージでの新しいアクセス方法を指定します。<br>
+またアクセス方法には対応したステージがあり、その対応表は ::V3D_ACCESS_FLAG を参照してください。
+.
+- srcQueueFamily, dstQueueFamily<br>
+キューファミリーの変更を指定します。<br>
+キューファミリーは srcQueueFamily から dstQueueFamily に移行することになります。<br>
+またキューファミリーの変更が無いとわかっている場合は、srcQueueFamily 及び dstQueueFamily に ::V3D_QUEUE_FAMILY_IGNORED を指定することができます。<br>
+それ以外の場合は、srcQueueFamily 及び dstQueueFamily には有効なキューファミリーを指定しなくてはいけません。
+.
+- srcLayout, dstLayout ※3<br>
+イメージレイアウトの変更を指定します。<br>
+イメージレイアウトは srcLayout から dstLayout に移行することになります。<br>
+また dstLayout には ::V3D_IMAGE_LAYOUT_UNDEFINED 及び ::V3D_IMAGE_LAYOUT_PREINITIALIZED を指定することはできません。
+.
+※1 作成直後のリソースのステージは ::V3D_PIPELINE_STAGE_TOP_OF_PIPE になります。<br>
+※2 作成直後のリソースのアクセス方法は未定義であり、0 になります。<br>
+※3 イメージ限定のメンバです。<br>
+<br>
+これらのメンバに対して適切な値を指定してあげる必要があります。<br>
+インスタンス作成時に ::V3D_LAYER_VALIDATION レイヤーを指定しておくと、間違っている場合はエラーを出力してくれます。<br>
+是非ご活用ください。<br>
+<br>
+
+@section renderPass_section レンダーパス
+_ _ _
+@par
+描画はこのレンダーパスの開始から終了の間に行います。<br>
+<br>
+レンダーパスは IV3DDevice::CreateRenderPass を使用して作成します。<br>
+このセクションに関係する引数は以下のようになります。<br>
+<br>
+- @ref renderPass_attachment_subsection attachmentCount, pAttachments
+.
+- @ref renderPass_subpass_subsection subpassCount, pSubpasses
+.
+- @ref renderPass_subpassDependency_subsection subpassDependencyCount, pSubpassDependencies
+.
+<br>
+以降ざっくりかもしれませんが、順に説明していきたいと思います。<br>
+<br>
+
+
+@subsection renderPass_attachment_subsection アタッチメント
+@par
+アタッチメントとは @ref renderPass_subpass_subsection でシェーダーに入力、またはシェーダーからの出力先として使用するイメージビューのことを表しています。<br>
+また、このアタッチメントは後で説明する @ref renderPass_frameBuffer_subsection に格納されているものになります。<br>
+アタッチメントを定義するには V3DAttachmentDesc 構造体を使用します。<br>
+<br>
+V3DAttachmentDesc<br>
+- format<br>
+アタッチメントのフォーマットです。
+.
+- samples<br>
+アタッチメントのサンプル数です。<br>
+通常は ::V3D_SAMPLE_COUNT_1 ですが、リゾルブアタッチメント ( マルチサンプル ) として使用する場合は、 ::V3D_SAMPLE_COUNT_1 ではないものを指定することになります。<br>
+.
+- loadOp<br>
+レンダーパスを開始 ( IV3DCommandBuffer::BeginRenderPass ) して、最初のサブパスを開始する際のアタッチメントに対して行う処理を指定します。<br>
+この処理には以下のものがあります。<br>
+  - ::V3D_ATTACHMENT_LOAD_OP_UNDEFINED<br>
+  アタッチメントの以前の内容を保持する必要がない場合に指定します。
+  - ::V3D_ATTACHMENT_LOAD_OP_CLEAR<br>
+  アタッチメントの内容を clearValue の値でクリアします。
+  - ::V3D_ATTACHMENT_LOAD_OP_LOAD<br>
+  アタッチメントの以前の内容をロードします。<br>
+  このレンダーパス外でなんらかの書き込みがあった場合にそれをロードしたい場合に指定します。
+  .
+またこの順序には意味があり、上から速い順に並んでいます。<br>
+::V3D_ATTACHMENT_LOAD_OP_UNDEFINED は最も処理が速く、 ::V3D_ATTACHMENT_LOAD_OP_LOAD は最も処理が遅く、 ::V3D_ATTACHMENT_LOAD_OP_CLEAR はその中間にあたります。<br>
+基本的には ::V3D_ATTACHMENT_LOAD_OP_CLEAR が推奨されているようです。<br>
+.
+- storeOp<br>
+最後のサブパス終了時にアタッチメントに対して行う処理を指定します。<br>
+この処理には以下のものがあります。<br>
+  - ::V3D_ATTACHMENT_STORE_OP_UNDEFINED<br>
+  アタッチメントの内容を保存する必要がなく、レンダーパス外にでた際の内容は保持は保証されません。<br>
+  アタッチメントがこのレンダーパス内で完結する場合、またはテンポラリとして使用する場合は、これを指定します。<br>
+  - ::V3D_ATTACHMENT_STORE_OP_STORE<br>
+  アタッチメントの内容を保存します。<br>
+  レンダーパス外にでてもアタッチメントの内容は保持されます。
+  .
+.
+- stencilLoadOp<br>
+最後のサブパス終了時にアタッチメントの<b>ステンシル</b>に対して行う処理を指定します。<br>
+この処理は loadOp のステンシル版であり、説明は同じなので省きます。
+.
+- stencilStoreOp<br>
+最後のサブパス終了時にアタッチメントの<b>ステンシル</b>に対して行う処理を指定します。<br>
+この処理は storeOp のステンシル版であり、説明は同じなので省きます。
+.
+- initialLayout<br>
+最初のサブパスを開始する際のアタッチメントのイメージレイアウトになります。<br>
+レンダーパスを開始する前に手動でこのイメージレイアウトに移行しておく ( IV3DCommandBuffer::BarrierImage または IV3DCommandBuffer::BarrierImageView ) か、
+後で説明する @ref renderPass_subpassDependency_subsection でも移行することができます。<br>
+手動で移行する際の詳細は @ref barrier_section を参照してください。
+.
+- finalLayout<br>
+最後のサブパスが終了した際のアタッチメントのイメージレイアウトになります。<br>
+この イメージレイアウト ( finalLayout ) が initialLayout と異なる場合は、@ref renderPass_subpassDependency_subsection で移行します。<br>
+ただし、initialLayout と finalLayout が同じだったとしても、サブパスが２つ以上存在している場合は、最低でも１つ以上の依存性は定義する必要があります。
+.
+- clearValue<br>
+loadOp または stencilLoadOp に ::V3D_ATTACHMENT_LOAD_OP_CLEAR を指定した際のクリアする値です。
+.
+<br>
+
+
+@subsection renderPass_subpass_subsection サブパス
+@par
+簡単に言ってしまうと、マルチプルレンダーターゲットです。<br>
+ただ他と違うのは、Vulkan の場合はレンダーパスに複数のサブパスを定義できるということと、
+サブパス内のアタッチメントはシェーダーから出力だけでなく、シェーダーへの入力も指定することができ、データの生産と消費の両方を行うことができます。<br>
+サブパスで指定できるアタッチメントには以下のようなものがあります。<br>
+<br>
+- インプットアタッチメント<br>
+シェーダーに入力するアタッチメントです。<br>
+レンダーパス内の他のサブパスで出力された結果が書き込まれているアタッチメントを、デスクリプタとして入力することによって、シェーダーから読み取ることができるアタッチメントです。
+.
+- カラーアタッチメント<br>
+シェーダーの出力先となるアタッチメントです。<br>
+このアタッチメントに対してシェーダーが出力結果を書き込みます。
+.
+- リゾルブアタッチメント<br>
+カラーアタッチメントをマルチサンプルした結果を出力するアタッチメントです。<br>
+マルチサンプルした場合は、カラーアタッチメントがサブパスの最終結果ではなく、リゾルブアタッチメントがサブパスの最終結果になることに注意してください。
+.
+- デプスステンシルアタッチメント<br>
+デプスステンシルテストに使用するアタッチメントです。<br>
+.
+<br>
+サブパスの定義は V3DSubpassDesc 構造体を使用します。<br>
+またサブパスには各種アタッチメントを参照するための V3DAttachmentReference 構造体も含まれています。<br>
+<br>
+V3DAttachmentReference<br>
+- attachment<br>
+アタッチメントを指定します。<br>
+この値は IV3DDevice::CreateRenderPass の第二引数である pAttachments に指定した V3DAttachmentDesc 構造体の配列のインデックスになります。
+.
+- layout<br>
+サブパス中のアタッチメントのイメージレイアウトです。<br>
+また、このイメージレイアウトに移行した際のパイプラインステージ及びアクセス方法の変更、同期は @ref renderPass_subpassDependency_subsection で説明します。
+.
+<br>
+V3DSubpassDesc<br>
+- inputAttachmentCount, pInputAttachments<br>
+インプットアタッチメントの参照です。<br>
+インプットアタッチメントが存在する場合は pInputAttachments に inputAttachmentCount の値の要素をもつ V3DAttachmentReference 構造体の配列を指定する必要があり、
+逆に存在しない場合は nullptr を指定します。
+.
+- colorAttachmentCount, pColorAttachments<br>
+カラーアタッチメントの参照です。<br>
+pColorAttachments には、colorAttachmentCount の要素を持つ V3DAttachmentReference 構造体の配列を指定します。
+.
+- pResolveAttachments<br>
+リゾルブアタッチメントの参照です。<br>
+マルチサンプルしない場合は nullptr を指定し、
+マルチサンプルする場合は colorAttachmentCount の値の要素をもつ V3DAttachmentReference 配列を指定する必要があります。<br>
+またマルチサンプルする必要がないアタッチメントの場合は V3DAttachmentReference::attachment に ::V3D_ATTACHMENT_UNUSED を指定します。
+.
+- pDepthStencilAttachment<br>
+デプスステンシルアタッチメントを参照する V3DAttachmentReference 構造体のポインタです。<br>
+デプスステンシルアタッチメントを使用しない、または無い場合は nullptr を指定します。
+.
+- preserveAttachmentCount, pPreserveAttachments<br>
+このサブパスで参照されてなく、内容を保持したい、アタッチメントのインデックスです。<br>
+preserveAttachmentCount が 1 以上の場合は、preserveAttachmentCount の値の要素をもつ uint32_t 型の配列を指定必要があり、0 の場合は nullptr を指定します。<br>
+<br>
+※ V3DAttachmentDesc::loadOp に ::V3D_ATTACHMENT_LOAD_OP_UNDEFINED を指定したときの、GPU が自由に使っちゃう感じのものを対象とするんでしょうか？<br>
+すいません、正直よくわかりません、、、
+.
+<br>
+
+
+@subsection renderPass_subpassDependency_subsection サブパスの依存性
+@par
+異なるサブパスへ移行する際のアタッチメントのパイプラインステージ及びアクセス方法の変更、同期を定義します。<br>
+サブパスの依存性を定義するには V3DSubpassDependencyDesc 構造体を使用します。<br>
+<br>
+V3DSubpassDependencyDesc<br>
+- srcSubpass<br>
+移行元であるサブパスのインデックスです。<br>
+またレンダーパス外からの移行の場合は、 ::V3D_SUBPASS_EXTERNAL を指定します。
+.
+- dstSubpass<br>
+移行先であるサブパスのインデックスです。<br>
+またレンダーパス外への移行の場合は、 ::V3D_SUBPASS_EXTERNAL を指定します。
+.
+- srcStageMask<br>
+srcSubpass のパイプラインステージです。<br>
+srcSubpass に ::V3D_SUBPASS_EXTERNAL が指定されていた場合は、レンダーパス開始直前のパイプラインステージを指定する必要があります。
+.
+- dstStageMask<br>
+dstSubpass のパイプラインステージです。<br>
+.
+- srcAccessMask<br>
+srcSubpass のアクセス方法です。<br>
+srcSubpass に ::V3D_SUBPASS_EXTERNAL が指定されていた場合は、レンダーパス開始直前ののアクセス方法を指定する必要があります。
+.
+- dstAccessMask<br>
+dstSubpass のアクセス方法です。
+.
+- dependencyFlags<br>
+GPU はサブパスのアタッチメントをタイル状に分割し、並列で処理しています。<br>
+そのため、次のサブパス dstSubpass に移行する際に、すべてのタイルの処理が完了している必要があるかどうかを指定する必要があります。<br>
+すべてのタイルの処理が完了している必要がある場合は 0 を、完了している必要がない場合は ::V3D_DEPENDENCY_BY_REGION を指定します。<br>
+ただし、依存関係がレンダーパス外 ( srcSubpass または dstSubpass に ::V3D_SUBPASS_EXTERNAL が含まれている ) にわたる場合は 0 を指定する必要があります。<br>
+<br>
+※ 説明にレンダーパスという表現を使用していますが、正確には @ref renderPass_frameBuffer_subsection です。<br>
+これはサブパスによって処理されたのはレンダーパスではなく、 @ref renderPass_frameBuffer_subsection に格納されているアタッチメントだからです。<br>
+.
+<br>
+※ srcStageMask、dstStageMask、srcAccessMask、dstAccessMask の詳細は @ref barrier_section を参照してください。<br>
+<br>
+@subsection renderPass_frameBuffer_subsection フレームバッファー
+@par
+フレームバッファーはレンダーパスが参照するアタッチメントの入れ物になります。<br>
+フレームバッファーは IV3DDevice::CreateFrameBuffer で作成することができ、主要な引数は以下のようになります。<br>
+<br>
+- pRenderPass<br>
+フレームバッファーのアタッチメントを参照するレンダーパスです。
+.
+- attachmentCount, ppAttachments<br>
+pRenderPass が参照するアタッチメントであるイメージビューの配列です。<br>
+このイメージビューの並びは pRenderPass 作成時に渡した V3DAttachmentDesc 構造体の配列と同じ順序である必要があり、<br>
+レンダーパス作成時の V3DAttachmentDesc 構造体とイメージ作成時の V3DImageDesc 構造体のメンバである format 及び samples は一致している必要があります。<br>
+また、すべてのイメージビューの、width、height、depth、layerCount は同じでないといけません。
+.
+<br>
+@subsection renderPass_example1_subsection 例１
+@par
+スワップチェインのイメージに対してレンダリングをするレンダーパスです。<br>
+またイメージのステージは ::V3D_PIPELINE_STAGE_TOP_OF_PIPE 、アクセス方法は ::V3D_ACCESS_MEMORY_READ 、イメージレイアウトは ::V3D_IMAGE_LAYOUT_PRESENT_SRC に移行してある状態です。<br>
+<br>
+@code
+const V3DSwapChainDesc& swapChainDesc;
+
+// ----------------------------------------------------------------------------------------------------
+// アタッチメント
+// ----------------------------------------------------------------------------------------------------
+
+V3DAttachmentDesc attachments[1];
+attachments[0].format = swapChainDesc.imageFormat;
+attachments[0].samples = V3D_SAMPLE_COUNT_1;
+attachments[0].loadOp = V3D_ATTACHMENT_LOAD_OP_CLEAR;
+attachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
+attachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
+attachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
+attachments[0].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+attachments[0].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+attachments[0].clearValue = V3DClearValue{};
+
+// ----------------------------------------------------------------------------------------------------
+// サブパス
+// ----------------------------------------------------------------------------------------------------
+
+V3DAttachmentReference colorAttachmentRefs[1];
+colorAttachmentRefs[0].attachment = 0;
+colorAttachmentRefs[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+
+V3DSubpassDesc subpasses[1];
+subpasses[0].inputAttachmentCount = 0;
+subpasses[0].pInputAttachments = nullptr;
+subpasses[0].colorAttachmentCount = _countof(colorAttachmentRefs);
+subpasses[0].pColorAttachments = colorAttachmentRefs;
+subpasses[0].pResolveAttachments = nullptr;
+subpasses[0].pDepthStencilAttachment = nullptr;
+subpasses[0].preserveAttachmentCount = 0;
+subpasses[0].pPreserveAttachments = nullptr;
+
+// ----------------------------------------------------------------------------------------------------
+// サブパスの依存性
+// ----------------------------------------------------------------------------------------------------
+
+V3DSubpassDependencyDesc subpassDependencies[2];
+
+// レンダーパス外からサブパス０への依存
+subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL;
+subpassDependencies[0].dstSubpass = 0;
+subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
+subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[0].dependencyFlags = 0;
+
+// サブパス０からレンダーパス外への依存
+subpassDependencies[1].srcSubpass = 0;
+subpassDependencies[1].dstSubpass = V3D_SUBPASS_EXTERNAL;
+subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+subpassDependencies[1].dependencyFlags = 0;
+@endcode
+<br>
+@subsection renderPass_example2_subsection 例２
+@par
+サブパス０及びサブパス１でイメージを生成し、サブパス２で合成してスワップチェインのイメージに出力するレンダーパスです。<br>
+<br>
+サブパス０及びサブパス１で生成するイメージのステージは ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT 、アクセス方法は ::V3D_ACCESS_COLOR_ATTACHMENT_WRITE 、イメージレイアウトは ::V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT に移行してある状態です。
+また、スワップチェインのイメージのステージは ::V3D_PIPELINE_STAGE_TOP_OF_PIPE 、アクセス方法は ::V3D_ACCESS_MEMORY_READ 、イメージレイアウトは ::V3D_IMAGE_LAYOUT_PRESENT_SRC に移行してある状態です。<br>
+<br>
+@code
+const V3DSwapChainDesc& swapChainDesc;
+
+// ----------------------------------------------------------------------------------------------------
+// アタッチメント
+// ----------------------------------------------------------------------------------------------------
+
+V3DAttachmentDesc attachments[3];
+
+// サブパス０で出力されるアタッチメント
+attachments[0].format = V3D_FORMAT_B8G8R8A8_UNORM;
+attachments[0].samples = V3D_SAMPLE_COUNT_1;
+attachments[0].loadOp = V3D_ATTACHMENT_LOAD_OP_CLEAR;
+attachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
+attachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
+attachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
+attachments[0].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+attachments[0].finalLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+attachments[0].clearValue = V3DClearValue{};
+
+// サブパス１で出力されるアタッチメント
+attachments[1].format = V3D_FORMAT_B8G8R8A8_UNORM;
+attachments[1].samples = V3D_SAMPLE_COUNT_1;
+attachments[1].loadOp = V3D_ATTACHMENT_LOAD_OP_CLEAR;
+attachments[1].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
+attachments[1].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
+attachments[1].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
+attachments[1].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+attachments[1].finalLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+attachments[1].clearValue = V3DClearValue{};
+
+// サブパス０および１で生成したものを出力するアタッチメント
+attachments[2].format = swapChainDesc.imageFormat;
+attachments[2].samples = V3D_SAMPLE_COUNT_1;
+attachments[2].loadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
+attachments[2].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
+attachments[2].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
+attachments[2].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
+attachments[2].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+attachments[2].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+attachments[2].clearValue = V3DClearValue{};
+
+// ----------------------------------------------------------------------------------------------------
+// サブパス
+// ----------------------------------------------------------------------------------------------------
+
+V3DSubpassDesc subpasses[3];
+
+// サブパス０
+V3DAttachmentReference colorAttachmentRefs0[1];
+colorAttachmentRefs0[0].attachment = 0;
+colorAttachmentRefs0[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+
+subpasses[0].inputAttachmentCount = 0;
+subpasses[0].pInputAttachments = nullptr;
+subpasses[0].colorAttachmentCount = _countof(colorAttachmentRefs0);
+subpasses[0].pColorAttachments = colorAttachmentRefs0;
+subpasses[0].pResolveAttachments = nullptr;
+subpasses[0].pDepthStencilAttachment = nullptr;
+subpasses[0].preserveAttachmentCount = 0;
+subpasses[0].pPreserveAttachments = nullptr;
+
+// サブパス１
+V3DAttachmentReference colorAttachmentRefs1[1];
+colorAttachmentRefs1[0].attachment = 1;
+colorAttachmentRefs1[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+
+subpasses[1].inputAttachmentCount = 0;
+subpasses[1].pInputAttachments = nullptr;
+subpasses[1].colorAttachmentCount = _countof(colorAttachmentRefs1);
+subpasses[1].pColorAttachments = colorAttachmentRefs1;
+subpasses[1].pResolveAttachments = nullptr;
+subpasses[1].pDepthStencilAttachment = nullptr;
+subpasses[1].preserveAttachmentCount = 0;
+subpasses[1].pPreserveAttachments = nullptr;
+
+// サブパス２
+V3DAttachmentReference inputAttachmentRefs2[2];
+inputAttachmentRefs2[0].attachment = 0;
+inputAttachmentRefs2[0].layout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+inputAttachmentRefs2[1].attachment = 1;
+inputAttachmentRefs2[1].layout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+
+V3DAttachmentReference colorAttachmentRefs2[1];
+colorAttachmentRefs2[0].attachment = 2;
+colorAttachmentRefs2[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+
+subpasses[2].inputAttachmentCount = _countof(inputAttachmentRefs2);
+subpasses[2].pInputAttachments = inputAttachmentRefs2;
+subpasses[2].colorAttachmentCount = _countof(colorAttachmentRefs2);
+subpasses[2].pColorAttachments = colorAttachmentRefs2;
+subpasses[2].pResolveAttachments = nullptr;
+subpasses[2].pDepthStencilAttachment = nullptr;
+subpasses[2].preserveAttachmentCount = 0;
+subpasses[2].pPreserveAttachments = nullptr;
+
+// ----------------------------------------------------------------------------------------------------
+// サブパスの依存性
+// ----------------------------------------------------------------------------------------------------
+
+V3DSubpassDependencyDesc subpassDependencies[6];
+
+// サブパス０からサブパス２の依存
+subpassDependencies[0].srcSubpass = 0;
+subpassDependencies[0].dstSubpass = 2;
+subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+subpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[0].dstAccessMask = V3D_ACCESS_INPUT_ATTACHMENT_READ;
+subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
+// サブパス１からサブパス２への依存
+subpassDependencies[1].srcSubpass = 1;
+subpassDependencies[1].dstSubpass = 2;
+subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[1].dstAccessMask = V3D_ACCESS_INPUT_ATTACHMENT_READ;
+subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
+// レンダーパス外からサブパス２への依存
+subpassDependencies[2].srcSubpass = V3D_SUBPASS_EXTERNAL;
+subpassDependencies[2].dstSubpass = 2;
+subpassDependencies[2].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+subpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[2].srcAccessMask = V3D_ACCESS_MEMORY_READ;
+subpassDependencies[2].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[2].dependencyFlags = 0;
+
+// サブパス２からレンダーパス外への依存
+subpassDependencies[3].srcSubpass = 2;
+subpassDependencies[3].dstSubpass = V3D_SUBPASS_EXTERNAL;
+subpassDependencies[3].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[3].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+subpassDependencies[3].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[3].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+subpassDependencies[3].dependencyFlags = 0;
+
+// サブパス０からレンダーパス外への依存
+subpassDependencies[4].srcSubpass = 0;
+subpassDependencies[4].dstSubpass = V3D_SUBPASS_EXTERNAL;
+subpassDependencies[4].srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+subpassDependencies[4].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[4].srcAccessMask = V3D_ACCESS_INPUT_ATTACHMENT_READ;
+subpassDependencies[4].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[4].dependencyFlags = 0;
+
+// サブパス１からレンダーパス外への依存
+subpassDependencies[5].srcSubpass = 1;
+subpassDependencies[5].dstSubpass = V3D_SUBPASS_EXTERNAL;
+subpassDependencies[5].srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+subpassDependencies[5].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+subpassDependencies[5].srcAccessMask = V3D_ACCESS_INPUT_ATTACHMENT_READ;
+subpassDependencies[5].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+subpassDependencies[5].dependencyFlags = 0;
+
+@endcode
+<br>
+@ref renderPass_example1_subsection にくらべて、多く @ref renderPass_subpassDependency_subsection が定義されています。<br>
+説明には srcSubpass が移行元のサブパス、dstSubpass が移行先のサブパスと書いていますが、
+レンダーパスの場合は srcSubpass を生産のサブパス、dstSubpass を消費のサブパスに置き換えると、多少考えやすくなるかもしれません。<br>
+また、生産を出力、消費を入力として置き換えるのもありだと思われます。
+
+@section pipeline_section パイプライン
+_ _ _
+@par
+Underconstruction...<br>
 <br>
 */

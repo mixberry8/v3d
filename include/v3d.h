@@ -223,9 +223,9 @@ enum V3D_FORMAT : uint8_t
 	V3D_FORMAT_R64G64B64A64_SFLOAT = 121, //!< 4 成分、256 ビット符号付き浮動小数点フォーマットです。
 	V3D_FORMAT_B10G11R11_UFLOAT = 122, //!< 3 成分、32 ビット符号なし浮動小数点フォーマットです。
 	V3D_FORMAT_E5B9G9R9_UFLOAT = 123, //!< 4 成分、共有指数を含む 32 ビット符号なし浮動小数点フォーマットです。
-	V3D_FORMAT_D16_UNORM = 124, //!< 1 成分、16 ビット符号なし正規化フォーマットです。
-	V3D_FORMAT_X8_D24_UNORM = 125, //!< 2 成分、32 ビット符号なし正規化フォーマットです。
-	V3D_FORMAT_D32_SFLOAT = 126, //!< 1 成分、32 ビット符号付き浮動小数点フォーマットです。
+	V3D_FORMAT_D16_UNORM = 124, //!< 1 成分、深度 16 ビット符号なし正規化フォーマットです。
+	V3D_FORMAT_X8_D24_UNORM = 125, //!< 2 成分、未使用 8 ビット、深度 24 ビット符号なし正規化フォーマットです。
+	V3D_FORMAT_D32_SFLOAT = 126, //!< 1 成分、深度 32 ビット符号付き浮動小数点フォーマットです。
 	V3D_FORMAT_S8_UINT = 127, //!< 1 成分、8 ビット符号なし整数フォーマットです。
 	V3D_FORMAT_D16_UNORM_S8_UINT = 128, //!< デプスに 16 ビット符号なし正規化整数、ステンシルに 8 ビット符号無し整数を使用するフォーマットです。
 	V3D_FORMAT_D24_UNORM_S8_UINT = 129, //!< デプスに 24 ビット符号なし正規化整数、ステンシルに 8 ビット符号無し整数を使用するフォーマットです。
@@ -290,9 +290,9 @@ enum V3D_FORMAT : uint8_t
 //! @brief メモリプロパティフラグ
 enum V3D_MEMORY_PROPERTY_FLAG : V3DFlags
 {
-	//! @brief デバイスからアクセスできるメモリを使用します。
+	//! @brief デバイスからアクセスできるメモリです。
 	V3D_MEMORY_PROPERTY_DEVICE_LOCAL = 0x00000001,
-	//! @brief ホストからアクセスできるメモリを使用します。
+	//! @brief ホストからアクセスできるメモリです。
 	V3D_MEMORY_PROPERTY_HOST_VISIBLE = 0x00000002,
 	//! @brief ホストから書き込んだ内容をフラッシュする必要はありません。<br>
 	//! このフラグを指定した場合は IV3DResource::Map および IV3DResource::Unmap 時にデバイスまたはホストからのメモリの可視、不可視の変更処理を行わないため、速度の向上が見込まれます。<br>
@@ -310,63 +310,52 @@ enum V3D_MEMORY_PROPERTY_FLAG : V3DFlags
 //! @brief パイプラインステージフラグ
 enum V3D_PIPELINE_STAGE_FLAG : V3DFlags
 {
-	//! @brief コマンドがキューによって受信される最初のステージです。
+	//! @brief 最初のステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! N/A
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> </td></tr></table>
 	V3D_PIPELINE_STAGE_TOP_OF_PIPE = 0x00000001,
 	//! @brief バーテックスバッファとインデックスバッファが消費されるステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_VERTEX_INPUT = 0x00000004,
 	//! @brief バーテックスシェーダステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_VERTEX_SHADER = 0x00000008,
 	//! @brief テッセレーション制御シェーダステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER = 0x00000010,
 	//! @brief テッセレーション評価シェーダステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER = 0x00000020,
 	//! @brief ジオメトリシェーダステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_GEOMETRY_SHADER = 0x00000040,
 	//! @brief フラグメントシェーダステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_FRAGMENT_SHADER = 0x00000080,
 	//! @brief フラグメントシェーディング前のデプステストとステンシルテストが実行されるステージです。<br>
 	//! サブパスのデプスステンシルアタッチメントのロード処理が含まれます。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS = 0x00000100,
 	//! @brief フラグメントシェーディング後のデプステストとステンシルテストが実行されるステージです。<br>
 	//! サブパスのデプスステンシルアタッチメントのストア処理が含まれます。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS = 0x00000200,
 	//! @brief ブレンドされたカラーが出力されるパイプラインステージです。<br>
 	//! サブパスのカラーアタッチメントのロード、ストア、リゾルブ ( マルチサンプル ) が含まれます。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT = 0x00000400,
 	//! @brief コンピュートシェーダーステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_COMPUTE
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_COMPUTE </td></tr></table>
 	V3D_PIPELINE_STAGE_COMPUTE_SHADER = 0x00000800,
 	//! @brief コピー操作をするステージです。<br>
 	//! 以下のコマンドはこのステージで実行する必要があります。<br>
@@ -380,21 +369,19 @@ enum V3D_PIPELINE_STAGE_FLAG : V3DFlags
 	//! IV3DCommandBuffer::ResolveImageView<br>
 	//! IV3DCommandBuffer::BlitImage<br>
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS ::V3D_QUEUE_COMPUTE または ::V3D_QUEUE_TRANSFER
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE <br>または<br> ::V3D_QUEUE_TRANSFER </td></tr></table>
 	V3D_PIPELINE_STAGE_TRANSFER = 0x00001000,
-	//! @brief コマンドによって生成されたオペレーションが実行を完了する最終ステージです。<br>
+	//! @brief 最後のステージです。<br>
+	//! コマンドによって生成されたオペレーションが実行を完了するステージであり、
 	//! 次のアクセスが別のキューまたはプレゼンテーション ( IV3DQueue::Present ) で行われる場合の移行に使用します。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! N/A
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> </td></tr></table>
 	V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE = 0x00002000,
+
 	//! @brief ホストからの読み込み、または書き込みを実行するステージです。
 	//! <br>
-	//! - 必須のキューの機能フラグ<br>
-	//! N/A
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> </td></tr></table>
 	V3D_PIPELINE_STAGE_HOST = 0x00004000,
-
 	//! @brief すべてのグラフィックパイプラインステージです。<br>
 	//! <br>
 	//! ::V3D_PIPELINE_STAGE_TOP_OF_PIPE<br>
@@ -408,14 +395,12 @@ enum V3D_PIPELINE_STAGE_FLAG : V3DFlags
 	//! ::V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS<br>
 	//! ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT<br>
 	//! ::V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE<br>
-	//! @remarks
-	//! - 必須のキューの機能フラグ<br>
-	//! ::V3D_QUEUE_GRAPHICS
+	//! <br>
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> ::V3D_QUEUE_GRAPHICS </td></tr></table>
 	V3D_PIPELINE_STAGE_ALL_GRAPHICS = 0x00008000,
 	//! @brief すべてのコマンドのステージです。
-	//! @remarks
-	//! - 必須のキューの機能フラグ<br>
-	//! N/A
+	//! <br>
+	//! <table class="pielineStage"><tr><th>必須のキュー機能</th></tr><tr><td> </td></tr></table>
 	V3D_PIPELINE_STAGE_ALL_COMMANDS = 0x00010000,
 };
 
@@ -425,19 +410,19 @@ enum V3D_ACCESS_FLAG : V3DFlags
 {
 	//! @brief インデックスバッファーへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_VERTEX_INPUT</td><td>::V3D_BUFFER_USAGE_INDEX</td><td>::V3D_QUEUE_GRAPHICS</td></tr>
 	//! </table>
 	V3D_ACCESS_INDEX_READ = 0x00000002,
 	//! @brief バーテックスバッファへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td class="td_stage">::V3D_PIPELINE_STAGE_VERTEX_INPUT</td><td>::V3D_BUFFER_USAGE_VERTEX</td><td>::V3D_QUEUE_GRAPHICS</td></tr>
 	//! </table>
 	V3D_ACCESS_VERTEX_READ = 0x00000004,
 	//! @brief ユニフォームバッファへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr>
 	//!     <td>
 	//!       ::V3D_PIPELINE_STAGE_VERTEX_INPUT<br>
@@ -457,13 +442,13 @@ enum V3D_ACCESS_FLAG : V3DFlags
 	V3D_ACCESS_UNIFORM_READ = 0x00000008,
 	//! @brief インプットアタッチメントへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_FRAGMENT_SHADER</td><td>::V3D_IMAGE_USAGE_INPUT_ATTACHMENT</td><td>::V3D_QUEUE_GRAPHICS</td></tr>
 	//! </table>
 	V3D_ACCESS_INPUT_ATTACHMENT_READ = 0x00000010,
 	//! @brief ストレージバッファ、ユニフォームテクセルバッファ、ストレージテクセルバッファ、サンプリングイメージ、ストレージイメージへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr>
 	//!     <td>
 	//!       ::V3D_PIPELINE_STAGE_VERTEX_SHADER<br>
@@ -487,7 +472,7 @@ enum V3D_ACCESS_FLAG : V3DFlags
 	V3D_ACCESS_SHADER_READ = 0x00000020,
 	//! @brief ストレージバッファ、ストレージテクセルバッファ、ストレージイメージへの書き込みアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr>
 	//!     <td>
 	//!       ::V3D_PIPELINE_STAGE_VERTEX_SHADER<br>
@@ -509,19 +494,19 @@ enum V3D_ACCESS_FLAG : V3DFlags
 	V3D_ACCESS_SHADER_WRITE = 0x00000040,
 	//! @brief ブレンディング、ロジック、サブパスのロードなどのカラーアタッチメントへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td class="td_stage">::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT</td><td>::V3D_IMAGE_USAGE_COLOR_ATTACHMENT</td><td>::V3D_QUEUE_GRAPHICS</td></tr>
 	//! </table>
 	V3D_ACCESS_COLOR_ATTACHMENT_READ = 0x00000080,
 	//! @brief レンダリングパス中のサブパスのロード後からストアまでの処理などのカラーアタッチメントへの書き込みアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT</td><td>::V3D_IMAGE_USAGE_COLOR_ATTACHMENT</td><td>::V3D_QUEUE_GRAPHICS</td></tr>
 	//! </table>
 	V3D_ACCESS_COLOR_ATTACHMENT_WRITE = 0x00000100,
 	//! @brief デプス、ステンシルの操作、サブパスのロードなどのデプスステンシルアタッチメントへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr>
 	//!     <td>
 	//!       ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS<br>
@@ -534,7 +519,7 @@ enum V3D_ACCESS_FLAG : V3DFlags
 	V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ = 0x00000200,
 	//! @brief レンダリングパス中のサブパスのロード後からストアまでの処理などのデプスステンシルアタッチメントへの書き込みアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr>
 	//!     <td>
 	//!       ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS<br>
@@ -547,42 +532,42 @@ enum V3D_ACCESS_FLAG : V3DFlags
 	V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE = 0x00000400,
 	//! @brief コピーコマンドでのバッファまたはイメージへの読み取りアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_TRANSFER</td><td> ::V3D_BUFFER_USAGE_TRANSFER_SRC<br> <br> ::V3D_IMAGE_USAGE_TRANSFER_SRC</td><td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE<br> ::V3D_QUEUE_TRANSFER</td>
 	//!   </tr>
 	//! </table>
 	V3D_ACCESS_TRANSFER_READ = 0x00000800,
 	//! @brief コピーコマンドでのバッファまたはイメージへの書き込みアクセスです。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_TRANSFER</td><td>::V3D_BUFFER_USAGE_TRANSFER_DST<br> <br> ::V3D_IMAGE_USAGE_TRANSFER_DST</td><td>::V3D_QUEUE_GRAPHICS<br> ::V3D_QUEUE_COMPUTE <br> ::V3D_QUEUE_TRANSFER </td></tr>
 	//! </table>
 	V3D_ACCESS_TRANSFER_WRITE = 0x00001000,
 	//! @brief ホストからの読み取りアクセスです。<br>
 	//! バインドしたリソースメモリの特性に ::V3D_MEMORY_PROPERTY_HOST_VISIBLE が含まれているリソースを対象とします。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_HOST</td><td> </td><td> </td></tr>
 	//! </table>
 	V3D_ACCESS_HOST_READ = 0x00002000,
 	//! @brief ホストからの書き込みアクセスです。<br>
 	//! バインドしたリソースメモリの特性に ::V3D_MEMORY_PROPERTY_HOST_VISIBLE が含まれているリソースを対象とします。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td>::V3D_PIPELINE_STAGE_HOST</td><td> </td><td> </td></tr>
 	//! </table>
 	V3D_ACCESS_HOST_WRITE = 0x00004000,
 	//! @brief 特定のリソースへの読み取りアクセスです。<br>
 	//! スワップチェインのイメージなどがこの特定のリソースに含まれます。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td> </td><td> </td><td> </td></tr>
 	//! </table>
 	V3D_ACCESS_MEMORY_READ = 0x00008000,
 	//! @brief 特定のリソースへの書き込みアクセスです。<br>
 	//! スワップチェインのイメージなどがこの特定のリソースに含まれます。<br>
 	//! <table class="access">
-	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">サポートするキュー</th></tr>
+	//!   <tr><th class="stage">サポートするステージ</th><th class="usage">サポートするリソースの使用法</th><th class="queue">必須のキュー機能</th></tr>
 	//!   <tr><td> </td><td> </td><td> </td></tr>
 	//! </table>
 	V3D_ACCESS_MEMORY_WRITE = 0x00010000,
@@ -592,7 +577,8 @@ enum V3D_ACCESS_FLAG : V3DFlags
 //! @brief 依存性フラグ
 enum V3D_DEPENDENCY_FLAG : V3DFlags
 {
-	V3D_DEPENDENCY_BY_REGION = 0x00000001, //!< 依存関係がフレームバッファのローカルであることを表します。
+	//! @brief サブパスの依存関係がフレームバッファー内であることを表します。
+	V3D_DEPENDENCY_BY_REGION = 0x00000001,
 };
 
 //! @enum V3D_SHADER_STAGE_FLAG
@@ -614,6 +600,7 @@ enum V3D_IMAGE_LAYOUT
 	//! @brief デバイスのアクセスをサポートしません。<br>
 	//! イメージ作成時の初期レイアウトとして使用することができます。<br>
 	//! また、このレイアウトから移行するとき、メモリの内容の保持は保証されません。
+	//! @sa IV3DDevice::CreateImage
 	V3D_IMAGE_LAYOUT_UNDEFINED = 0,
 	//! @brief すべてのアクセスをサポートします。<br>
 	V3D_IMAGE_LAYOUT_GENERAL = 1,
@@ -631,28 +618,30 @@ enum V3D_IMAGE_LAYOUT
 	//! またこのレイアウトを適用するイメージの使用法には ::V3D_IMAGE_USAGE_SAMPLED または ::V3D_IMAGE_USAGE_INPUT_ATTACHMENT のいずれかが含まれている必要があります。
 	V3D_IMAGE_LAYOUT_SHADER_READ_ONLY = 5,
 	//! @brief コピーコマンドのコピー元イメージに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用するイメージの使用法には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! このレイアウトを適用するイメージの使用法には ::V3D_IMAGE_USAGE_TRANSFER_SRC 、パイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。<br>
 	//! @sa IV3DCommandBuffer::CopyImage
 	//! @sa IV3DCommandBuffer::CopyImageToBuffer
 	//! @sa IV3DCommandBuffer::BlitImage
 	//! @sa IV3DCommandBuffer::BlitImageView
-	//! @sa IV3DCommandBuffer::ResolveImageView
+	//! @sa IV3DCommandBuffer::ResolveImage
 	//! @sa IV3DCommandBuffer::ResolveImageView
 	V3D_IMAGE_LAYOUT_TRANSFER_SRC = 6,
 	//! @brief コピーコマンドのコピー先イメージに対して有効なレイアウトです。<br>
-	//! このレイアウトを適用するイメージの使用法には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! このレイアウトを適用するイメージの使用法には ::V3D_IMAGE_USAGE_TRANSFER_DST 、パイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @sa IV3DCommandBuffer::CopyImage
 	//! @sa IV3DCommandBuffer::CopyBufferToImage
 	//! @sa IV3DCommandBuffer::BlitImage
 	//! @sa IV3DCommandBuffer::BlitImageView
-	//! @sa IV3DCommandBuffer::ResolveImageView
+	//! @sa IV3DCommandBuffer::ResolveImage
 	//! @sa IV3DCommandBuffer::ResolveImageView
 	V3D_IMAGE_LAYOUT_TRANSFER_DST = 7,
 	//! @brief デバイスのアクセスをサポートしません<br>
 	//! イメージ作成時の初期レイアウトとして使用することができ、イメージ作成後すぐにメモリへの書き込みができます。<br>
 	//! また異なるレイアウトへ移行するとき、メモリの内容は保持されます。
+	//! @sa IV3DDevice::CreateImage
 	V3D_IMAGE_LAYOUT_PREINITIALIZED = 8,
-	//! @brief スワップチェインのイメージに対して有効なレイアウトです。<br>
+	//! @brief スワップチェインのイメージを表示する際のレイアウトです。<br>
+	//! スワップチェインのイメージはプレゼント ( IV3DQueue::Present ) する前にこのイメージレイアウトに移行しておく必要があります。
 	V3D_IMAGE_LAYOUT_PRESENT_SRC = 9,
 };
 
@@ -921,7 +910,7 @@ enum V3D_QUERY_RESULT_FLAG : uint8_t
 {
 	V3D_QUERY_RESULT_WAIT = 0x00000001, //!< 指定したすべてのクエリの結果が取得できるまで待機します。
 	V3D_QUERY_RESULT_WITH_AVAILABILITY = 0x00000002, //!< 結果が出ているクエリがあるかどうかを確認できるようにします。
-	V3D_QUERY_RESULT_PARTIAL = 0x00000004, //!< 指定したすべてクエリでなくても結果を取得できるようにします。
+	V3D_QUERY_RESULT_PARTIAL = 0x00000004, //!< 指定したすべてのクエリでなくても結果を取得できるようにします。
 };
 
 //! @enum V3D_QUERY_PIPELINE_STATISTIC_TYPE
@@ -985,21 +974,22 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @retval V3D_ERROR_DEVICE_LOST @copydoc V3D_ERROR_DEVICE_LOST
 	//! @remarks
-	//! クエリがキューに送信 ( IV3DQueue::Submit ) された後に使用してください。<br>
-	//! 返り値が V3D_OK でなくてもクエリの結果を取得しようとした後は IV3DCommandBuffer::ResetQueryPool でクエリプールをリセットしてください。<br>
-	//! <br>
-	//! クエリのタイプが ::V3D_QUERY_TYPE_OCCLUSION もしくわ ::V3D_QUERY_TYPE_TIMESTAMP であった場合は queryResultCount の値は queryCount になります。<br>
-	//! クエリのタイプが ::V3D_QUERY_TYPE_PIPELINE_STATISTICS であった場合は queryResultCount の値は queryCount * 11 になり、それぞれの 0 ～ 10 要素の値の意味は ::V3D_QUERY_PIPELINE_STATISTIC_TYPE 列挙型を参照してください。<br>
-	//! クエリのタイプが ::V3D_QUERY_TYPE_TIMESTAMP であった場合は pQueryResults に書き込まれる数値の単位はナノ秒になります。<br>
-	//! <br>
-	//! flags に ::V3D_QUERY_RESULT_WAIT を指定した場合は、クエリの結果が取得できるまで待機します。<br>
-	//! flags に ::V3D_QUERY_RESULT_PARTIAL を指定した場合は、指定したすべてのクエリでなく、部分的なクエリの途中の結果を取得できるようになります。<br>
+	//! - 返り値が ::V3D_OK でなくてもクエリの結果を取得しようとした後は IV3DCommandBuffer::ResetQueryPool でクエリプールをリセットしてください。
+	//! .
+	//! - クエリのタイプが ::V3D_QUERY_TYPE_OCCLUSION または ::V3D_QUERY_TYPE_TIMESTAMP であった場合は queryResultCount の値は queryCount になります。
+	//! .
+	//! - クエリのタイプが ::V3D_QUERY_TYPE_PIPELINE_STATISTICS であった場合は queryResultCount の値は queryCount * 11 になり、それぞれの 0 ～ 10 要素の値の意味は ::V3D_QUERY_PIPELINE_STATISTIC_TYPE 列挙型を参照してください。
+	//! .
+	//! - クエリのタイプが ::V3D_QUERY_TYPE_TIMESTAMP であった場合は pQueryResults に書き込まれる数値の単位はナノ秒になります。
+	//! .
+	//! - flags に ::V3D_QUERY_RESULT_WAIT が含まれている場合は、クエリの結果が取得できるまで待機します。<br>
+	//! ただしクエリがキューに送信されていない状態で結果を取得しようとすると、デッドロックをひきおこしますので注意が必要です。
+	//! .
+	//! - flags に ::V3D_QUERY_RESULT_PARTIAL が含まれている場合は、指定したすべてのクエリでなく、部分的なクエリの途中の結果を取得できるようになります。<br>
 	//! ただし、クエリのタイプが ::V3D_QUERY_TYPE_TIMESTAMP であった場合、このフラグを指定することはできません。<br>
-	//! flags に ::V3D_QUERY_RESULT_WITH_AVAILABILITY を指定した場合は、queryResultCount の値は queryCount + 1 をを必要とし、
-	//! 最後の要素 ( pQueryResults[queryResultCount - 1] ) にクエリの結果が取得できた場合は 1 以上の値、取得できなかった場合は 0 が書き込まれます。
-	//! @sa V3D_QUERY_TYPE
-	//! @sa V3D_QUERY_RESULT_FLAG
-	//! @sa V3D_QUERY_PIPELINE_STATISTIC_TYPE
+	//! .
+	//! - flags に ::V3D_QUERY_RESULT_WITH_AVAILABILITY が含まれている場合は、queryResultCount は queryCount + 1 を必要とします。<br>
+	//! そして最後の要素 ( pQueryResults[queryResultCount - 1] ) にクエリの結果が取得できた場合は 1 以上の値、取得できなかった場合は 0 が書き込まれます。
 	virtual V3D_RESULT GetResults(uint32_t firstQuery, uint32_t queryCount, uint32_t queryResultCount, uint64_t* pQueryResults, V3DFlags queryResultFlags) = 0;
 
 protected:
@@ -1633,13 +1623,13 @@ protected:
 //! @brief アタッチメントのロード操作
 enum V3D_ATTACHMENT_LOAD_OP : uint8_t
 {
-	//! @brief レンダーパスの開始時 ( IV3DCommandBuffer::BeginRenderPass ) にアタッチメントの以前の内容が保持されている必要がないことを表します。<br>
+	//! @brief 最初のサブパスが開始された際にアタッチメントの以前の内容が保持されている必要がないことを表します。<br>
 	//! またアタッチメントのアクセスには、 ::V3D_ACCESS_COLOR_ATTACHMENT_WRITE または ::V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE が含まれている必要があります。
 	V3D_ATTACHMENT_LOAD_OP_UNDEFINED = 0,
-	//! @brief レンダーパスの開始時 ( IV3DCommandBuffer::BeginRenderPass ) にアタッチメントの以前の内容を読み込みます。<br>
+	//! @brief 最初のサブパスが開始された際にアタッチメントの以前の内容を読み込みます。<br>
 	//! またアタッチメントのアクセスには、 ::V3D_ACCESS_COLOR_ATTACHMENT_READ または ::V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ が含まれている必要があります。
 	V3D_ATTACHMENT_LOAD_OP_LOAD = 1,
-	//! @brief レンダーパスの開始時 ( IV3DCommandBuffer::BeginRenderPass ) にアタッチメントをクリアします。
+	//! @brief 最初のサブパスが開始された際にアタッチメントをクリアします。
 	//! またアタッチメントのアクセスには、 ::V3D_ACCESS_COLOR_ATTACHMENT_WRITE または ::V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE が含まれている必要があります。
 	V3D_ATTACHMENT_LOAD_OP_CLEAR = 2,
 };
@@ -1648,10 +1638,10 @@ enum V3D_ATTACHMENT_LOAD_OP : uint8_t
 //! @brief アタッチメントのストア操作
 enum V3D_ATTACHMENT_STORE_OP : uint8_t
 {
-	//! @brief レンダーパスの終了時 ( IV3DCommandBuffer::EndRenderPass ) にアタッチメントの内容が保存されず、破棄される可能性があることを表します。<br>
+	//! @brief 最後のサブパスが終了した際にアタッチメントの内容が保存されず、破棄される可能性があることを表します。<br>
 	//! またアタッチメントのアクセスには、 ::V3D_ACCESS_COLOR_ATTACHMENT_WRITE または ::V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE が含まれている必要があります。
 	V3D_ATTACHMENT_STORE_OP_UNDEFINED = 0,
-	//! @brief レンダーパスの終了時 ( IV3DCommandBuffer::EndRenderPass ) にアタッチメントの内容を保存します。<br>
+	//! @brief 最後のサブパスが終了した際にアタッチメントの内容を保存します。<br>
 	//! またアタッチメントのアクセスには、 ::V3D_ACCESS_COLOR_ATTACHMENT_WRITE または ::V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE が含まれている必要があります。
 	V3D_ATTACHMENT_STORE_OP_STORE = 1,
 };
@@ -1726,10 +1716,10 @@ struct V3DSubpassDesc
 	//! サンプル数 ( V3DImageDesc::samples ) はカラーアタッチメントと同じである必要があります。<br>
 	const V3DAttachmentReference* pDepthStencilAttachment;
 
-	//! @brief このサブパスで使用されてなく、内容を保持したいアタッチメントの数です。
+	//! @brief このサブパス参照されてなく、内容を保持したいアタッチメントの数です。
 	uint32_t preserveAttachmentCount;
-	//! @brief このサブパスで使用されてなく、内容を保持したいアタッチメントのインデックス配列です。<br>
-	//! - 配列の要素数は preserveAttachmentCount である必要があります。
+	//! @brief このサブパスで参照されてなく、内容を保持したいアタッチメントのインデックス配列です。<br>
+	//! - preserveAttachmentCount が 1 以上の場合、配列の要素数は preserveAttachmentCount である必要があり、0 の場合は nullptr を指定します。
 	const uint32_t* pPreserveAttachments;
 };
 
@@ -1740,11 +1730,16 @@ struct V3DSubpassDependencyDesc
 {
 	uint32_t srcSubpass; //!< 移行元のサブパスのインデックスです。
 	uint32_t dstSubpass; //!< 移行先のサブパスのインデックスです。
+
 	V3DFlags srcStageMask; //!< 移行元のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+
 	V3DFlags srcAccessMask; //!< 移行元のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
-	V3DFlags dependencyFlags; //!< 依存を表す ::V3D_DEPENDENCY_FLAG 列挙定数の組み合わせです。
+
+	//! 依存を表す ::V3D_DEPENDENCY_FLAG 列挙定数の組み合わせです。<br>
+	//! srcSubpass または dstSubpass に ::V3D_SUBPASS_EXTERNAL が指定されている場合は ::V3D_DEPENDENCY_BY_REGION を含めてはいけません。
+	V3DFlags dependencyFlags;
 };
 
 //! @}
@@ -2961,14 +2956,14 @@ enum V3D_STENCIL_FACE_FLAG : V3DFlags
 //! @brief バッファーバリアの記述
 struct V3DBarrierBufferDesc
 {
-	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 移行元のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す ::V3D_DEPENDENCY_FLAG 列挙定数の組み合わせです。
 
-	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcAccessMask; //!< 移行元のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 
-	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
+	uint32_t srcQueueFamily; //!< 移行元のキューファミリーです。
 	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
 
 	uint64_t offset; //!< メモリのオフセットをバイト単位で指定します。
@@ -2979,14 +2974,14 @@ struct V3DBarrierBufferDesc
 //! @brief バッファービューバリアの記述
 struct V3DBarrierBufferViewDesc
 {
-	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 移行元のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す ::V3D_DEPENDENCY_FLAG 列挙定数の組み合わせです。
 
-	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcAccessMask; //!< 移行元のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 
-	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
+	uint32_t srcQueueFamily; //!< 移行元のキューファミリーです。
 	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
 };
 
@@ -2994,17 +2989,17 @@ struct V3DBarrierBufferViewDesc
 //! @brief イメージバリアの記述
 struct V3DBarrierImageDesc
 {
-	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 移行元のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す ::V3D_DEPENDENCY_FLAG 列挙定数の組み合わせです。
 
-	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcAccessMask; //!< 移行元のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 
-	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
+	uint32_t srcQueueFamily; //!< 移行元のキューファミリーです。
 	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
 
-	V3D_IMAGE_LAYOUT srcLayout; //!< 現在のイメージレイアウトです。
+	V3D_IMAGE_LAYOUT srcLayout; //!< 移行元のイメージレイアウトです。
 	V3D_IMAGE_LAYOUT dstLayout; //!< 移行先のイメージレイアウトです。
 
 	uint32_t baseLevel; //!< 最初のレベルです。
@@ -3017,17 +3012,17 @@ struct V3DBarrierImageDesc
 //! @brief イメージビューバリアの記述
 struct V3DBarrierImageViewDesc
 {
-	V3DFlags srcStageMask; //!< 現在のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcStageMask; //!< 移行元のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstStageMask; //!< 移行先のパイプラインステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
 	V3DFlags dependencyFlags; //!< 依存性を表す ::V3D_DEPENDENCY_FLAG 列挙定数の組み合わせです。
 
-	V3DFlags srcAccessMask; //!< 現在のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
+	V3DFlags srcAccessMask; //!< 移行元のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 	V3DFlags dstAccessMask; //!< 移行先のアクセス方法を表す ::V3D_ACCESS_FLAG 列挙定数の組み合わせです。
 
-	uint32_t srcQueueFamily; //!< 現在のキューファミリーです。
+	uint32_t srcQueueFamily; //!< 移行元のキューファミリーです。
 	uint32_t dstQueueFamily; //!< 移行先のキューファミリーです。
 
-	V3D_IMAGE_LAYOUT srcLayout; //!< 現在のイメージレイアウトです。
+	V3D_IMAGE_LAYOUT srcLayout; //!< 移行元のイメージレイアウトです。
 	V3D_IMAGE_LAYOUT dstLayout; //!< 移行先のイメージレイアウトです。
 };
 
@@ -3111,8 +3106,8 @@ struct V3DClearColorAttachmentDesc
 //! @brief デスプステンシルアタッチメントをクリアするための記述
 struct V3DClearDepthStencilAttachmentDesc
 {
-	//! @brief デプスをクリアするかどうかを指定します。<br>
-	//! クリアしようとしているデプスステンシルアタッチメントのフォーマットにデプスが含まれている必要があります。
+	//! @brief 深度をクリアするかどうかを指定します。<br>
+	//! クリアしようとしているデプスステンシルアタッチメントのフォーマットに深度が含まれている必要があります。
 	bool depthEnable;
 	//! @brief ステンシルをクリアするかどうかを指定します。<br>
 	//! クリアしようとしているデプスステンシルアタッチメントのフォーマットにステンシルが含まれている必要があります。
@@ -3389,11 +3384,13 @@ public:
 	//! @brief イメージをコピーします。
 	//! @param[in] pDstImage コピー先のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout コピー先のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSrcImage コピー元のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout コピー元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3423,11 +3420,13 @@ public:
 	//! @brief イメージをコピーします。
 	//! @param[in] pDstImage コピー先のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout コピー先のイメージレイアウトです。
 	//! - イメージレイアウトは ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSrcImage コピー元のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。<br>
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout コピー元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれか指定します。
 	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3450,6 +3449,7 @@ public:
 	//! @brief バッファーをイメージにコピーします。
 	//! @param[in] pDstImage コピー先のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout コピー先のイメージのレイアウトです。
 	//! - メージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3485,6 +3485,7 @@ public:
 	//! @brief バッファーをイメージにコピーします
 	//! @param[in] pDstImage コピー先のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout コピー先のイメージのレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL 、 ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3516,6 +3517,7 @@ public:
 	//! - この値は { 0 <= dstBufferOffset < V3DBufferDesc::size } の範囲に制限されます。
 	//! @param[in] pSrcImage コピー元のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout コピー元のイメージのレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL 、::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3548,6 +3550,7 @@ public:
 	//! - バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には ::V3D_BUFFER_USAGE_TRANSFER_DST が含まれている必要があります。
 	//! @param[in] pSrcImage コピー元のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout コピー元のイメージのレイアウトです。
 	//! - メージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImage はコピーを開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3573,11 +3576,13 @@ public:
 	//! @brief イメージを転送します。
 	//! @param[in] pDstImage 転送先のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImage は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSrcImage 転送元のイメージです。
 	//! - イメージ作成時の使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImage は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3614,6 +3619,7 @@ public:
 	//! @brief イメージビューを転送します。
 	//! @param[in] pDstImageView 転送先のイメージビューです。
 	//! - アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImageView は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3621,6 +3627,7 @@ public:
 	//! - この値は、転送先イメージの範囲 ( width height ) を超えて指定してはいけません。
 	//! @param[in] pSrcImageView 転送元のイメージビューです。
 	//! - アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL 、::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImageView は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3628,8 +3635,7 @@ public:
 	//! - この値は、転送元イメージの範囲 ( width height ) を超えて指定してはいけません。
 	//! @param[in] filter フィルターです。
 	//! @remarks
-	//! - 転送操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数、サンプル数が一致している必要があります。
-	//! .
+	//! 転送操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数、サンプル数が一致している必要があります。<br>
 	//! <br>
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>サポートするパイプラインステージ</th><th>サポートするキュー</th></tr>
@@ -3649,18 +3655,19 @@ public:
 	//! @brief イメージビューを転送します。
 	//! @param[in] pDstImageView 転送先のイメージビューです。
 	//! - アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout 転送先のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImageView は転送を開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSrcImageView 転送元のイメージビューです。
 	//! - アクセスするイメージ作成時の使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout 転送元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImageView は転送を開始する前にこのイメージレイアウトに移行く必要があります。
 	//! @param[in] filter フィルターです。
 	//! @remarks
-	//! - 転送操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数、サンプル数が一致している必要があります。
-	//! .
+	//! 転送操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数、サンプル数が一致している必要があります。<br>
 	//! <br>
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>サポートするパイプラインステージ</th><th>サポートするキュー</th></tr>
@@ -3680,11 +3687,13 @@ public:
 	//! @brief マルチサンプルイメージを非マルチサンプルイメージに変換します。
 	//! @param[in] pDstImage 変換先のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかである必要があります。<br>
 	//! また pDstImage は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSrcImage 変換元のイメージです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。
+	//! - イメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。
 	//! - イメージレイアウトは ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImage は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3693,8 +3702,7 @@ public:
 	//! @param[in] pRanges rangeCount 変換する範囲の配列です。
 	//! - 配列の要素数は rangeCount である必要があります。
 	//! @remarks
-	//! - 変換操作をするイメージビューはタイプ、フォーマットが一致している必要があります。
-	//! .
+	//! 変換操作をするイメージビューはタイプ、フォーマットが一致している必要があります。<br>
 	//! <br>
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>サポートするパイプラインステージ</th><th>サポートするキュー</th></tr>
@@ -3714,6 +3722,7 @@ public:
 	//! @param[in] pDstImageView 変換先のイメージビューです。
 	//! - アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。<br>
 	//! またサンプル数である V3DImageDesc::samples には ::V3D_SAMPLE_COUNT_1 が指定されている必要があります。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3722,6 +3731,7 @@ public:
 	//! @param[in] pSrcImageView 変換元のイメージビューです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。<br>
 	//! またサンプル数である V3DImageDesc::samples は ::V3D_SAMPLE_COUNT_1 ではあってはいけません。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
@@ -3730,8 +3740,7 @@ public:
 	//! @param[in] size 変換するイメージのサイズです。
 	//! - この値は変換操作をするイメージの範囲 ( imageSize - offset ) を超えて指定してはいけません。
 	//! @remarks
-	//! - 変換操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数が一致している必要があります。
-	//! .
+	//! 変換操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数が一致している必要があります。<br>
 	//! <br>
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>サポートするパイプラインステージ</th><th>サポートするキュー</th></tr>
@@ -3751,18 +3760,19 @@ public:
 	//! @param[in] pDstImageView 変換先のイメージビューです。
 	//! - アクセスするイメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_DST が含まれている必要があります。<br>
 	//! またサンプル数である V3DImageDesc::samples には ::V3D_SAMPLE_COUNT_1 が指定されている必要があります。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] dstImageLayout 変換先のイメージレイアウトです。
 	//! - イメージレイアウトは ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_DST のいずれかを指定します。<br>
 	//! また pDstImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @param[in] pSrcImageView 変換元のイメージビューです。
 	//! - イメージ作成時に指定した使用法である V3DImageDesc::usageFlags には ::V3D_IMAGE_USAGE_TRANSFER_SRC が含まれている必要があります。<br>
 	//! またサンプル数である V3DImageDesc::samples は ::V3D_SAMPLE_COUNT_1 ではあってはいけません。
+	//! - アクセスするイメージのパイプラインステージには ::V3D_PIPELINE_STAGE_TRANSFER が含まれている必要があります。
 	//! @param[in] srcImageLayout 変換元のイメージレイアウトです。
 	//! - イメージレイアウトには ::V3D_IMAGE_LAYOUT_GENERAL または ::V3D_IMAGE_LAYOUT_TRANSFER_SRC のいずれかを指定します。<br>
 	//! また pSrcImageView は変換を開始する前にこのイメージレイアウトに移行しておく必要があります。
 	//! @remarks
-	//! - 変換操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数が一致している必要があります。
-	//! .
+	//! 変換操作をするイメージビューはタイプ、フォーマット、深さ、レベル数、レイヤー数が一致している必要があります。<br>
 	//! <br>
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>サポートするパイプラインステージ</th><th>サポートするキュー</th></tr>
@@ -4533,13 +4543,13 @@ enum V3D_MEMORY_HEAP_TYPE : uint8_t
 //! @brief バッファーフォーマットのサポートフラグ
 enum V3D_BUFFER_FORMAT_FEATURE_FLAG : V3DFlags
 {
-	//! @brief ユニフォームテクセルバッファとして使用できます。
+	//! @brief ユニフォームテクセルバッファーで使用することができます。
 	V3D_BUFFER_FORMAT_FEATURE_UNIFORM_TEXEL = 0x00000008,
-	//! @brief ストレージテクセルバッファとして使用できます。
+	//! @brief ストレージテクセルバッファーで使用することができます。
 	V3D_BUFFER_FORMAT_FEATURE_STORAGE_TEXEL = 0x00000010,
-	//! @brief アトミック操作をサポートするストレージテクセルバッファとして使用できます。
+	//! @brief アトミック操作をサポートするストレージテクセルバッファーで使用することができます。
 	V3D_BUFFER_FORMAT_FEATURE_STORAGE_TEXEL_ATOMIC = 0x00000020,
-	//! @brief バーテックスバッファとして使用できます。
+	//! @brief バーテックスバッファーで使用することができます。
 	V3D_BUFFER_FORMAT_FEATURE_VERTEX = 0x00000040,
 };
 
@@ -4553,11 +4563,11 @@ enum V3D_IMAGE_FORMAT_FEATURE_FLAG : V3DFlags
 	V3D_IMAGE_FORMAT_FEATURE_STORAGE = 0x00000002,
 	//! @brief アトミック操作をサポートするストレージイメージとして使用できます。
 	V3D_IMAGE_FORMAT_FEATURE_STORAGE_ATOMIC = 0x00000004,
-	//! @brief カラーアタッチメント、インプットアタッチメントとして使用できます。
+	//! @brief カラーアタッチメント及びインプットアタッチメントとして使用できます。
 	V3D_IMAGE_FORMAT_FEATURE_COLOR_ATTACHMENT = 0x00000080,
-	//! @brief ブレンディングをサポートするカラーアタッチメント、インプットアタッチメントとして使用できます。
+	//! @brief ブレンディングをサポートするカラーアタッチメント及びインプットアタッチメントとして使用できます。
 	V3D_IMAGE_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND = 0x00000100,
-	//! @brief デプスステンシルアタッチメントおよびインプットアタッチメントとして使用できます。
+	//! @brief デプスステンシルアタッチメント及びインプットアタッチメントとして使用できます。
 	V3D_IMAGE_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT = 0x00000200,
 	//! @brief 転送先のイメージとして使用することができます。
 	//! @sa IV3DCommandBuffer::BlitImage
@@ -4567,10 +4577,12 @@ enum V3D_IMAGE_FORMAT_FEATURE_FLAG : V3DFlags
 	//! @sa IV3DCommandBuffer::BlitImage
 	//! @sa IV3DCommandBuffer::BlitImageView
 	V3D_IMAGE_FORMAT_FEATURE_BLIT_DST = 0x00000800,
-	//! @brief ::V3D_IMAGE_FORMAT_FEATURE_SAMPLED と一緒に指定されていた場合は、サンプラーの拡大フィルタ、縮小フィルタに ::V3D_MIPMAP_MODE_LINEAR を指定することができます。<br>
-	//! また ::V3D_IMAGE_FORMAT_FEATURE_BLIT_SRC と一緒に指定されていた場合は、::IV3DCommandBuffer::BlitImage の 第７引数である filter に ::V3D_FILTER_LINEAR を指定することができます。
-	//! @sa IV3DCommandBuffer::BlitImage
-	//! @sa IV3DCommandBuffer::BlitImageView
+	//! @brief 線形フィルターを使用することができます。
+	//! - ::V3D_IMAGE_FORMAT_FEATURE_SAMPLED と一緒に指定されていた場合は、サンプラーの拡大フィルタ ( V3DSamplerDesc::magFilter ) 、縮小フィルタ ( V3DSamplerDesc::minFilter ) に ::V3D_FILTER_LINEAR を指定することができます。<br>
+	//! また、サンプラーのミップマップモード ( V3DSamplerDesc::mipmapMode ) には ::V3D_MIPMAP_MODE_LINEAR を指定することができます。
+	//! .
+	//! - ::V3D_IMAGE_FORMAT_FEATURE_BLIT_SRC と一緒に指定されていた場合は、 IV3DCommandBuffer::BlitImage および IV3DCommandBuffer::BlitImageView の引数である filter に ::V3D_FILTER_LINEAR を指定することができます。
+	//! <br>
 	V3D_IMAGE_FORMAT_FEATURE_SAMPLED_FILTER_LINEAR = 0x00001000,
 };
 
