@@ -56,7 +56,7 @@ static constexpr float SPACE_ACC = static_cast<float>(SPACE_ACC_I);
 
 #define ENABLE_MULTITHREAD
 
-//#define DEBUG_MARKER_ENABLE
+#define DEBUG_MARKER_ENABLE
 
 #if defined(DEBUG_MARKER_ENABLE)
 #define DEBUG_MARKER_CODE(code) code
@@ -271,10 +271,10 @@ protected:
 			bool serialize = false;
 //			std::wstring meshName = L"mesh\\house";
 //			std::wstring meshName = L"mesh\\Room";
-			std::wstring meshName = L"mesh\\shadow";
+//			std::wstring meshName = L"mesh\\shadow";
 //			std::wstring meshName = L"mesh\\sibenik";
 //			std::wstring meshName = L"mesh\\sponza";
-//			std::wstring meshName = L"mesh\\dabrovic-sponza";
+			std::wstring meshName = L"mesh\\dabrovic-sponza";
 //			std::wstring meshName = L"mesh\\sanMiguel";
 
 			SkeletalMeshPtr mesh;
@@ -2636,12 +2636,13 @@ protected:
 		// クリーンアップ
 		// ----------------------------------------------------------------------------------------------------
 
-		Array1<IV3DImageView*, 4> imageViews;
+		Array1<IV3DImageView*, 5> imageViews;
 
 		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_0, &imageViews[0]);
 		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_1, &imageViews[1]);
-		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_0, &imageViews[2]);
-		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_1, &imageViews[3]);
+		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_LDR_COLOR_1, &imageViews[2]);
+		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_0, &imageViews[3]);
+		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_1, &imageViews[4]);
 
 		V3DBarrierImageViewDesc barrier{};
 		barrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
@@ -3150,8 +3151,8 @@ public:
 #else //DEBUG_MARKER_ENABLE
 
 #ifdef _DEBUG
-//		desc.layer = V3D_LAYER_VALIDATION;
-		desc.layer = V3D_LAYER_OPTIMAL;
+		desc.layer = V3D_LAYER_VALIDATION;
+//		desc.layer = V3D_LAYER_OPTIMAL;
 #else //_DEBUG
 		desc.layer = V3D_LAYER_OPTIMAL;
 #endif //_DEBUG
