@@ -118,7 +118,7 @@ protected:
 		// メッシュバッファーを作成
 		// ----------------------------------------------------------------------------------------------------
 
-		V3D_RESULT result = CreatePrefab(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), PREFAB_TYPE_CUBE, &m_pMeshBuffer, &m_MeshDrawDesc);
+		V3D_RESULT result = CreatePrefab(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), PREFAB_TYPE_SPHERE, &m_pMeshBuffer, &m_MeshDrawDesc);
 		if (result != V3D_OK)
 		{
 			return false;
@@ -132,7 +132,7 @@ protected:
 			std::wstring srcFilePath;
 			CreateFilePath(L"image\\textureCube.dds", srcFilePath);
 
-			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, &m_pImageView);
+			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, V3D_PIPELINE_STAGE_FRAGMENT_SHADER, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -293,7 +293,7 @@ protected:
 		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
 		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_MeshDrawDesc.vertexOffset);
 		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_MeshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
-		pCommandBufer->DrawIndexed(36, 1, 0, 0, 0);
+		pCommandBufer->DrawIndexed(m_MeshDrawDesc.indexCount, m_MeshDrawDesc.instanceCount, 0, 0, 0);
 
 		// サブパス 1 : テキストの描画
 		pCommandBufer->NextSubpass();

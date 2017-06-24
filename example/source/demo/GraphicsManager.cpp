@@ -282,7 +282,11 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			TO_UI32(descriptors.size()), descriptors.data(),
 			1, 1,
 			&m_pDescriptorSetLayouts[GraphicsManager::DESCRIPTOR_SET_TYPE_SSAO]);
-
+/*
+		result = m_pDevice->CreateDescriptorSetLayout(
+			TO_UI32(descriptors.size()), descriptors.data(),
+			&m_pDescriptorSetLayouts[GraphicsManager::DESCRIPTOR_SET_TYPE_SSAO]);
+*/
 		if (result != V3D_OK)
 		{
 			return result;
@@ -719,7 +723,9 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_GEOMETRY_COLOR_0] = attachment;
+		m_Attachments[IMAGE_TYPE_GEOMETRY_COLOR_0].name = L"geometryColor0";
 		m_Attachments[IMAGE_TYPE_GEOMETRY_COLOR_1] = attachment;
+		m_Attachments[IMAGE_TYPE_GEOMETRY_COLOR_1].name = L"geometryColor1";
 
 		// ジオメトリ : バッファー ( rgb=法線 a=ピクセルが書き込まれたかどうか 0 or 1 )
 		attachment.imageDesc.format = unorm8BitFormat;
@@ -734,6 +740,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_GEOMETRY_BUFFER_0] = attachment;
+		m_Attachments[IMAGE_TYPE_GEOMETRY_BUFFER_0].name = L"geometryBuffer ( normal )";
 
 		// ジオメトリ : バッファー ( rgb=マテリアル a=指数深度 )
 		attachment.imageDesc.format = sfloatFormat;
@@ -748,6 +755,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_GEOMETRY_BUFFER_1] = attachment;
+		m_Attachments[IMAGE_TYPE_GEOMETRY_BUFFER_1].name = L"geometryBuffer ( material depth )";
 
 		// ジオメトリ : デプスステンシル
 		attachment.imageDesc.format = depthStencilFormat;
@@ -762,6 +770,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_GEOMETRY_DEPTH_STENCIL] = attachment;
+		m_Attachments[IMAGE_TYPE_GEOMETRY_DEPTH_STENCIL].name = L"geometryDepthStencil";
 
 		// SSAO
 		attachment.imageDesc.format = unorm8BitFormat;
@@ -776,6 +785,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_SSAO_COLOR] = attachment;
+		m_Attachments[IMAGE_TYPE_SSAO_COLOR].name = L"ambientOcclusion";
 
 		// シャドウ : バッファー ( rgb=色 a=指数深度 )
 		attachment.imageDesc.format = sfloatFormat;
@@ -792,6 +802,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_SHADOW_BUFFER] = attachment;
+		m_Attachments[IMAGE_TYPE_SHADOW_BUFFER].name = L"shadowBuffer";
 
 		// シャドウ : デプスステンシル
 		attachment.imageDesc.format = depthStencilFormat;
@@ -808,6 +819,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_SHADOW_DEPTH_STENCIL] = attachment;
+		m_Attachments[IMAGE_TYPE_SHADOW_DEPTH_STENCIL].name = L"shadowDepthStencil";
 
 		// ライティング
 		attachment.imageDesc.format = colorFormat;
@@ -822,6 +834,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_LIGHT_COLOR] = attachment;
+		m_Attachments[IMAGE_TYPE_LIGHT_COLOR].name = L"lightColor";
 
 		// LDR : カラー
 		attachment.imageDesc.format = unorm8BitFormat;
@@ -836,10 +849,12 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_LDR_COLOR_0] = attachment;
+		m_Attachments[IMAGE_TYPE_LDR_COLOR_0].name = L"ldrColor0";
 		m_Attachments[IMAGE_TYPE_LDR_COLOR_1] = attachment;
+		m_Attachments[IMAGE_TYPE_LDR_COLOR_1].name = L"ldrColor1";
 
 		// ブライトパス
-		attachment.imageDesc.format = colorFormat;
+		attachment.imageDesc.format = unorm8BitFormat;
 		attachment.imageDesc.layerCount = 1;
 		attachment.imageDesc.usageFlags = V3D_IMAGE_USAGE_SAMPLED | V3D_IMAGE_USAGE_COLOR_ATTACHMENT | V3D_IMAGE_USAGE_INPUT_ATTACHMENT;
 		attachment.imageStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
@@ -851,9 +866,10 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 			return V3D_ERROR_FAIL;
 		}
 		m_Attachments[IMAGE_TYPE_BRIGHT_PASS_COLOR] = attachment;
+		m_Attachments[IMAGE_TYPE_BRIGHT_PASS_COLOR].name = L"brightPassColor";
 
 		// ブラー
-		attachment.imageDesc.format = colorFormat;
+		attachment.imageDesc.format = unorm8BitFormat;
 		attachment.imageDesc.layerCount = 1;
 		attachment.imageDesc.usageFlags = V3D_IMAGE_USAGE_SAMPLED | V3D_IMAGE_USAGE_COLOR_ATTACHMENT | V3D_IMAGE_USAGE_INPUT_ATTACHMENT;
 		attachment.imageStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
@@ -866,11 +882,15 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 
 		attachment.imageSizeType = GraphicsManager::IMAGE_SIZE_HALF;
 		m_Attachments[IMAGE_TYPE_BLUR_2_0] = attachment;
+		m_Attachments[IMAGE_TYPE_BLUR_2_0].name = L"blurColor2_0";
 		m_Attachments[IMAGE_TYPE_BLUR_2_1] = attachment;
+		m_Attachments[IMAGE_TYPE_BLUR_2_1].name = L"blurColor2_1";
 
 		attachment.imageSizeType = GraphicsManager::IMAGE_SIZE_QUARTER;
 		m_Attachments[IMAGE_TYPE_BLUR_4_0] = attachment;
+		m_Attachments[IMAGE_TYPE_BLUR_4_0].name = L"blurColor4_0";
 		m_Attachments[IMAGE_TYPE_BLUR_4_1] = attachment;
+		m_Attachments[IMAGE_TYPE_BLUR_4_1].name = L"blurColor4_1";
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -954,7 +974,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 	}
 
 	// 遠景
@@ -1004,7 +1024,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_SHADER_READ;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 	}
 
 	// シャドウ
@@ -1055,7 +1075,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 	}
 
 	// ライティング
@@ -1131,13 +1151,13 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 		// フィニッシュライティング → レンダーパス終了
-		pSubpassDependencies[2].srcSubpass = 1;
-		pSubpassDependencies[2].dstSubpass = 2;
+		pSubpassDependencies[2].srcSubpass = 2;
+		pSubpassDependencies[2].dstSubpass = V3D_SUBPASS_EXTERNAL;
 		pSubpassDependencies[2].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[2].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[2].dependencyFlags = 0;
 	}
 
 	// ブライトパス
@@ -1175,7 +1195,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 	}
 
 	// ブラー
@@ -1256,7 +1276,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[2].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[2].dependencyFlags = 0;
 	}
 
 	// 合成
@@ -1290,7 +1310,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_SHADER_READ;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 	}
 
 	// SSAO
@@ -1328,14 +1348,14 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 	}
 
 	// イメージエフェクト
 	{
 		GraphicsManager::RenderPassDesc& desc = m_RenderPassDescs[GRAPHICS_RENDERPASS_TYPE_IMAGE_EFFECT];
 
-		desc.Allocate(4, 3, 3);
+		desc.Allocate(4, 3, 4);
 
 		V3DAttachmentDesc* pAttachments = desc.pAttachments;
 
@@ -1373,7 +1393,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pAttachments[3].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
 		pAttachments[3].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
 		pAttachments[3].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
-		pAttachments[3].finalLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		pAttachments[3].finalLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
 
 		// サブパス 0 : HDR
 		RenderPassDesc::Subpass* pSubpass = desc.AllocateSubpass(0, 1, 1, false, 0);
@@ -1382,14 +1402,14 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpass->colorAttachments[0].attachment = GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_0;
 		pSubpass->colorAttachments[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
 
-		// サブパス 1 : HDR to LDR
+		// サブパス 1 : HDR to LDR ( ToneMapping )
 		pSubpass = desc.AllocateSubpass(1, 1, 1, false, 0);
 		pSubpass->inputAttachments[0].attachment = GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_0;
 		pSubpass->inputAttachments[0].layout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
 		pSubpass->colorAttachments[0].attachment = GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_LDR_COLOR_0;
 		pSubpass->colorAttachments[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
 
-		// サブパス 2 : LDR
+		// サブパス 2 : LDR ( FXAA )
 		pSubpass = desc.AllocateSubpass(2, 1, 1, false, 0);
 		pSubpass->inputAttachments[0].attachment = GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_LDR_COLOR_0;
 		pSubpass->inputAttachments[0].layout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
@@ -1405,14 +1425,14 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_SHADER_READ;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 
 		pSubpassDependencies[1].srcSubpass = 0;
 		pSubpassDependencies[1].dstSubpass = 1;
-		pSubpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		pSubpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		pSubpassDependencies[1].srcAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[1].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		pSubpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;// V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		pSubpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;// V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		pSubpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;// V3D_ACCESS_SHADER_READ;
+		pSubpassDependencies[1].dstAccessMask = V3D_ACCESS_SHADER_READ;// V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 		pSubpassDependencies[2].srcSubpass = 1;
@@ -1422,54 +1442,39 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[2].dstAccessMask = V3D_ACCESS_SHADER_READ;
 		pSubpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
-/*
-		pSubpassDependencies[3].srcSubpass = 0;
+
+		pSubpassDependencies[3].srcSubpass = 2;
 		pSubpassDependencies[3].dstSubpass = V3D_SUBPASS_EXTERNAL;
 		pSubpassDependencies[3].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[3].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
 		pSubpassDependencies[3].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[3].dstAccessMask = V3D_ACCESS_SHADER_READ;
-		pSubpassDependencies[3].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
-*/	}
+		pSubpassDependencies[3].dependencyFlags = 0;
+	}
 
 	// フィニッシュ
 	{
 		GraphicsManager::RenderPassDesc& desc = m_RenderPassDescs[GRAPHICS_RENDERPASS_TYPE_FINISH];
 
-		desc.Allocate(2, 2, 3);
+		desc.Allocate(1, 2, 3);
 
 		V3DAttachmentDesc* pAttachments = desc.pAttachments;
-
-		pAttachments[0].format = m_Attachments[IMAGE_TYPE_LDR_COLOR_1].imageDesc.format;
-		pAttachments[0].samples = m_Attachments[IMAGE_TYPE_LDR_COLOR_1].imageDesc.samples;
-		pAttachments[0].loadOp = V3D_ATTACHMENT_LOAD_OP_LOAD;
+		
+		pAttachments[0].format = V3D_FORMAT_UNDEFINED; // バックバッファー
+		pAttachments[0].samples = V3D_SAMPLE_COUNT_1;
+		pAttachments[0].loadOp = V3D_ATTACHMENT_LOAD_OP_CLEAR;
 		pAttachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
 		pAttachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
 		pAttachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
-		pAttachments[0].initialLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
-		pAttachments[0].finalLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		pAttachments[0].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+		pAttachments[0].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
 		pAttachments[0].clearValue.color.float32[0] = 0.0f;
 		pAttachments[0].clearValue.color.float32[1] = 0.0f;
 		pAttachments[0].clearValue.color.float32[2] = 0.0f;
 		pAttachments[0].clearValue.color.float32[3] = 1.0f;
-		
-		pAttachments[1].format = V3D_FORMAT_UNDEFINED; // バックバッファー
-		pAttachments[1].samples = V3D_SAMPLE_COUNT_1;
-		pAttachments[1].loadOp = V3D_ATTACHMENT_LOAD_OP_CLEAR;
-		pAttachments[1].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
-		pAttachments[1].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
-		pAttachments[1].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
-		pAttachments[1].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-		pAttachments[1].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-		pAttachments[1].clearValue.color.float32[0] = 0.0f;
-		pAttachments[1].clearValue.color.float32[1] = 0.0f;
-		pAttachments[1].clearValue.color.float32[2] = 0.0f;
-		pAttachments[1].clearValue.color.float32[3] = 1.0f;
 
 		// サブパス 0
-		RenderPassDesc::Subpass* pSubpass = desc.AllocateSubpass(0, 1, 1, false, 0);
-		pSubpass->inputAttachments[0].attachment = GRAPHICS_ATTACHMENT_TYPE_FINISH_SOURCE_COLOR;
-		pSubpass->inputAttachments[0].layout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+		RenderPassDesc::Subpass* pSubpass = desc.AllocateSubpass(0, 0, 1, false, 0);
 		pSubpass->colorAttachments[0].attachment = GRAPHICS_ATTACHMENT_TYPE_FINISH_BACK_BUFFER;
 		pSubpass->colorAttachments[0].layout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
 
@@ -1487,23 +1492,23 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pSubpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
 		pSubpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		pSubpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[0].dependencyFlags = 0;
 
-		pSubpassDependencies[1].srcSubpass = V3D_SUBPASS_EXTERNAL;
-		pSubpassDependencies[1].dstSubpass = 0;
+		pSubpassDependencies[1].srcSubpass = 0;
+		pSubpassDependencies[1].dstSubpass = 1;
 		pSubpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		pSubpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		pSubpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		pSubpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		pSubpassDependencies[1].dstAccessMask = V3D_ACCESS_SHADER_READ | V3D_ACCESS_COLOR_ATTACHMENT_READ;
+		pSubpassDependencies[1].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		pSubpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
-		pSubpassDependencies[2].srcSubpass = 0;
-		pSubpassDependencies[2].dstSubpass = 1;
-		pSubpassDependencies[2].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		pSubpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		pSubpassDependencies[2].srcAccessMask = V3D_ACCESS_MEMORY_READ;
-		pSubpassDependencies[2].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		pSubpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		pSubpassDependencies[2].srcSubpass = 1;
+		pSubpassDependencies[2].dstSubpass = V3D_SUBPASS_EXTERNAL;
+		pSubpassDependencies[2].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		pSubpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+		pSubpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		pSubpassDependencies[2].dstAccessMask = V3D_ACCESS_MEMORY_READ;
+		pSubpassDependencies[2].dependencyFlags = 0;
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -2024,7 +2029,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pipeline.subpass = 0;
 	}
 
-	// ポストエフェクト : コピー
+	// イメージエフェクト : コピー
 	{
 		GraphicsManager::PipelineDesc& pipeline = m_PipelineDescs[GRAPHICS_RENDERPASS_TYPE_IMAGE_EFFECT][GRAPHICS_PIPELINE_TYPE_IMAGE_EFFECT_COPY];
 		pipeline.Allocate(2, 1, 1);
@@ -2066,7 +2071,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pipeline.subpass = 0;
 	}
 
-	// ポストエフェクト : 補正
+	// イメージエフェクト : 補正
 	{
 		GraphicsManager::PipelineDesc& pipeline = m_PipelineDescs[GRAPHICS_RENDERPASS_TYPE_IMAGE_EFFECT][GRAPHICS_PIPELINE_TYPE_IMAGE_EFFECT_CORRECTION];
 		pipeline.Allocate(2, 1, 1);
@@ -2108,7 +2113,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pipeline.subpass = 0;
 	}
 
-	// ポストエフェクト : トーンマッピング
+	// イメージエフェクト : トーンマッピング
 	{
 		GraphicsManager::PipelineDesc& pipeline = m_PipelineDescs[GRAPHICS_RENDERPASS_TYPE_IMAGE_EFFECT][GRAPHICS_PIPELINE_TYPE_IMAGE_EFFECT_TONE_MAPPING];
 		pipeline.Allocate(2, 1, 1);
@@ -2150,7 +2155,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pipeline.subpass = 0;
 	}
 
-	// ポストエフェクト : FXAA
+	// イメージエフェクト : FXAA
 	{
 		GraphicsManager::PipelineDesc& pipeline = m_PipelineDescs[GRAPHICS_RENDERPASS_TYPE_IMAGE_EFFECT][GRAPHICS_PIPELINE_TYPE_IMAGE_EFFECT_FXAA];
 		pipeline.Allocate(2, 1, 1);
@@ -2192,7 +2197,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 		pipeline.subpass = 0;
 	}
 
-	// オーバーレイ : コピー
+	// フィニッシュ : コピー
 	{
 		GraphicsManager::PipelineDesc& pipeline = m_PipelineDescs[GRAPHICS_RENDERPASS_TYPE_FINISH][GRAPHICS_PIPELINE_TYPE_FINISH_INIT];
 		pipeline.Allocate(2, 1, 1);
@@ -2241,7 +2246,7 @@ V3D_RESULT GraphicsManager::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, I
 	{
 		V3DCommandPoolDesc commandPoolDesc{};
 		commandPoolDesc.queueFamily = m_pQueue->GetFamily();
-		commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
+		commandPoolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER;
 
 		result = m_pDevice->CreateCommandBuffer(commandPoolDesc, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &m_pCommandBuffer);
 		if (result != V3D_OK)
@@ -2420,7 +2425,7 @@ V3D_RESULT GraphicsManager::Restore()
 			break;
 		}
 
-		V3D_RESULT result = m_pDevice->CreateImage(attachment.imageDesc, V3D_IMAGE_LAYOUT_UNDEFINED, &attachment.pImage);
+		V3D_RESULT result = m_pDevice->CreateImage(attachment.imageDesc, V3D_IMAGE_LAYOUT_UNDEFINED, &attachment.pImage, attachment.name.c_str());
 		if (result != V3D_OK)
 		{
 			return result;
@@ -2487,7 +2492,7 @@ V3D_RESULT GraphicsManager::Restore()
 	{
 		GraphicsManager::Attachment& attachment = m_Attachments[i];
 
-		V3DBarrierImageDesc barrier{};
+		V3DBarrierImageViewDesc barrier{};
 		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
@@ -2513,7 +2518,6 @@ V3D_RESULT GraphicsManager::Restore()
 		}
 		else
 		{
-			V3DBarrierImageDesc barrier{};
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
 			barrier.dstStageMask = attachment.imageStageMask;
 			barrier.srcAccessMask = 0;
@@ -2713,8 +2717,7 @@ V3D_RESULT GraphicsManager::CreateFrameBuffer(GRAPHICS_RENDERPASS_TYPE renderpas
 	}
 	else if (renderpassType == GRAPHICS_RENDERPASS_TYPE_FINISH)
 	{
-		attachments.reserve(2);
-		attachments.push_back(m_Attachments[IMAGE_TYPE_LDR_COLOR_1].pImageView);
+		attachments.reserve(1);
 		attachments.push_back(m_Attachments[IMAGE_TYPE_BACK_BUFFER + index].pImageView);
 	}
 	else if (renderpassType == GRAPHICS_RENDERPASS_TYPE_BRIGHT_PASS)
@@ -2759,7 +2762,15 @@ V3D_RESULT GraphicsManager::CreateDescriptorSet(GRAPHICS_PIPELINE_TYPE pipelineT
 
 	m_pPipelineLayouts[pipelineType]->GetDescriptorSetLayout(descriptorSetType, &pDescriptorSetLayout);
 
-	V3D_RESULT result = m_pDevice->CreateDescriptorSet(pDescriptorSetLayout, ppDescriptorSet);
+	const wchar_t* pDebugName = nullptr;
+#ifdef _DEBUG
+	std::wstringstream debugStringStream;
+	debugStringStream << L"DS_PT" << pipelineType << L"_DST" << descriptorSetType;
+	std::wstring debugString = debugStringStream.str();
+	pDebugName = debugString.c_str();
+#endif //_DEBUG
+
+	V3D_RESULT result = m_pDevice->CreateDescriptorSet(pDescriptorSetLayout, ppDescriptorSet, pDebugName);
 	if (result != V3D_OK)
 	{
 		SAFE_RELEASE(pDescriptorSetLayout);

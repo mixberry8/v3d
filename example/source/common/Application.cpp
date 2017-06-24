@@ -36,10 +36,10 @@ int32_t Application::Execute()
 
 	ApplicationDesc desc{};
 #ifdef _DEBUG
-	desc.layer = V3D_LAYER_STANDARD;
+	desc.layer = V3D_LAYER_VALIDATION;
 	desc.logFlags = V3D_LOG_WARNING | V3D_LOG_ERROR | V3D_LOG_DEBUG;
 #else //_DEBUG
-	desc.layer = V3D_LAYER_OPTIMUS;
+	desc.layer = V3D_LAYER_OPTIMAL;
 	desc.logFlags = 0;
 #endif //_DEBUG
 	desc.fps = 60;

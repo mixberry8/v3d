@@ -119,7 +119,7 @@ protected:
 		// ----------------------------------------------------------------------------------------------------
 
 		const V3DDeviceCaps& deviceCaps = Application::GetDevice()->GetCaps();
-		m_PointSize = CLAMP(2, deviceCaps.pointSizeRange[0], deviceCaps.pointSizeRange[1]);
+		m_PointSize = CLAMP(2, deviceCaps.minPointSize, deviceCaps.maxPointSize);
 
 		// ----------------------------------------------------------------------------------------------------
 		// カメラを初期化
@@ -187,7 +187,7 @@ protected:
 		// コンピュート
 		{
 			V3DCommandPoolDesc poolDesc{};
-			poolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
+			poolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER;
 			poolDesc.queueFamily = m_ComputeQueueFamily;
 
 			V3D_RESULT result = Application::GetDevice()->CreateCommandBuffer(poolDesc, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &m_pComputeCommandBuffer);

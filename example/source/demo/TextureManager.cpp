@@ -54,6 +54,7 @@ TexturePtr TextureManager::Load(const wchar_t* pFilePath)
 		m_pGraphicsManager->GetFencePtr(),
 		filePath.c_str(),
 		true,
+		V3D_PIPELINE_STAGE_FRAGMENT_SHADER,
 		&pImageView);
 
 	if (result != V3D_OK)

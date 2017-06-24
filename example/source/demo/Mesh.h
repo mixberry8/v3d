@@ -159,8 +159,8 @@ protected:
 		IV3DBuffer** ppDstBuffer, uint64_t* pDstVertexOffset, uint64_t* pDstVertexSize,
 		uint64_t* pDstIndexOffset, uint64_t* pDstIndexSize, V3D_INDEX_TYPE* pDstIndexType);
 
-	bool LoadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstBuffer);
-	bool StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, uint64_t indicesSize, const void* pIndices, IV3DBuffer** ppDstBuffer, uint64_t* pDstVertexOffset, uint64_t* pDstIndexOffset);
+	bool DownloadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstBuffer);
+	bool UploadVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, uint64_t indicesSize, const void* pIndices, IV3DBuffer** ppDstBuffer, uint64_t* pDstVertexOffset, uint64_t* pDstIndexOffset);
 
 	V3D_RESULT CreateMaterials(const wchar_t* pFilePath, const MeshImportDesc& importDesc, std::vector<Mesh::OptMaterial>& materials);
 	bool CreateMaterials(const wchar_t* pFilePath, std::vector<Material::SerialData>& materials);

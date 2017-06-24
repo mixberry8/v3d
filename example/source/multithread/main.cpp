@@ -135,7 +135,7 @@ protected:
 			std::wstring srcFilePath;
 			CreateFilePath(L"image\\multithread.bmp", srcFilePath);
 
-			V3D_RESULT result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, &m_pImageView);
+			V3D_RESULT result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, V3D_PIPELINE_STAGE_FRAGMENT_SHADER, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -325,6 +325,8 @@ protected:
 		// ----------------------------------------------------------------------------------------------------
 		// ÉÅÉbÉVÉÖÇÃèàóù
 		// ----------------------------------------------------------------------------------------------------
+
+		m_ParallelManager.Reset();
 
 #ifdef ENABLE_MULTITREAD
 
@@ -893,7 +895,7 @@ protected:
 		for (uint32_t i = 0; i < swapChainDesc.imageCount; i++)
 		{
 			V3DCommandPoolDesc commandPoolDesc{};
-			commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
+			commandPoolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER;
 			commandPoolDesc.queueFamily = GetGraphicsQueueFamily();
 
 			m_ParallelData.commandBuffers[i].reserve(threadCount);

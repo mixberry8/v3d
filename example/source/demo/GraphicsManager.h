@@ -205,8 +205,7 @@ enum GRAPHICS_ATTACHMENT_TYPE
 	GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_LDR_COLOR_1 = 3, // color
 
 	// フィニッシュ
-	GRAPHICS_ATTACHMENT_TYPE_FINISH_SOURCE_COLOR = 0,   // input
-	GRAPHICS_ATTACHMENT_TYPE_FINISH_BACK_BUFFER = 1, // color
+	GRAPHICS_ATTACHMENT_TYPE_FINISH_BACK_BUFFER = 0, // color
 
 	// ブライトパス - GRAPHICS_RENDERPASS_TYPE_BRIGHT_PASS
 	GRAPHICS_ATTACHMENT_TYPE_BRIGHT_PASS_COLOR = 0,
@@ -443,7 +442,7 @@ private:
 class GraphicsManager
 {
 public:
-	static constexpr uint32_t ShadowMapSize = 4096;
+	static constexpr uint32_t ShadowMapSize = 1024;
 
 	GraphicsManager();
 	~GraphicsManager();
@@ -586,6 +585,8 @@ private:
 
 	struct Attachment
 	{
+		std::wstring name;
+
 		V3DImageDesc imageDesc;
 		IV3DImage* pImage;
 		V3DFlags imageStageMask;
@@ -617,7 +618,6 @@ private:
 			depthStencil.stencilFront.compareOp = V3D_COMPARE_OP_ALWAYS;
 			depthStencil.stencilFront.readMask = 0x000000FF;
 			depthStencil.stencilFront.writeMask = 0x000000FF;
-			depthStencil.stencilFront.reference = 0;
 			depthStencil.stencilBack = depthStencil.stencilFront;
 			depthStencil.depthBoundsTestEnable = false;
 			depthStencil.minDepthBounds = 0.0f;

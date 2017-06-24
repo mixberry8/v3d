@@ -160,7 +160,7 @@ protected:
 			std::wstring filePath;
 			CreateFilePath(L"image\\texture2d.bmp", filePath);
 
-			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), filePath.c_str(), false, &m_pImageView);
+			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), filePath.c_str(), false, V3D_PIPELINE_STAGE_FRAGMENT_SHADER, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;

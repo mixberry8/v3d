@@ -157,7 +157,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	V3DCommandPoolDesc graphicsCommandPoolDesc{};
 	graphicsCommandPoolDesc.queueFamily = queueFamily;
-	graphicsCommandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER | V3D_COMMAND_POOL_PROPERTY_TRANSIENT;
+	graphicsCommandPoolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER | V3D_COMMAND_POOL_USAGE_TRANSIENT;
 
 	result = g_pDevice->CreateCommandPool(graphicsCommandPoolDesc, &g_pGraphicsCommandPool, L"Simple(CommandPool)");
 	if (result != V3D_OK)
@@ -172,7 +172,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	V3DCommandPoolDesc workCommandPoolDesc{};
 	workCommandPoolDesc.queueFamily = queueFamily;
-	workCommandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER | V3D_COMMAND_POOL_PROPERTY_TRANSIENT;
+	workCommandPoolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER | V3D_COMMAND_POOL_USAGE_TRANSIENT;
 
 	result = g_pDevice->CreateCommandBuffer(workCommandPoolDesc, V3D_COMMAND_BUFFER_TYPE_PRIMARY, &g_pWorkCommandBuffer, L"Simple(CommandBuffer)");
 	if (result != V3D_OK)

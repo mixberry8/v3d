@@ -103,7 +103,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	swapChainDesc.vsyncEnable = waitVSync;
 	swapChainDesc.windowed = true;
 	swapChainDesc.queueFamily = m_pGraphicsQueue->GetFamily();
-	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_ALL_GRAPHICS;// V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
 
 	V3DSwapChainCallbacks swapChainCallbacks{};
 	swapChainCallbacks.pLostFunction = Window::LostSwapChainFunction;
@@ -124,7 +124,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	{
 		V3DCommandPoolDesc commandPoolDesc{};
 		commandPoolDesc.queueFamily = m_pWorkQueue->GetFamily();
-		commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
+		commandPoolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER;
 
 		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pWorkCommandPool, L"Example_WorkCommandPool");
 		if (result != V3D_OK)
@@ -148,7 +148,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	{
 		V3DCommandPoolDesc commandPoolDesc{};
 		commandPoolDesc.queueFamily = m_pGraphicsQueue->GetFamily();
-		commandPoolDesc.propertyFlags = V3D_COMMAND_POOL_PROPERTY_RESET_COMMAND_BUFFER;
+		commandPoolDesc.usageFlags = V3D_COMMAND_POOL_USAGE_RESET_COMMAND_BUFFER;
 
 		result = Application::GetDevice()->CreateCommandPool(commandPoolDesc, &m_pGraphicsCommandPool, L"Example_GraphicsCommandPool");
 		if (result != V3D_OK)

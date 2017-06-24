@@ -299,7 +299,7 @@ protected:
 			std::wstring srcFilePath;
 			CreateFilePath(L"image\\tessAndGeomShader.dds", srcFilePath);
 
-			V3D_RESULT result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), false, &m_pImageView);
+			V3D_RESULT result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), false, V3D_PIPELINE_STAGE_GEOMETRY_SHADER, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;

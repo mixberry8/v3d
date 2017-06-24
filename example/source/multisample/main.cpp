@@ -186,7 +186,7 @@ protected:
 			std::wstring srcFilePath;
 			CreateFilePath(L"image\\multisample.bmp", srcFilePath);
 
-			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, &m_pImageView);
+			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, V3D_PIPELINE_STAGE_FRAGMENT_SHADER, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;

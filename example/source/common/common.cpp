@@ -216,6 +216,7 @@ V3D_RESULT CreateImageFromMemory(
 	IV3DFence* pFence,
 	uint64_t srcSize, const void* pSrc,
 	bool generateMipmap,
+	V3DFlags dstStageMask,
 	IV3DImageView** ppImageView)
 {
 	if ((pDevice == nullptr) || (pQueue == nullptr) || (pCommandBuffer == nullptr) || (srcSize == 0) || (pSrc == nullptr))
@@ -435,7 +436,6 @@ V3D_RESULT CreateImageFromMemory(
 		}
 
 		V3DBarrierImageDesc barrier{};
-		barrier.dependencyFlags = 0;
 		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
@@ -532,7 +532,6 @@ V3D_RESULT CreateImageFromMemory(
 
 		{
 			V3DBarrierImageDesc barrier{};
-			barrier.dependencyFlags = 0;
 			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
@@ -550,7 +549,7 @@ V3D_RESULT CreateImageFromMemory(
 			}
 
 			barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+			barrier.dstStageMask = dstStageMask;
 			barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
 			barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
 			barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
@@ -600,6 +599,7 @@ V3D_RESULT CreateImageFromFile(
 	IV3DFence* pFence,
 	const wchar_t* pSrcFilePath,
 	bool generateMipmap,
+	V3DFlags dstStageMask,
 	IV3DImageView** ppImageView)
 {
 	HANDLE fileHandle = CreateFile(pSrcFilePath, GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -621,7 +621,7 @@ V3D_RESULT CreateImageFromFile(
 
 	CloseHandle(fileHandle);
 
-	V3D_RESULT result = CreateImageFromMemory(pDevice, pCommandQueue, pCommandBuffer, pFence, fileSize, pBuffer, generateMipmap, ppImageView);
+	V3D_RESULT result = CreateImageFromMemory(pDevice, pCommandQueue, pCommandBuffer, pFence, fileSize, pBuffer, generateMipmap, dstStageMask, ppImageView);
 	if (result != V3D_OK)
 	{
 		delete[] pBuffer;
@@ -886,7 +886,7 @@ V3D_RESULT CreatePrefab(
 	}
 
 	uint8_t* pMemory;
-	result = pHostBuffer->Map(0, V3D_WHOLE_SIZE, reinterpret_cast<void**>(&pMemory));
+	result = pHostBuffer->Map(0, 0, reinterpret_cast<void**>(&pMemory));
 	if (result == V3D_OK)
 	{
 		// バーテックスを書き込む
@@ -992,7 +992,7 @@ V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode, 
 {
 	static constexpr V3DPipelineColorBlendAttachment table[] =
 	{
-		{ true, V3D_BLEND_FACTOR_ONE, V3D_BLEND_FACTOR_ZERO , V3D_BLEND_OP_ADD, V3D_BLEND_FACTOR_ONE, V3D_BLEND_FACTOR_ZERO, V3D_BLEND_OP_ADD, V3D_COLOR_COMPONENT_ALL },
+		{ false, V3D_BLEND_FACTOR_ONE, V3D_BLEND_FACTOR_ZERO , V3D_BLEND_OP_ADD, V3D_BLEND_FACTOR_ONE, V3D_BLEND_FACTOR_ZERO, V3D_BLEND_OP_ADD, V3D_COLOR_COMPONENT_ALL },
 		{ true, V3D_BLEND_FACTOR_SRC_ALPHA, V3D_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA , V3D_BLEND_OP_ADD, V3D_BLEND_FACTOR_ONE, V3D_BLEND_FACTOR_ZERO, V3D_BLEND_OP_ADD, V3D_COLOR_COMPONENT_ALL },
 		{ true, V3D_BLEND_FACTOR_SRC_ALPHA, V3D_BLEND_FACTOR_ONE , V3D_BLEND_OP_ADD, V3D_BLEND_FACTOR_SRC_ALPHA, V3D_BLEND_FACTOR_ONE, V3D_BLEND_OP_ADD, V3D_COLOR_COMPONENT_ALL },
 		{ true, V3D_BLEND_FACTOR_SRC_ALPHA, V3D_BLEND_FACTOR_ONE , V3D_BLEND_OP_REVERSE_SUBTRACT, V3D_BLEND_FACTOR_SRC_ALPHA, V3D_BLEND_FACTOR_ONE, V3D_BLEND_OP_REVERSE_SUBTRACT, V3D_COLOR_COMPONENT_ALL },
@@ -1050,11 +1050,11 @@ void CalcBufferMemoryLayout(IV3DDevice* pDevice, V3DFlags memoryPropertyFlags, u
 
 void MemCopy(void* pDst, uint64_t dstSize, const void* pSrc, uint64_t srcSize)
 {
-#ifdef _WIN64
+#ifdef V3D64
 	memcpy_s(pDst, dstSize, pSrc, srcSize);
-#else //_WIN64
+#else //V3D64
 	memcpy_s(pDst, TO_UI32(dstSize), pSrc, TO_UI32(srcSize));
-#endif //_WIN64
+#endif //V3D64
 }
 
 void ToWideChar(const char* pSrc, std::wstring& dst)

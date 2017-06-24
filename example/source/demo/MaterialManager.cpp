@@ -128,7 +128,6 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, Textur
 	}
 
 	V3DBarrierImageDesc barrier{};
-	barrier.dependencyFlags = 0;
 	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 

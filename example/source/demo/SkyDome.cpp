@@ -502,7 +502,7 @@ void SkyDome::Update(const Matrix4x4& viewProjMatrix, const Vector3& eyePos)
 	m_FragUniform.mulitpliers.Set(m_Lin, m_Fex.x * m_Fex.w, m_Fex.y * m_Fex.w, m_Fex.z * m_Fex.w);
 
 	void* pMemory;
-	if (m_pUniformBuffer->Map(0, V3D_WHOLE_SIZE, &pMemory) == V3D_OK)
+	if (m_pUniformBuffer->Map(0, 0, &pMemory) == V3D_OK)
 	{
 		::memcpy_s(pMemory, m_pUniformBuffer->GetDesc().size, &m_FragUniform, sizeof(SkyDomeFragUniform));
 		m_pUniformBuffer->Unmap();

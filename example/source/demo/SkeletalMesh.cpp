@@ -433,7 +433,7 @@ bool SkeletalMesh::Save(const wchar_t* pFilePath)
 
 	IV3DBuffer* pHostVertexIndexBuffer;
 
-	if (Mesh::LoadVertexIndexBuffer(m_pBuffer, &pHostVertexIndexBuffer) == false)
+	if (Mesh::DownloadVertexIndexBuffer(m_pBuffer, &pHostVertexIndexBuffer) == false)
 	{
 		return false;
 	}
@@ -510,7 +510,7 @@ bool SkeletalMesh::Save(const wchar_t* pFilePath)
 	}
 
 	uint8_t* pMemory;
-	V3D_RESULT result = pHostVertexIndexBuffer->Map(0, V3D_WHOLE_SIZE, reinterpret_cast<void**>(&pMemory));
+	V3D_RESULT result = pHostVertexIndexBuffer->Map(0, 0, reinterpret_cast<void**>(&pMemory));
 	if (result == V3D_OK)
 	{
 		// バーテックス
@@ -882,8 +882,8 @@ bool SkeletalMesh::Load(const wchar_t* pFilePath)
 		m_Nodes.push_back(dstNode);
 	}
 
-	// バーテックス、インデックスバッファー
-	if (StoreVertexIndexBuffer(vertices.size(), vertices.data(), indices.size(), indices.data(), &m_pBuffer, &m_VertexOffset, &m_IndexOffset) == false)
+	// バーテックス、インデックスバッファーをアップロード
+	if (UploadVertexIndexBuffer(vertices.size(), vertices.data(), indices.size(), indices.data(), &m_pBuffer, &m_VertexOffset, &m_IndexOffset) == false)
 	{
 		return false;
 	}

@@ -320,11 +320,11 @@ bool Mesh::Import(
 	std::vector<Mesh::OptNode>& nodes,
 	std::vector<Mesh::OptMaterial>& materials)
 {
-#ifdef _WIN64
+#ifdef V3D64
 	ObjParser parser(bufferSize, pBuffer);
-#else //_WIN64
+#else //V3D64
 	ObjParser parser(TO_UI32(bufferSize), pBuffer);
-#endif //_WIN64
+#endif //V3D64
 
 	std::vector<MeshVertex> tempVertices;
 	tempVertices.reserve(4);
@@ -438,9 +438,9 @@ bool Mesh::Import(
 
 			pNode = &nodes.back();
 
-			std::stringstream stringStream;
-			stringStream << "object : " << pStr << "\n";
-			OutputDebugStringA(stringStream.str().c_str());
+			std::wstringstream stringStream;
+			stringStream << L"object : " << node.name << L"\n";
+			OutputDebugStringW(stringStream.str().c_str());
 		}
 		else if (strcmp(pStr, "g") == 0)
 		{
@@ -729,6 +729,10 @@ bool Mesh::Import(
 				return false;
 			}
 		}
+		else if (strcmp(pStr, "l") == 0)
+		{
+			//ライン
+		}
 		else
 		{
 			return false;
@@ -1008,7 +1012,7 @@ V3D_RESULT Mesh::CreateVertexIndexBuffer(
 	return V3D_OK;
 }
 
-bool Mesh::LoadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstBuffer)
+bool Mesh::DownloadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstBuffer)
 {
 	V3DBufferDesc bufferDesc{};
 	bufferDesc.size = pSrcBuffer->GetDesc().size;
@@ -1037,7 +1041,6 @@ bool Mesh::LoadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstBuffe
 	}
 
 	V3DBarrierBufferDesc barrier{};
-	barrier.dependencyFlags = 0;
 	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 	barrier.offset = 0;
@@ -1080,17 +1083,17 @@ bool Mesh::LoadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstBuffe
 	return true;
 }
 
-bool Mesh::StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, uint64_t indicesSize, const void* pIndices, IV3DBuffer** ppDstBuffer, uint64_t* pDstVertexOffset, uint64_t* pDstIndexOffset)
+bool Mesh::UploadVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, uint64_t indicesSize, const void* pIndices, IV3DBuffer** ppDstBuffer, uint64_t* pDstVertexOffset, uint64_t* pDstIndexOffset)
 {
 	// ----------------------------------------------------------------------------------------------------
-	// バーテックス、インデックスバッファを作成
+	// 転送元のテンポラリバッファーを作成
 	// ----------------------------------------------------------------------------------------------------
 
 	Array1<BufferSubresourceDesc, 2> tempBufferSubresources;
-	tempBufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX;
+	tempBufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;// | V3D_BUFFER_USAGE_VERTEX;
 	tempBufferSubresources[0].size = verticesSize;
 	tempBufferSubresources[0].count = 1;
-	tempBufferSubresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_INDEX;
+	tempBufferSubresources[1].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;// | V3D_BUFFER_USAGE_INDEX;
 	tempBufferSubresources[1].size = indicesSize;
 	tempBufferSubresources[1].count = 1;
 
@@ -1105,9 +1108,8 @@ bool Mesh::StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, 
 		tempBufferMemoryLayouts.data(),
 		&tempBufferMemorySize);
 
-	// テンポラリバッファ
 	V3DBufferDesc tempBufferDesc{};
-	tempBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
+	tempBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;// | V3D_BUFFER_USAGE_VERTEX | V3D_BUFFER_USAGE_INDEX;
 	tempBufferDesc.size = tempBufferMemorySize;
 
 	IV3DBuffer* pTempBuffer;
@@ -1149,7 +1151,10 @@ bool Mesh::StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, 
 		return false;
 	}
 
-	// 描画用バッファを作成
+	// ----------------------------------------------------------------------------------------------------
+	// 転送先の描画用バッファーを作成
+	// ----------------------------------------------------------------------------------------------------
+
 	Array1<BufferSubresourceDesc, 2> bufferSubresources;
 	bufferSubresources[0].usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_VERTEX;
 	bufferSubresources[0].size = verticesSize;
@@ -1188,7 +1193,10 @@ bool Mesh::StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, 
 		return false;
 	}
 
-	// テンポラリバッファの内容を描画用バッファに転送
+	// ----------------------------------------------------------------------------------------------------
+	// テンポラリバッファーの内容を描画用バッファーに転送
+	// ----------------------------------------------------------------------------------------------------
+
 	IV3DCommandBuffer* pCommandBuffer = m_pGraphicsManager->ResetCommandBuffer();
 	if (pCommandBuffer == nullptr)
 	{
@@ -1197,6 +1205,7 @@ bool Mesh::StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, 
 		return false;
 	}
 
+	// コピー
 	Array1<V3DCopyBufferRange, 2> copyBufferRanges;
 	copyBufferRanges[0].dstOffset = bufferMemoryLayouts[0].offset;
 	copyBufferRanges[0].srcOffset = tempBufferMemoryLayouts[0].offset;
@@ -1204,8 +1213,27 @@ bool Mesh::StoreVertexIndexBuffer(uint64_t verticesSize, const void* pVertices, 
 	copyBufferRanges[1].dstOffset = bufferMemoryLayouts[1].offset;
 	copyBufferRanges[1].srcOffset = tempBufferMemoryLayouts[1].offset;
 	copyBufferRanges[1].size = tempBufferSubresources[1].size;
-
 	pCommandBuffer->CopyBuffer(*ppDstBuffer, pTempBuffer, TO_UI32(copyBufferRanges.size()), copyBufferRanges.data());
+
+	V3DBarrierBufferDesc barrier;
+	barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+	barrier.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+	barrier.dependencyFlags = 0;
+	barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+
+	// バーテックスのバリア
+	barrier.dstAccessMask = V3D_ACCESS_VERTEX_READ;
+	barrier.offset = bufferMemoryLayouts[0].offset;
+	barrier.size = bufferMemoryLayouts[0].stride;
+	pCommandBuffer->BarrierBuffer(*ppDstBuffer, barrier);
+
+	// インデックスのバリア
+	barrier.dstAccessMask = V3D_ACCESS_INDEX_READ;
+	barrier.offset = bufferMemoryLayouts[1].offset;
+	barrier.size = bufferMemoryLayouts[1].stride;
+	pCommandBuffer->BarrierBuffer(*ppDstBuffer, barrier);
 
 	if (m_pGraphicsManager->FlushCommandBuffer() == false)
 	{
@@ -1496,11 +1524,11 @@ bool Mesh::ImportMaterial(const wchar_t* pFilePath, std::vector<Mesh::OptMateria
 
 bool Mesh::ImportMaterial(uint64_t bufferSize, void* pBuffer, std::vector<Mesh::OptMaterial>& materials)
 {
-#ifdef _WIN64
+#ifdef V3D64
 	ObjParser parser(bufferSize, pBuffer);
-#else //_WIN64
+#else //V3D64
 	ObjParser parser(TO_UI32(bufferSize), pBuffer);
-#endif //_WIN64
+#endif //V3D64
 
 	Mesh::OptMaterial* pMaterial = nullptr;
 
@@ -1752,7 +1780,9 @@ bool Mesh::ImportName(ObjParser* pParser, std::wstring& name)
 		return false;
 	}
 
-	ToWideChar(stringStream.str().c_str(), name);
+	std::string temp = stringStream.str();
+
+	ToWideChar(temp.c_str(), name);
 
 	return true;
 }

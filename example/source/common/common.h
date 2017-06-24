@@ -31,8 +31,10 @@
 
 #ifdef _DEBUG
 #define ASSERT(expression) assert(expression)
+#define DEBUG_NAME(name) name
 #else //_DEBUG
 #define ASSERT(expression)
+#define DEBUG_NAME(name)
 #endif //_DEBUG
 
 #define TO_I32(value) static_cast<int32_t>(value)
@@ -167,6 +169,7 @@ V3D_RESULT CreateImageFromMemory(
 	IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence,
 	uint64_t srcSize, const void* pSrc,
 	bool generateMipmap,
+	V3DFlags dstStageMask,
 	IV3DImageView** ppImageView);
 
 // ファイルからイメージを作成
@@ -175,6 +178,7 @@ V3D_RESULT CreateImageFromFile(
 	IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence,
 	const wchar_t* pSrcFilePath,
 	bool generateMipmap,
+	V3DFlags dstStageMask,
 	IV3DImageView** ppImageView);
 
 // ----------------------------------------------------------------------------------------------------
@@ -229,7 +233,7 @@ V3DPipelineColorBlendAttachment InitializeColorBlendAttachment(BLEND_MODE mode, 
 
 struct BufferSubresourceDesc
 {
-	V3DFlags usageFlags; // バッファーの使用法 V3D_BUFFER_USAGE
+	V3DFlags usageFlags; // バッファーの使用法 V3D_BUFFER_USAGE_FLAG
 	uint64_t size; // 必要とするメモリのサイズ
 	uint32_t count; // 個数
 };
