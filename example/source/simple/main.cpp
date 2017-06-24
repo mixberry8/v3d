@@ -78,9 +78,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	V3DInstanceDesc instanceDesc{};
 #ifdef _DEBUG
-	instanceDesc.layer = V3D_LAYER_STANDARD;
+	instanceDesc.layer = V3D_LAYER_VALIDATION;
 #else //_DEBUG
-	instanceDesc.layer = V3D_LAYER_OPTIMUS;
+	instanceDesc.layer = V3D_LAYER_OPTIMAL;
 #endif //_DEBUG
 	instanceDesc.log.flags = V3D_LOG_ALL;
 	instanceDesc.log.pFunction = LogFunction;
