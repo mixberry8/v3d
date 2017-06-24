@@ -679,6 +679,9 @@ V3D_RESULT V3DSwapChain::RecreateSwapChain()
 		return ToV3DResult(vkResult);
 	}
 
+	vkSurfaceCaps.minImageExtent.width = V3D_MAX(1, vkSurfaceCaps.minImageExtent.width);
+	vkSurfaceCaps.minImageExtent.height = V3D_MAX(1, vkSurfaceCaps.minImageExtent.height);
+
 	m_Source.swapChainCreateInfo.imageExtent.width = V3D_MAX(vkSurfaceCaps.minImageExtent.width, vkSurfaceCaps.currentExtent.width);
 	m_Source.swapChainCreateInfo.imageExtent.height = V3D_MAX(vkSurfaceCaps.minImageExtent.height, vkSurfaceCaps.currentExtent.height);
 	m_Source.swapChainCreateInfo.oldSwapchain = m_Source.swapChain;
@@ -833,8 +836,8 @@ V3D_RESULT V3DSwapChain::RecreateSurfaceAndSwapChain()
 	bool windowed = m_Desc.windowed;
 	m_Desc = m_InitialDesc;
 
-	m_Desc.imageWidth = static_cast<uint32_t>(clientRect.right - clientRect.left);
-	m_Desc.imageHeight = static_cast<uint32_t>(clientRect.bottom - clientRect.top);
+	m_Desc.imageWidth = V3D_MAX(1, static_cast<uint32_t>(clientRect.right - clientRect.left));
+	m_Desc.imageHeight = V3D_MAX(1, static_cast<uint32_t>(clientRect.bottom - clientRect.top));
 	m_Desc.windowed = windowed;
 
 	V3D_RESULT result = CreateSurfaceAndSwapChain();
