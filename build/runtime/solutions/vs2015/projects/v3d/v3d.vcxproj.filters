@@ -48,12 +48,6 @@
     <ClInclude Include="..\..\..\..\source\V3DComputePipeline.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\source\V3DDescriptorSet.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\source\V3DDescriptorSetLayout.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\source\V3DDevice.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -102,6 +96,24 @@
     <ClInclude Include="..\..\..\..\source\V3DResourceMemory.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DBaseDescriptorSet.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DBaseDescriptorSetLayout.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DPushDescriptorSet.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DPushDescriptorSetLayout.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DStandardDescriptorSet.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DStandardDescriptorSetLayout.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\pch.cpp">
@@ -126,12 +138,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\source\V3DComputePipeline.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\source\V3DDescriptorSet.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\source\V3DDescriptorSetLayout.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\source\V3DDevice.cpp">
@@ -180,6 +186,24 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\source\V3DResourceMemory.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DBaseDescriptorSet.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DBaseDescriptorSetLayout.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DPushDescriptorSet.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DPushDescriptorSetLayout.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DStandardDescriptorSet.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DStandardDescriptorSetLayout.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
