@@ -40,6 +40,27 @@ table.access td {
 
 /* ************************************************ */
 
+table.pielineStage {
+  border: 1px solid #a8b8d9;
+  border-collapse: collapse;
+}
+
+table.pielineStage tr {
+  border: 1px solid #a8b8d9;
+}
+
+table.pielineStage th {
+  border: 1px solid #a8b8d9;
+}
+
+table.pielineStage td {
+  border: 1px solid #a8b8d9;
+  width: 192px;
+  height: 24px;
+}
+
+/* ************************************************ */
+
 table.basic {
   border: 1px solid #a8b8d9;
   border-collapse: collapse;
