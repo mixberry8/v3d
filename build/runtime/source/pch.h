@@ -281,30 +281,33 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 
 #define V3D_LOG_TYPE_A(type) #type
 #define V3D_LOG_S_STR_A(str) " \"" << str << "\""
-#define V3D_LOG_S_PTR_A(ptr) L" " << #ptr << L"[" << ((ptr != nullptr)? L"ok" : L"nullptr" ) << L"]"
-#define V3D_LOG_S_NUM_A(num) L" " << #num << L"[" << num << L"]"
-#define V3D_LOG_S_NUM_LESS_A(num0, num1) L" " << #num0 << L"[ (" << num0 << L" ) < " << num1 << L" ]"
-#define V3D_LOG_S_NUM_LESS_EQUAL_A(num0, num1) L" " << #num0 << L"[ (" << num0 << L" ) <= " << num1 << L" ]"
-#define V3D_LOG_S_NUM_GREATER_A(num0, num1) L" " << #num0 << L"[ (" << num0 << L" ) > " << num1 << L" ]"
-#define V3D_LOG_S_NUM_GREATER_EQUAL_A(num0, num1) L" " << #num0 << L"[ (" << num0 << L" ) >= " << num1 << L" ]"
-#define V3D_LOG_S_RANGE_EQUAL_A(num, minNum, maxNum) L" " << #num << L"[" << minNum << L" <= (" << num << L" ) <=" << maxNum << L"]"
-#define V3D_LOG_S_DEBUG_NAME_A " : " << str
+#define V3D_LOG_S_PTR_A(ptr) " | " << #ptr << ((ptr != nullptr)? "(ok)" : "(nullptr)" )
+#define V3D_LOG_S_NUM_A(num) " | " << #num << "(" << num << ")"
+#define V3D_LOG_S_NUM_NOT_EQUAL_A(num0, num1) " | " << L#num0 << " != " << num1
+#define V3D_LOG_S_NUM_LESS_A(num0, num1) " | " << #num0 << "(" << num0 << ")" << " < " << num1
+#define V3D_LOG_S_NUM_LESS_EQUAL_A(num0, num1) " | " << #num0 << "(" << num0 << ")" << " <= " << num1
+#define V3D_LOG_S_NUM_GREATER_A(num0, num1) " | " << #num0 << "(" << num0 << ")" << " > " << num1
+#define V3D_LOG_S_NUM_GREATER_EQUAL_A(num0, num1) " | " << #num0 << "(" << num0 << ")" << " >= " << num1
+#define V3D_LOG_S_RANGE_EQUAL_A(num, minNum, maxNum) " | " << minNum << " <= " << #num << "(" << num << ")" << " <=" << maxNum
+#define V3D_LOG_S_DEBUG_NAME_A(str) " : " << str
 
 #define V3D_LOG_TYPE_W(type) L#type
 #define V3D_LOG_S_STR_W(str) L" \"" << str << L"\""
-#define V3D_LOG_S_PTR_W(ptr) L" " << L#ptr << L"[" << ((ptr != nullptr)? L"ok" : L"nullptr" ) << L"]"
-#define V3D_LOG_S_NUM_W(num) L" " << L#num << L"[" << num << L"]"
-#define V3D_LOG_S_NUM_LESS_W(num0, num1) L" " << L#num0 << L"[ (" << num0 << L" ) < " << num1 << L" ]"
-#define V3D_LOG_S_NUM_LESS_EQUAL_W(num0, num1) L" " << L#num0 << L"[ (" << num0 << L" ) <= " << num1 << L" ]"
-#define V3D_LOG_S_NUM_GREATER_W(num0, num1) L" " << L#num0 << L"[ (" << num0 << L" ) > " << num1 << L" ]"
-#define V3D_LOG_S_NUM_GREATER_EQUAL_W(num0, num1) L" " << L#num0 << L"[ (" << num0 << L" ) >= " << num1 << L" ]"
-#define V3D_LOG_S_RANGE_EQUAL_W(num, minNum, maxNum) L" " << L#num << L"[" << minNum << L" <= (" << num << L" ) <=" << maxNum << L"]"
-#define V3D_LOG_S_DEBUG_NAME_W L" : " << str
+#define V3D_LOG_S_PTR_W(ptr) L" | " << #ptr << ((ptr != nullptr)? L"(ok)" : L"(nullptr)" )
+#define V3D_LOG_S_NUM_W(num) L" | " << #num << L"(" << num << L")"
+#define V3D_LOG_S_NUM_NOT_EQUAL_W(num0, num1) L" | " << L#num0 << L" != " << num1
+#define V3D_LOG_S_NUM_LESS_W(num0, num1) L" | " << #num0 << L"(" << num0 << L")" << " < " << num1
+#define V3D_LOG_S_NUM_LESS_EQUAL_W(num0, num1) L" | " << #num0 << L"(" << num0 << L")" << L" <= " << num1
+#define V3D_LOG_S_NUM_GREATER_W(num0, num1) L" | " << #num0 << L"(" << num0 << L")" << " > " << num1
+#define V3D_LOG_S_NUM_GREATER_EQUAL_W(num0, num1) L" | " << #num0 << L"(" << num0 << L")" << L" >= " << num1
+#define V3D_LOG_S_RANGE_EQUAL_W(num, minNum, maxNum) L" | " << minNum << L" <= " << #num << L"(" << num << L")" << L" <=" << maxNum
+#define V3D_LOG_S_DEBUG_NAME_W(str) L" : " << str
 
 #define V3D_LOG_TYPE(type) V3D_LOG_TYPE_W(type)
 #define V3D_LOG_S_STR(str) V3D_LOG_S_STR_W(str)
 #define V3D_LOG_S_PTR(ptr) V3D_LOG_S_PTR_W(ptr)
 #define V3D_LOG_S_NUM(num) V3D_LOG_S_NUM_W(num)
+#define V3D_LOG_S_NUM_NOT_EQUAL(num0, num1) V3D_LOG_S_NUM_NOT_EQUAL_W(num0, num1)
 #define V3D_LOG_S_NUM_LESS(num0, num1) V3D_LOG_S_NUM_LESS_W(num0, num1)
 #define V3D_LOG_S_NUM_LESS_EQUAL(num0, num1) V3D_LOG_S_NUM_LESS_EQUAL_W(num0, num1)
 #define V3D_LOG_S_NUM_GREATER(num0, num1) V3D_LOG_S_NUM_GREATER_W(num0, num1)
