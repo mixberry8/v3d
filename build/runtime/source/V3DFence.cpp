@@ -10,7 +10,7 @@ V3DFence* V3DFence::Create()
 	return V3D_NEW_T(V3DFence);
 }
 
-V3D_RESULT V3DFence::Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName)
+V3D_RESULT V3DFence::Initialize(IV3DDevice* pDevice, bool initialState, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(pDevice != nullptr);
 
@@ -19,7 +19,7 @@ V3D_RESULT V3DFence::Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName)
 	VkFenceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	createInfo.pNext = nullptr;
-	createInfo.flags = 0;
+	createInfo.flags = (initialState == true)? VK_FENCE_CREATE_SIGNALED_BIT : 0;
 
 	VkResult vkResult = vkCreateFence(m_pDevice->GetSource().device, &createInfo, nullptr, &m_Source.fence);
 	if (vkResult != VK_SUCCESS)

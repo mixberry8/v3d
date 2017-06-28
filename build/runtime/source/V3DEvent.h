@@ -2,24 +2,24 @@
 
 class V3DDevice;
 
-class V3DFence : public IV3DFence
+class V3DEvent : public IV3DEvent
 {
 public:
 	struct Source
 	{
-		VkFence fence;
+		VkEvent event;
 	};
 
-	static V3DFence* Create();
-	V3D_RESULT Initialize(IV3DDevice* pDevice, bool initialState, const wchar_t* pDebugName);
-	const V3DFence::Source& GetSource() const;
+	static V3DEvent* Create();
+	V3D_RESULT Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName);
+	const V3DEvent::Source& GetSource() const;
 
 	/************************/
-	/* override - IV3DFence */
+	/* override - IV3DEvent */
 	/************************/
 	virtual bool IsSignaled() const override;
 	virtual V3D_RESULT Reset() override;
-	virtual V3D_RESULT Wait(uint64_t timeOut) override;
+	virtual V3D_RESULT Set() override;
 
 	/******************************/
 	/* override - IV3DDeviceChild */
@@ -36,10 +36,10 @@ public:
 private:
 	ReferenceCounter m_RefCounter;
 	V3DDevice* m_pDevice;
-	V3DFence::Source m_Source;
+	V3DEvent::Source m_Source;
 
-	V3DFence();
-	virtual ~V3DFence();
+	V3DEvent();
+	virtual ~V3DEvent();
 
 	V3D_DECLARE_ALLOCATOR
 };

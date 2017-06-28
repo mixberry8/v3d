@@ -43,12 +43,19 @@ public:
 	virtual V3D_RESULT Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderPass, uint32_t subpass, IV3DFrameBuffer* pFrameBuffer) override;
 	virtual V3D_RESULT End() override;
 
-	virtual void BarrierBuffer(IV3DBuffer* pBuffer, const V3DBarrierBufferDesc& barrier) override;
-	virtual void BarrierBufferView(IV3DBufferView* pBufferView, const V3DBarrierBufferViewDesc& barrier) override;
-	virtual void BarrierBufferViews(uint32_t bufferViewCount, IV3DBufferView** ppBufferViews, const V3DBarrierBufferViewDesc& barrier) override;
-	virtual void BarrierImage(IV3DImage* pImage, const V3DBarrierImageDesc& barrier) override;
-	virtual void BarrierImageView(IV3DImageView* pImageView, const V3DBarrierImageViewDesc& desc) override;
-	virtual void BarrierImageViews(uint32_t imageVewCount, IV3DImageView** ppImageViews, const V3DBarrierImageViewDesc& barrier) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, const V3DBufferMemoryBarrier& bufferMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, const V3DBufferViewMemoryBarrier& bufferViewMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, const V3DImageMemoryBarrier& imageMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, const V3DImageViewMemoryBarrier& imageViewMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, uint32_t memoryBarrierCount, const V3DBufferMemoryBarrier* pMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, uint32_t memoryBarrierCount, const V3DBufferViewMemoryBarrier* pMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, uint32_t memoryBarrierCount, const V3DImageMemoryBarrier* pMemoryBarriers) override;
+	virtual void Barrier(const V3DPipelineBarrier& pipelineBarrier, uint32_t memoryBarrierCount, const V3DImageViewMemoryBarrier* pMemoryBarriers) override;
+	virtual void Barrier(IV3DBarrierSet* pBarrierSet) override;
+	virtual void ResetEvent(IV3DEvent* pEvent, V3DFlags stageMask) override;
+	virtual void SetEvent(IV3DEvent* pEvent, V3DFlags stageMask) override;
+	virtual void WaitEvents(uint32_t eventCount, IV3DEvent** ppEvents, V3DFlags srcStageMask, V3DFlags dstStageMask) override;
+	virtual void WaitEvents(uint32_t eventCount, IV3DEvent** ppEvents, IV3DBarrierSet* pBarrierSet) override;
 	virtual void FillBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t size, uint32_t data) override;
 	virtual void UpdateBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t dataSize, const void* pData) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size) override;
@@ -114,6 +121,7 @@ private:
 		STLVector<VkViewport> viewports;
 		STLVector<VkRect2D> scissors;
 		STLVector<VkBuffer> buffers;
+		STLVector<VkEvent> events;
 		STLVector<VkDescriptorSet> descriptorSets;
 		STLVector<uint64_t> memoryOffsets;
 		STLVector<VkBufferMemoryBarrier> bufferMemoryBarriers;

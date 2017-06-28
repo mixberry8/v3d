@@ -1,7 +1,9 @@
 #include "V3DDevice.h"
 #include "V3DInstance.h"
 #include "V3DAdapter.h"
+#include "V3DEvent.h"
 #include "V3DFence.h"
+#include "V3DSemaphore.h"
 #include "V3DQueryPool.h"
 #include "V3DQueue.h"
 #include "V3DCommandPool.h"
@@ -13,6 +15,7 @@
 #include "V3DImage.h"
 #include "V3DBufferView.h"
 #include "V3DImageView.h"
+#include "V3DBarrierSet.h"
 #include "V3DSampler.h"
 #include "V3DRenderPass.h"
 #include "V3DFrameBuffer.h"
@@ -772,7 +775,27 @@ V3D_RESULT V3DDevice::CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, con
 	return V3D_OK;
 }
 
-V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence, const wchar_t* pDebugName)
+V3D_RESULT V3DDevice::CreateEvent(IV3DEvent** ppEvent, const wchar_t* pDebugName)
+{
+	V3DEvent* pEvent = V3DEvent::Create();
+	if (pEvent == nullptr)
+	{
+		return V3D_ERROR_OUT_OF_HOST_MEMORY;
+	}
+
+	V3D_RESULT result = pEvent->Initialize(this, pDebugName);
+	if (result != V3D_OK)
+	{
+		V3D_RELEASE(pEvent);
+		return result;
+	}
+
+	(*ppEvent) = pEvent;
+
+	return V3D_OK;
+}
+
+V3D_RESULT V3DDevice::CreateFence(bool initialState, IV3DFence** ppFence, const wchar_t* pDebugName)
 {
 	V3DFence* pFence = V3DFence::Create();
 	if (pFence == nullptr)
@@ -780,7 +803,7 @@ V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence, const wchar_t* pDebugName
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-	V3D_RESULT result = pFence->Initialize(this, pDebugName);
+	V3D_RESULT result = pFence->Initialize(this, initialState, pDebugName);
 	if (result != V3D_OK)
 	{
 		V3D_RELEASE(pFence);
@@ -788,6 +811,26 @@ V3D_RESULT V3DDevice::CreateFence(IV3DFence** ppFence, const wchar_t* pDebugName
 	}
 
 	(*ppFence) = pFence;
+
+	return V3D_OK;
+}
+
+V3D_RESULT V3DDevice::CreateSemaphore(IV3DSemaphore** ppSemaphore, const wchar_t* pDebugName)
+{
+	V3DSemaphore* pSemaphore = V3DSemaphore::Create();
+	if (pSemaphore == nullptr)
+	{
+		return V3D_ERROR_OUT_OF_HOST_MEMORY;
+	}
+
+	V3D_RESULT result = pSemaphore->Initialize(this, pDebugName);
+	if (result != V3D_OK)
+	{
+		V3D_RELEASE(pSemaphore);
+		return result;
+	}
+
+	(*ppSemaphore) = pSemaphore;
 
 	return V3D_OK;
 }
@@ -1126,6 +1169,7 @@ V3D_RESULT V3DDevice::CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewD
 	V3D_RESULT result = pBufferView->Initialize(this, pBuffer, desc, pDebugName);
 	if (result != V3D_OK)
 	{
+		V3D_RELEASE(pBufferView);
 		return result;
 	}
 
@@ -1156,10 +1200,40 @@ V3D_RESULT V3DDevice::CreateImageView(IV3DImage* pImage, const V3DImageViewDesc&
 	V3D_RESULT result = pImageView->Initialize(this, pImage, desc, pDebugName);
 	if (result != V3D_OK)
 	{
+		V3D_RELEASE(pImageView);
 		return result;
 	}
 
 	(*ppImageView) = pImageView;
+
+	return V3D_OK;
+}
+
+V3D_RESULT V3DDevice::CreateBarrierSet(const V3DBarrierSetDesc& desc, IV3DBarrierSet** ppBarrierSet, const wchar_t* pDebugName)
+{
+	if (((desc.pipeline.srcStageMask == 0) || (desc.pipeline.dstStageMask == 0)) ||
+		((desc.bufferMemoryCount != 0) && (desc.pBufferMemories == nullptr)) ||
+		((desc.bufferViewMemoryCount != 0) && (desc.pBufferViewMemories == nullptr)) ||
+		((desc.imageMemoryCount != 0) && (desc.pImageMemories == nullptr)) ||
+		((desc.imageViewMemoryCount != 0) && (desc.pImageViewMemories == nullptr)))
+	{
+		return V3D_ERROR_INVALID_ARGUMENT;
+	}
+
+	V3DBarrierSet* pBarrierSet = V3DBarrierSet::Create();
+	if (pBarrierSet == nullptr)
+	{
+		return V3D_ERROR_OUT_OF_HOST_MEMORY;
+	}
+
+	V3D_RESULT result = pBarrierSet->Initialize(this, desc, pDebugName);
+	if (result != V3D_OK)
+	{
+		V3D_RELEASE(pBarrierSet);
+		return result;
+	}
+
+	(*ppBarrierSet) = pBarrierSet;
 
 	return V3D_OK;
 }

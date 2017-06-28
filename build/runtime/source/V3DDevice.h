@@ -43,7 +43,9 @@ public:
 	virtual V3D_RESULT CreateCommandBuffer(IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType, IV3DCommandBuffer** ppCommandBuffer, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateCommandBuffer(const V3DCommandPoolDesc& poolDesc, V3D_COMMAND_BUFFER_TYPE bufferType, IV3DCommandBuffer** ppCommandBuffer, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateSwapChain(const V3DSwapChainDesc& swapChainDesc, const V3DSwapChainCallbacks& swapChainCallbacks, IV3DSwapChain** ppSwapChain, const wchar_t* pDebugName) override;
-	virtual V3D_RESULT CreateFence(IV3DFence** ppFence, const wchar_t* pDebugName) override;
+	virtual V3D_RESULT CreateEvent(IV3DEvent** ppEvent, const wchar_t* pDebugName) override;
+	virtual V3D_RESULT CreateFence(bool initialState, IV3DFence** ppFence, const wchar_t* pDebugName) override;
+	virtual V3D_RESULT CreateSemaphore(IV3DSemaphore** ppSemaphore, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateQueryPool(const V3DQueryPoolDesc& desc, IV3DQueryPool** ppQueryPool, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** ppSampler, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateShaderModule(size_t codeSize, const void* pCode, IV3DShaderModule** ppShaderModule, const wchar_t* pDebugName) override;
@@ -57,6 +59,7 @@ public:
 	virtual V3D_RESULT CreateImage(const V3DImageDesc& imageDesc, V3D_IMAGE_LAYOUT initialLayout, IV3DImage** ppImage, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateBufferView(IV3DBuffer* pBuffer, const V3DBufferViewDesc& desc, IV3DBufferView** ppBufferView, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateImageView(IV3DImage* pImage, const V3DImageViewDesc& desc, IV3DImageView** ppImageView, const wchar_t* pDebugName) override;
+	virtual V3D_RESULT CreateBarrierSet(const V3DBarrierSetDesc& desc, IV3DBarrierSet** ppBarrierSet, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateRenderPass(uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, IV3DRenderPass** ppRenderPass, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateFrameBuffer(IV3DRenderPass* pRenderPass,	uint32_t attachmentCount, IV3DImageView** ppAttachments, IV3DFrameBuffer** ppFrameBuffer, const wchar_t* pDebugName) override;
 	virtual V3D_RESULT CreateDescriptorSetLayout(uint32_t descriptorCount, const V3DDescriptorDesc* pDescriptors, uint32_t poolSize, uint32_t poolResizeStep, IV3DDescriptorSetLayout** ppDescriptorSetLayout, const wchar_t* pDebugName) override;

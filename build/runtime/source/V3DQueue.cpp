@@ -1,6 +1,5 @@
 #include "V3DQueue.h"
 #include "V3DDevice.h"
-#include "V3DCommandBuffer.h"
 #include "V3DFence.h"
 #include "V3DSwapChain.h"
 
@@ -78,31 +77,62 @@ V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppC
 	}
 #endif //_DEBUG
 
-	V3DCommandBuffer** ppSrcCommandBuffer = reinterpret_cast<V3DCommandBuffer**>(ppCommandBuffers);
-	V3DCommandBuffer** ppSrcCommandBufferEnd = ppSrcCommandBuffer + commandBufferCount;
-
-	m_Temp.commandBuffers.resize(commandBufferCount);
-	VkCommandBuffer* pDstCommandBuffers = m_Temp.commandBuffers.data();
-
-	while (ppSrcCommandBuffer != ppSrcCommandBufferEnd)
-	{
-		*pDstCommandBuffers++ = (*ppSrcCommandBuffer++)->GetSource().commandBuffer;
-	}
-
-	VkSubmitInfo submitInfo = {};
+	VkSubmitInfo submitInfo;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.pNext = nullptr;
 	submitInfo.waitSemaphoreCount = 0;
 	submitInfo.pWaitSemaphores = nullptr;
 	submitInfo.pWaitDstStageMask = nullptr;
 	submitInfo.commandBufferCount = commandBufferCount;
-	submitInfo.pCommandBuffers = m_Temp.commandBuffers.data();
+	submitInfo.pCommandBuffers = V3DQueue::Vulkan_CreateCommandBufferArray(m_Temp.commandBuffers, commandBufferCount, ppCommandBuffers);
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
 
 	VkFence fence = (pFence != nullptr) ? static_cast<V3DFence*>(pFence)->GetSource().fence : VK_NULL_HANDLE;
 	VkResult vkResult = vkQueueSubmit(m_Source.queue, 1, &submitInfo, fence);
 	
+	return ToV3DResult(vkResult);
+}
+
+V3D_RESULT V3DQueue::Submit(uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence)
+{
+#ifdef _DEBUG
+	if (((waitSemaphoreCount != 0) && ((ppWaitSemaphores == nullptr) || (pWaitDstStageMasks == nullptr))) || (commandBufferCount == 0) || (ppCommandBuffers == nullptr) || ((signalSemaphoreCount != 0) && (ppSignalSemaphores == nullptr)))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM(waitSemaphoreCount) << V3D_LOG_S_PTR(ppWaitSemaphores) << V3D_LOG_S_PTR(pWaitDstStageMasks) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers) << V3D_LOG_S_NUM(signalSemaphoreCount) << V3D_LOG_S_PTR(ppSignalSemaphores));
+		return V3D_ERROR_INVALID_ARGUMENT;
+	}
+
+	for (uint32_t i = 0; i < commandBufferCount; i++)
+	{
+		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_PRIMARY)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_NotPrimaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			return V3D_ERROR_INVALID_ARGUMENT;
+		}
+
+		if (static_cast<V3DCommandBuffer*>(ppCommandBuffers[i])->GetDebug().isBegin == true)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_PrimaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			return V3D_ERROR_INVALID_ARGUMENT;
+		}
+	}
+#endif //_DEBUG
+
+	VkSubmitInfo submitInfo;
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = nullptr;
+	submitInfo.waitSemaphoreCount = waitSemaphoreCount;
+	submitInfo.pWaitSemaphores = V3DQueue::Vulkan_CreateSemaphoreArray(m_Temp.waitSemaphores, 0, waitSemaphoreCount, ppWaitSemaphores);;
+	submitInfo.pWaitDstStageMask = V3DQueue::Vulkan_CreatePipelineStageFlags(m_Temp.waitDstStageMasks, 0, waitSemaphoreCount, pWaitDstStageMasks);
+	submitInfo.commandBufferCount = commandBufferCount;
+	submitInfo.pCommandBuffers = V3DQueue::Vulkan_CreateCommandBufferArray(m_Temp.commandBuffers, commandBufferCount, ppCommandBuffers);
+	submitInfo.signalSemaphoreCount = signalSemaphoreCount;
+	submitInfo.pSignalSemaphores = V3DQueue::Vulkan_CreateSemaphoreArray(m_Temp.signalSemaphores, 0, signalSemaphoreCount, ppSignalSemaphores);
+
+	VkFence fence = (pFence != nullptr) ? static_cast<V3DFence*>(pFence)->GetSource().fence : VK_NULL_HANDLE;
+	VkResult vkResult = vkQueueSubmit(m_Source.queue, 1, &submitInfo, fence);
+
 	return ToV3DResult(vkResult);
 }
 
@@ -131,31 +161,75 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCou
 	}
 #endif //_DEBUG
 
-	V3DCommandBuffer** ppSrcCommandBuffer = reinterpret_cast<V3DCommandBuffer**>(ppCommandBuffers);
-	V3DCommandBuffer** ppSrcCommandBufferEnd = ppSrcCommandBuffer + commandBufferCount;
-
-	m_Temp.commandBuffers.resize(commandBufferCount);
-	VkCommandBuffer* pDstCommandBuffers = m_Temp.commandBuffers.data();
-
-	while (ppSrcCommandBuffer != ppSrcCommandBufferEnd)
-	{
-		*pDstCommandBuffers++ = (*ppSrcCommandBuffer++)->GetSource().commandBuffer;
-	}
-
 	const V3DSwapChain::Source& swapChainSource = static_cast<V3DSwapChain*>(pSwapChain)->GetSource();
 
-	VkSubmitInfo submitInfo = {};
+	VkSubmitInfo submitInfo;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.pNext = nullptr;
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = &swapChainSource.presentCompleteSemaphore;
 	submitInfo.pWaitDstStageMask = &swapChainSource.waitDstStageMask;
 	submitInfo.commandBufferCount = commandBufferCount;
-	submitInfo.pCommandBuffers = m_Temp.commandBuffers.data();
+	submitInfo.pCommandBuffers = V3DQueue::Vulkan_CreateCommandBufferArray(m_Temp.commandBuffers, commandBufferCount, ppCommandBuffers);
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &swapChainSource.renderingCompleteSemaphore;
 
 	VkFence fence = (pFence != nullptr) ? static_cast<V3DFence*>(pFence)->GetSource().fence : VK_NULL_HANDLE;
+	VkResult vkResult = vkQueueSubmit(m_Source.queue, 1, &submitInfo, fence);
+
+	return ToV3DResult(vkResult);
+}
+
+V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence)
+{
+#ifdef _DEBUG
+	if (((waitSemaphoreCount != 0) && (ppWaitSemaphores == nullptr)) || (commandBufferCount == 0) || (ppCommandBuffers == nullptr) || ((signalSemaphoreCount != 0) && (ppSignalSemaphores == nullptr)))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(waitSemaphoreCount, 0) << V3D_LOG_S_NUM(waitSemaphoreCount) << V3D_LOG_S_PTR(ppWaitSemaphores) << V3D_LOG_S_PTR(pWaitDstStageMasks) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers) << V3D_LOG_S_NUM(signalSemaphoreCount) << V3D_LOG_S_PTR(ppSignalSemaphores));
+		return V3D_ERROR_INVALID_ARGUMENT;
+	}
+
+	for (uint32_t i = 0; i < commandBufferCount; i++)
+	{
+		if (ppCommandBuffers[i]->GetType() != V3D_COMMAND_BUFFER_TYPE_PRIMARY)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_NotPrimaryCommandBuffer, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			return V3D_ERROR_INVALID_ARGUMENT;
+		}
+
+		if (static_cast<V3DCommandBuffer*>(ppCommandBuffers[i])->GetDebug().isBegin == true)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_PrimaryCommandBufferNotEnd, m_DebugName.c_str(), V3D_LOG_TYPE(ppCommandBuffers), i);
+			return V3D_ERROR_INVALID_ARGUMENT;
+		}
+	}
+#endif //_DEBUG
+
+	V3DSwapChain* pInternalSwapChain = static_cast<V3DSwapChain*>(pSwapChain);
+	const V3DSwapChain::Source& swapChainSource = pInternalSwapChain->GetSource();
+
+	VkSemaphore* pWaitSemaphores = V3DQueue::Vulkan_CreateSemaphoreArray(m_Temp.waitSemaphores, 1, waitSemaphoreCount, ppWaitSemaphores);
+	pWaitSemaphores[0] = swapChainSource.presentCompleteSemaphore;
+
+	uint32_t* pWaitStageMasks = V3DQueue::Vulkan_CreatePipelineStageFlags(m_Temp.waitDstStageMasks, 1, waitSemaphoreCount, pWaitDstStageMasks);
+	pWaitStageMasks[0] = ToVkPipelineStageFlags(swapChainSource.waitDstStageMask);
+
+	VkSemaphore* pSignalSemaphores = V3DQueue::Vulkan_CreateSemaphoreArray(m_Temp.signalSemaphores, 1, signalSemaphoreCount, ppSignalSemaphores);
+	pSignalSemaphores[0] = swapChainSource.renderingCompleteSemaphore;
+
+	VkSubmitInfo submitInfo;
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = nullptr;
+	submitInfo.waitSemaphoreCount = waitSemaphoreCount + 1;
+	submitInfo.pWaitSemaphores = pWaitSemaphores;
+	submitInfo.pWaitDstStageMask = pWaitStageMasks;
+	submitInfo.commandBufferCount = commandBufferCount;
+	submitInfo.pCommandBuffers = V3DQueue::Vulkan_CreateCommandBufferArray(m_Temp.commandBuffers, commandBufferCount, ppCommandBuffers);
+	submitInfo.signalSemaphoreCount = signalSemaphoreCount + 1;
+	submitInfo.pSignalSemaphores = pSignalSemaphores;
+
+	VkFence fence = (pFence != nullptr) ? static_cast<V3DFence*>(pFence)->GetSource().fence : VK_NULL_HANDLE;
+
 	VkResult vkResult = vkQueueSubmit(m_Source.queue, 1, &submitInfo, fence);
 
 	return ToV3DResult(vkResult);
@@ -174,7 +248,7 @@ V3D_RESULT V3DQueue::Present(IV3DSwapChain* pSwapChain)
 	V3DSwapChain* pInternalSwapChain = static_cast<V3DSwapChain*>(pSwapChain);
 	const V3DSwapChain::Source& swapChainSource = pInternalSwapChain->GetSource();
 
-	VkPresentInfoKHR presentInfo = {};
+	VkPresentInfoKHR presentInfo;
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 1;
