@@ -234,9 +234,9 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
 	appInfo.pApplicationName = "v3d";
-	appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 5);
+	appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 6);
 	appInfo.pEngineName = "v3d";
-	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 5);
+	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 6);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
 	instInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
