@@ -9,6 +9,8 @@ public:
 	{
 		VkImage image;
 		VkImageAspectFlags aspectFlags;
+		uint32_t levelCount;
+		uint32_t layerCount;
 		VkDeviceSize memoryOffset;
 	};
 

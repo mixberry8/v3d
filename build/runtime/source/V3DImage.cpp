@@ -64,10 +64,6 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 	m_ResourceDesc.memorySize = memReqs.size;
 	m_ResourceDesc.memoryAlignment = memReqs.alignment;
 
-	// ----------------------------------------------------------------------------------------------------
-	// イメージアスペクトを決定
-	// ----------------------------------------------------------------------------------------------------
-
 	if ((m_Desc.format == V3D_FORMAT_D16_UNORM) || (m_Desc.format == V3D_FORMAT_X8_D24_UNORM) || (m_Desc.format == V3D_FORMAT_D32_SFLOAT))
 	{
 		m_Source.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -84,6 +80,9 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 	{
 		m_Source.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
+
+	m_Source.levelCount = m_Desc.levelCount;
+	m_Source.layerCount = m_Desc.layerCount;
 
 	// ----------------------------------------------------------------------------------------------------
 	// サブリソースのレイアウトを取得

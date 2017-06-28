@@ -164,6 +164,8 @@ V3DBackBuffer::V3DBackBuffer() :
 
 	m_Source.image = VK_NULL_HANDLE;
 	m_Source.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+	m_Source.levelCount = m_Desc.levelCount;
+	m_Source.layerCount = m_Desc.layerCount;
 }
 
 V3DBackBuffer::~V3DBackBuffer()
