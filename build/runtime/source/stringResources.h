@@ -37,6 +37,11 @@ static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierBufferViews = L"IV3DComma
 static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierImage = L"IV3DCommandBuffer::BarrierImage";
 static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierImageView = L"IV3DCommandBuffer::BarrierImageView";
 static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierImageViews = L"IV3DCommandBuffer::BarrierImageViews";
+
+static constexpr wchar_t* Log_IV3DCommandBuffer_Barrier = L"IV3DCommandBuffer::Barrier";
+static constexpr wchar_t* Log_IV3DCommandBuffer_ResetEvent = L"IV3DCommandBuffer::ResetEvent";
+static constexpr wchar_t* Log_IV3DCommandBuffer_SetEvent = L"IV3DCommandBuffer::SetEvent";
+static constexpr wchar_t* Log_IV3DCommandBuffer_WaitEvents = L"IV3DCommandBuffer::WaitEvents";
 static constexpr wchar_t* Log_IV3DCommandBuffer_FillBuffer = L"IV3DCommandBuffer::FillBuffer";
 static constexpr wchar_t* Log_IV3DCommandBuffer_UpdateBuffer = L"IV3DCommandBuffer::UpdateBuffer";
 static constexpr wchar_t* Log_IV3DCommandBuffer_CopyBuffer = L"IV3DCommandBuffer::CopyBuffer";
