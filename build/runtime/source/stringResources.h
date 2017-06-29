@@ -16,6 +16,7 @@ static constexpr wchar_t* Log_Error_InvalidArgument = L" : •s³‚Èˆø”‚ª“n‚³‚ê‚Ü‚
 /* IV3DDevice */
 /**************/
 
+static constexpr wchar_t* Log_Error_MixingDifferentDescSetLayout = L"IV3DDevice::CreatePipelineLayout : %s : ˆÙ‚È‚éƒ^ƒCƒv‚ÌƒfƒXƒNƒŠƒvƒ^ƒZƒbƒgƒŒƒCƒAƒEƒg‚ª¬İ‚µ‚Ä‚¢‚Ü‚·Bƒ^ƒCƒv‚Í‚·‚×‚Ä“¯‚¶‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B";
 static constexpr wchar_t* Log_Error_InvalidSubpass = L"IV3DDevice::CreateGraphicsPipeline : %s : w’è‚³‚ê‚½ƒTƒuƒpƒX %u ‚Í”ÍˆÍ‚ğ’´‚¦‚Ä‚¢‚Ü‚·B";
 static constexpr wchar_t* Log_Error_MismatchSubpassColorAttachmentCount = L"IV3DDevice::CreateGraphicsPipeline : %s : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX %s ‚ÌƒTƒuƒpƒX %u ‚ÌƒJƒ‰[ƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
 static constexpr wchar_t* Log_Error_MismatchFrameBufferAttachmentCount = L"IV3DDevice::CreateFrameBuffer : %s : w’è‚³‚ê‚½ƒŒƒ“ƒ_[ƒpƒX %s ‚Æì¬‚µ‚æ‚¤‚Æ‚µ‚Ä‚¢‚éƒtƒŒ[ƒ€ƒoƒbƒtƒ@[‚ÌƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”‚ªˆê’v‚µ‚Ü‚¹‚ñB";
@@ -31,17 +32,10 @@ static constexpr wchar_t* Log_Error_AlreadyBindResourceMemory = L"IV3DDevice::Bi
 /* IV3DCommandBuffer */
 /*********************/
 
-static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierBuffer = L"IV3DCommandBuffer::BarrierBuffer";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierBufferView = L"IV3DCommandBuffer::BarrierBufferView";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierBufferViews = L"IV3DCommandBuffer::BarrierBufferViews";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierImage = L"IV3DCommandBuffer::BarrierImage";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierImageView = L"IV3DCommandBuffer::BarrierImageView";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BarrierImageViews = L"IV3DCommandBuffer::BarrierImageViews";
-
 static constexpr wchar_t* Log_IV3DCommandBuffer_Barrier = L"IV3DCommandBuffer::Barrier";
 static constexpr wchar_t* Log_IV3DCommandBuffer_ResetEvent = L"IV3DCommandBuffer::ResetEvent";
 static constexpr wchar_t* Log_IV3DCommandBuffer_SetEvent = L"IV3DCommandBuffer::SetEvent";
-static constexpr wchar_t* Log_IV3DCommandBuffer_WaitEvents = L"IV3DCommandBuffer::WaitEvents";
+static constexpr wchar_t* Log_IV3DCommandBuffer_WaitEvent = L"IV3DCommandBuffer::WaitEvents";
 static constexpr wchar_t* Log_IV3DCommandBuffer_FillBuffer = L"IV3DCommandBuffer::FillBuffer";
 static constexpr wchar_t* Log_IV3DCommandBuffer_UpdateBuffer = L"IV3DCommandBuffer::UpdateBuffer";
 static constexpr wchar_t* Log_IV3DCommandBuffer_CopyBuffer = L"IV3DCommandBuffer::CopyBuffer";
@@ -55,13 +49,13 @@ static constexpr wchar_t* Log_IV3DCommandBuffer_ResolveImageView = L"IV3DCommand
 static constexpr wchar_t* Log_IV3DCommandBuffer_BeginRenderPass = L"IV3DCommandBuffer::BeginRenderPass";
 static constexpr wchar_t* Log_IV3DCommandBuffer_ClearImage = L"IV3DCommandBuffer::ClearImage";
 static constexpr wchar_t* Log_IV3DCommandBuffer_ClearImageView = L"IV3DCommandBuffer::ClearImageView";
-static constexpr wchar_t* Log_IV3DCommandBuffer_ClearAttachments = L"IV3DCommandBuffer::ClearAttachments";
+static constexpr wchar_t* Log_IV3DCommandBuffer_ClearAttachment = L"IV3DCommandBuffer::ClearAttachments";
 static constexpr wchar_t* Log_IV3DCommandBuffer_BindPipeline = L"IV3DCommandBuffer::BindPipeline";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BindDescriptorSets = L"IV3DCommandBuffer::BindDescriptorSets";
-static constexpr wchar_t* Log_IV3DCommandBuffer_BindVertexBuffers = L"IV3DCommandBuffer::BindVertexBuffers";
+static constexpr wchar_t* Log_IV3DCommandBuffer_BindDescriptorSet = L"IV3DCommandBuffer::BindDescriptorSet";
+static constexpr wchar_t* Log_IV3DCommandBuffer_BindVertexBuffer = L"IV3DCommandBuffer::BindVertexBuffer";
 static constexpr wchar_t* Log_IV3DCommandBuffer_BindIndexBuffer = L"IV3DCommandBuffer::BindIndexBuffer";
 static constexpr wchar_t* Log_IV3DCommandBuffer_PushConstant = L"IV3DCommandBuffer::PushConstant";
-static constexpr wchar_t* Log_IV3DCommandBuffer_PushDescriptorSets = L"IV3DCommandBuffer::PushDescriptorSets";
+static constexpr wchar_t* Log_IV3DCommandBuffer_PushDescriptorSet = L"IV3DCommandBuffer::PushDescriptorSet";
 static constexpr wchar_t* Log_IV3DCommandBuffer_SetViewport = L"IV3DCommandBuffer::SetViewport";
 static constexpr wchar_t* Log_IV3DCommandBuffer_SetScissor = L"IV3DCommandBuffer::SetScissor";
 static constexpr wchar_t* Log_IV3DCommandBuffer_ResetQueryPool = L"IV3DCommandBuffer::ResetQueryPool";
@@ -71,25 +65,30 @@ static constexpr wchar_t* Log_IV3DCommandBuffer_WriteTimestamp = L"IV3DCommandBu
 static constexpr wchar_t* Log_IV3DCommandBuffer_Draw = L"IV3DCommandBuffer::Draw";
 static constexpr wchar_t* Log_IV3DCommandBuffer_DrawIndexed = L"IV3DCommandBuffer::DrawIndexed";
 static constexpr wchar_t* Log_IV3DCommandBuffer_Dispatch = L"IV3DCommandBuffer::Dispatch";
-static constexpr wchar_t* Log_IV3DCommandBuffer_ExecuteCommandBuffers = L"IV3DCommandBuffer::ExecuteCommandBuffers";
+static constexpr wchar_t* Log_IV3DCommandBuffer_ExecuteCommandBuffer = L"IV3DCommandBuffer::ExecuteCommandBuffers";
 static constexpr wchar_t* Log_IV3DCommandBuffer_BeginDebugMarker = L"IV3DCommandBuffer::BeginDebugMarker";
 static constexpr wchar_t* Log_IV3DCommandBuffer_InsertDebugMarker = L"IV3DCommandBuffer::InsertDebugMarker";
 
 static constexpr wchar_t* Log_Warning_CommandBufferRenderPassContinue = L"IV3DCommandBuffer::Begin : %s : ƒvƒ‰ƒCƒ}ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ìg—p–@‚É V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE ‚ğw’è‚·‚é‚±‚Æ‚Í‚Å‚«‚Ü‚¹‚ñB";
 
 static constexpr wchar_t* Log_Error_CommandBufferAlreadyBegin = L"IV3DCommandBuffer::Begin : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ö‚Ì‹L˜^‚ÍŠù‚ÉŠJn‚³‚ê‚Ä‚¢‚Ü‚·B";
-static constexpr wchar_t* Log_Error_CommandBufferAlreadyEnd = L"IV3DCommandBuffer::End : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Í‹L˜^‚ÍŠù‚ÉI—¹‚³‚ê‚Ä‚¢‚Ü‚·B";
-static constexpr wchar_t* Log_Error_CommandBufferNotBegin = L"IV3DCommandBuffer : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚ªŠJn‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚ÉƒRƒ}ƒ“ƒh‚ğ‘‚«‚à‚¤‚Æ‚µ‚Ü‚µ‚½B";
+static constexpr wchar_t* Log_Error_CommandBufferAlreadyEnd = L"IV3DCommandBuffer::End : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ö‚Ì‹L˜^‚ÍŠù‚ÉI—¹‚µ‚Ä‚¢‚Ü‚·B";
+static constexpr wchar_t* Log_Error_CommandBufferNotBegin = L"IV3DCommandBuffer : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ö‚Ì‹L˜^‚ªŠJn‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚ÉAƒRƒ}ƒ“ƒh‚ğ‘‚«‚à‚¤‚Æ‚µ‚Ü‚µ‚½B";
+static constexpr wchar_t* Log_Error_OverFlowViewports = L"IV3DCommandBuffer::SetViewport : %s : İ’è‚Å‚«‚éƒrƒ…[ƒ|[ƒg‚ÌÅ‘å”‚Í %u ( maxViewports ) ‚Å‚·B : firstViewport[%u] viewportCount[%u]";
+static constexpr wchar_t* Log_Error_OverFlowScissors = L"IV3DCommandBuffer::SetScissor : %s : İ’è‚Å‚«‚éƒVƒU[‚ÌÅ‘å”‚Í %u ( maxViewports ) ‚Å‚·B : firstScissor[%u] scissorCount[%u]";
 static constexpr wchar_t* Log_Error_CommandBufferRenderPassContinue = L"IV3DCommandBuffer::Begin : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ìg—p–@‚É V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE ‚ğw’è‚µ‚½ê‡‚Í pRenderPass ‚Æ subpass ‚Í•K‚¸w’è‚µ‚Ä‚­‚¾‚³‚¢A";
-static constexpr wchar_t* Log_Error_NotStandardDescriptorSet = L"IV3DCommandBuffer::BindDescriptorSets : %s[%u] ‚ÍƒXƒ^ƒ“ƒ_[ƒhƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_NotPushDescriptorSet = L"IV3DCommandBuffer::PushDescriptorSets : %s[%u] ‚ÍƒvƒbƒVƒ…ƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_NotStandardDescriptorSets = L"IV3DCommandBuffer::BindDescriptorSet : %s : %s[%u] ‚ÍƒXƒ^ƒ“ƒ_[ƒhƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_NotStandardDescriptorSet = L"IV3DCommandBuffer::BindDescriptorSet : %s : %s ‚ÍƒXƒ^ƒ“ƒ_[ƒhƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_OverFlowBindVertexBuffer = L"IV3DCommandBuffer::BindVertexBuffer : %s : ƒoƒCƒ“ƒh‚Å‚«‚éƒo[ƒeƒbƒNƒXƒoƒbƒtƒ@‚ÌÅ‘å”‚Í %u ( maxVertexInputBindings ) ‚Å‚·B : firstBinding[%u] bindingCount[%u]";
+static constexpr wchar_t* Log_Error_OverFlowBindDescriptorSet = L"IV3DCommandBuffer::BindDescriptorSet : %s : ƒoƒCƒ“ƒh‚Å‚«‚éƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚ÌÅ‘å”‚Í %u ( maxBoundDescriptorSets ) ‚Å‚·B : firstSet[%u] descriptorSetCount[%u]";
+static constexpr wchar_t* Log_Error_NotPushDescriptorSet = L"IV3DCommandBuffer::PushDescriptorSet : %s[%u] ‚ÍƒvƒbƒVƒ…ƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
 static constexpr wchar_t* Log_Error_NotSecondaryCommandBuffer = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@ %s[%u] ‚ÍƒZƒJƒ“ƒ_ƒŠ‚Å‚Í‚ ‚è‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_SecondaryCommandBufferNotEnd = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@ %s[%u] ‚Í IV3DCommandBuffer::End ‚ÅI—¹‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ";
-static constexpr wchar_t* Log_Error_CommandBuffersSimultaneousUse = L"IV3DCommandBuffer::ExecuteCommandBuffers : %s : ƒvƒ‰ƒCƒ}ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ìg—p–@‚É V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE ‚ªw’è‚³‚ê‚Ä‚¢‚éê‡‚ÍAƒZƒJƒ“ƒ_ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚à“¯—l‚É‚±‚Ìg—p–@‚ğw’è‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B";
-static constexpr wchar_t* Log_Error_UnavailablePushDescriptorSets = L"IV3DCommandBuffer::PushDescriptorSets : %s : Šg’£‹@”\‚ª—LŒø‚Å‚È‚¢‚½‚ß PushDescriptorSets ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_UnavailableBeginDebugMarker = L"IV3DCommandBuffer::BeginDebugMarker : %s : Šg’£‹@”\‚ª—LŒø‚Å‚È‚¢‚½‚ß BeginDebugMarker ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_UnavailableEndDebugMarker = L"IV3DCommandBuffer::EndDebugMarker : %s : Šg’£‹@”\‚ª—LŒø‚Å‚È‚¢‚½‚ß EndDebugMarker ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_UnavailableInsertDebugMarker = L"IV3DCommandBuffer::InsertDebugMarker : %s : Šg’£‹@”\‚ª—LŒø‚Å‚È‚¢‚½‚ß InsertDebugMarker ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_SecondaryCommandBufferNotEnd = L"IV3DCommandBuffer::ExecuteCommandBuffer : %s : ƒRƒ}ƒ“ƒhƒoƒbƒtƒ@ %s[%u] ‚Í IV3DCommandBuffer::End ‚ÅI—¹‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ";
+static constexpr wchar_t* Log_Error_CommandBuffersSimultaneousUse = L"IV3DCommandBuffer::ExecuteCommandBuffer : %s : ƒvƒ‰ƒCƒ}ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚Ìg—p–@‚É V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE ‚ªw’è‚³‚ê‚Ä‚¢‚éê‡‚ÍAƒZƒJƒ“ƒ_ƒŠƒRƒ}ƒ“ƒhƒoƒbƒtƒ@[‚à“¯—l‚É‚±‚Ìg—p–@‚ğw’è‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B";
+static constexpr wchar_t* Log_Error_UnavailablePushDescriptorSet = L"IV3DCommandBuffer::PushDescriptorSet : %s : Šg’£‹@”\ V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET ‚ª—LŒø‚Å‚È‚¢‚½‚ß PushDescriptorSet ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_UnavailableBeginDebugMarker = L"IV3DCommandBuffer::BeginDebugMarker : %s : Šg’£‹@”\ V3D_DEVICE_EXTENSION_DEBUG_MARKER ‚ª—LŒø‚Å‚È‚¢‚½‚ß BeginDebugMarker ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_UnavailableEndDebugMarker = L"IV3DCommandBuffer::EndDebugMarker : %s : Šg’£‹@”\ V3D_DEVICE_EXTENSION_DEBUG_MARKER ‚ª—LŒø‚Å‚È‚¢‚½‚ß EndDebugMarker ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_UnavailableInsertDebugMarker = L"IV3DCommandBuffer::InsertDebugMarker : %s : Šg’£‹@”\ V3D_DEVICE_EXTENSION_DEBUG_MARKER ‚ª—LŒø‚Å‚È‚¢‚½‚ß InsertDebugMarker ‚Íg—p‚Å‚«‚Ü‚¹‚ñB";
 
 /*************/
 /* IV3DQueue */
@@ -106,6 +105,6 @@ static constexpr wchar_t* Log_Error_PrimaryCommandBufferNotEnd = L"IV3DCommandQu
 /********************/
 
 static constexpr wchar_t* Log_Error_DescriptorNotSet = L"IV3DDescriptorSet::Update : %s : ƒoƒCƒ“ƒfƒBƒ“ƒO %u ‚ÉƒŠƒ\[ƒX ( %s ) ‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB";
-static constexpr wchar_t* Log_Error_DescriptorSetNoNeedUpdate = L"IV3DDescriptorSet::Update : %s : ƒvƒbƒVƒ…ƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚ÍXV‚·‚é•K—v‚Í‚ ‚è‚Ü‚¹‚ñB";
+static constexpr wchar_t* Log_Error_DescriptorSetNoNeedUpdate = L"IV3DDescriptorSet::Update : %s : ƒvƒbƒVƒ…ƒfƒXƒNƒŠƒvƒ^ƒZƒbƒg‚ÌXV‚Í•K—v‚Í‚ ‚è‚Ü‚¹‚ñB";
 
 #endif //_DEBUG
