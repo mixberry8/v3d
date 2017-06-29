@@ -46,44 +46,6 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	const V3DAdapter::Source& adapterSource = m_pAdapter->GetSource();
 
 	// ----------------------------------------------------------------------------------------------------
-	// レイヤーの列挙
-	// ----------------------------------------------------------------------------------------------------
-
-	// いらなくなったらしい
-/*
-	uint32_t vkLayerCount;
-	VkResult vkResult = vkEnumerateDeviceLayerProperties(adapterSource.physicalDevice, &vkLayerCount, nullptr);
-	if (vkResult != VK_SUCCESS)
-	{
-		return V3D_ERROR_FAIL;
-	}
-
-	STLVector<VkLayerProperties> vkLayerProps;
-	vkLayerProps.resize(vkLayerCount);
-	vkResult = vkEnumerateDeviceLayerProperties(adapterSource.physicalDevice, &vkLayerCount, vkLayerProps.data());
-	if (vkResult != VK_SUCCESS)
-	{
-		return V3D_ERROR_FAIL;
-	}
-
-	STLVector<const char*> vkEnableLayers;
-	switch (m_pInstance->GetLayerType())
-	{
-	case V3D_LAYER_VALIDATION:
-		if (std::find_if(vkLayerProps.begin(), vkLayerProps.end(), V3DFindLayer(V3D_LAYER_LUNARG_standard_validation)) != vkLayerProps.end())
-		{
-			vkEnableLayers.push_back(V3D_LAYER_LUNARG_standard_validation);
-		}
-		break;
-
-	case V3D_LAYER_RENDERDOC:
-		if (std::find_if(vkLayerProps.begin(), vkLayerProps.end(), V3DFindLayer(V3D_LAYER_RENDERDOC_Capture)) != vkLayerProps.end())
-		{
-			vkEnableLayers.push_back(V3D_LAYER_RENDERDOC_Capture);
-		}
-	}
-*/
-	// ----------------------------------------------------------------------------------------------------
 	// エクステンションの列挙
 	// ----------------------------------------------------------------------------------------------------
 
@@ -101,29 +63,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	{
 		return V3D_ERROR_FAIL;
 	}
-/*
-	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) == vExtensionProps.end())
-	{
-		return V3D_ERROR_FAIL;
-	}
 
-	const char* VK_KHX_NAME = "VK_KHX";
-	const char* VK_NVX_NAME = "VK_NVX";
-
-	for (uint32_t i = 0; i < vExtensionCount; i++)
-	{
-		const char* pExtensionName = vExtensionProps[i].extensionName;
-
-		if ((strncmp(pExtensionName, VK_KHX_NAME, strlen(VK_KHX_NAME)) == 0) ||
-			(strncmp(pExtensionName, VK_NVX_NAME, strlen(VK_NVX_NAME)) == 0))
-		{
-			// 実験的なものは除外する
-			continue;
-		}
-
-		vEnableExtensions.push_back(pExtensionName);
-	}
-*/
 	const char* KHR_SWAPCHAIN_EXTENSION_NAME = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
 	const char* KHR_MAINTENANCE1_EXTENSION_NAME = VK_KHR_MAINTENANCE1_EXTENSION_NAME;
 	const char* KHR_PUSH_DESCRIPTOR_EXTENSION_NAME = VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME;
@@ -156,7 +96,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	if (std::find_if(vExtensionProps.begin(), vExtensionProps.end(), V3DFindExtension(KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) != vExtensionProps.end())
 	{
 		vEnableExtensions.push_back(KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
-		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS;
+		extensionFlags |= V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET;
 	}
 
 	// デバッグマーカー
@@ -1300,7 +1240,7 @@ V3D_RESULT V3DDevice::CreateDescriptorSetLayout(uint32_t descriptorCount, const 
 
 	if ((poolSize == 0) && (poolResizeStep == 0))
 	{
-		if ((m_Caps.extensionFlags & V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS) == 0)
+		if ((m_Caps.extensionFlags & V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET) == 0)
 		{
 			return V3D_ERROR_NOT_SUPPORTED;
 		}
