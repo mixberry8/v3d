@@ -2061,8 +2061,8 @@ enum V3D_DESCRIPTOR_TYPE : uint8_t
 //! @brief デスクリプタセットのタイプ
 enum V3D_DESCRIPTOR_SET_TYPE : uint8_t
 {
-	V3D_DESCRIPTOR_SET_TYPE_STANDARD = 0, //!< IV3DCommandBuffer::BindDescriptorSets でバインドするスタンダードデスクリプタセットです。
-	V3D_DESCRIPTOR_SET_TYPE_PUSH = 1, //!< IV3DCommandBuffer::PushDescriptorSets で更新するプッシュデスクリプタセットです。
+	V3D_DESCRIPTOR_SET_TYPE_STANDARD = 0, //!< IV3DCommandBuffer::BindDescriptorSet でバインドするスタンダードデスクリプタセットです。
+	V3D_DESCRIPTOR_SET_TYPE_PUSH = 1, //!< IV3DCommandBuffer::PushDescriptorSet で更新するプッシュデスクリプタセットです。
 };
 
 //! @}
@@ -2420,7 +2420,7 @@ enum V3D_STENCIL_OP : uint8_t
 //! <tr><td>Rs0 Gs0 Bs0 As0</td><td>ブレンドされるカラーアタッチメントの第１のソースカラー</td></tr>
 //! <tr><td>Rs1 Gs1 Bs1 As1</td><td>ブレンドされるカラーアタッチメントの第２のソースカラー</td></tr>
 //! <tr><td>Rd Gd Bd Ad</td><td></td>出力先のカラー</tr>
-//! <tr><td>Rc Gc Bc Ac</td><td></td>コマンド IV3DCommandBuffer::SetBlendConstants で設定するブレンド定数</tr>
+//! <tr><td>Rc Gc Bc Ac</td><td></td>コマンド IV3DCommandBuffer::SetBlendConstant で設定するブレンド定数</tr>
 //! </table>
 //! @remarks
 //! 以下のものは V3DDeviceCaps::colorBlendFlags に ::V3D_COLOR_BLEND_CAP_DUAL_SRC が含まれている場合にのみ使用することができます。<br>
@@ -3121,7 +3121,7 @@ enum V3D_COMMAND_BUFFER_TYPE : uint8_t
 	//! @sa IV3DQueue::Submit
 	V3D_COMMAND_BUFFER_TYPE_PRIMARY = 0,
 	//! @brief プライマリコマンドバッファーで実行することができる、セカンダリコマンドバッファーです。
-	//! @sa IV3DCommandBuffer::ExecuteCommandBuffers
+	//! @sa IV3DCommandBuffer::ExecuteCommandBuffer
 	V3D_COMMAND_BUFFER_TYPE_SECONDARY = 1,
 };
 
@@ -3142,7 +3142,7 @@ enum V3D_COMMAND_BUFFER_USAGE_FLAG : V3DFlags
 	V3D_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT = 0x00000001,
 	//! @brief プライマリコマンドバッファーで開始されたレンダーパス内で実行されるセカンダリコマンドバッファーがレンダーパス、サブパス、フレームバッファを引き継ぐことを表します。
 	V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE = 0x00000002,
-	//! @brief コマンドバッファーが複数のキューに送信 (IV3DQueue::Submit) またはプライマリコマンドバッファーに記録 ( IV3DCommandBuffer::ExecuteCommandBuffers ) できることを表します。<br>
+	//! @brief コマンドバッファーが複数のキューに送信 (IV3DQueue::Submit) またはプライマリコマンドバッファーに記録 ( IV3DCommandBuffer::ExecuteCommandBuffer ) できることを表します。<br>
 	//! また、プライマリコマンドバッファーにこの使用法が含まれている場合、そこで実行されるセカンダリコマンドバッファーも同様にこの使用法が含まれている必要があります。
 	V3D_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE = 0x00000004,
 };
@@ -3478,6 +3478,7 @@ public:
 	//! @brief イベントをリセットして、非シグナル状態にします。
 	//! @param[in] pEvent リセットするイベントです。
 	//! @param[in] stageMask イベントを非シグナル状態と判断するためのステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	//! - 常に ::V3D_PIPELINE_STAGE_HOST を指定する必要があります。
 	//! @remarks
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
@@ -3489,9 +3490,11 @@ public:
 	//!   </tr>
 	//! </table>
 	virtual void ResetEvent(IV3DEvent* pEvent, V3DFlags stageMask) = 0;
+
 	//! @brief イベントをリセットして、シグナル状態にします。
 	//! @param[in] pEvent セットするイベントです。
 	//! @param[in] stageMask イベントをシグナル状態と判断するためのステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	//! - ::V3D_PIPELINE_STAGE_HOST を含めることはできません。
 	//! @remarks
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
@@ -3510,7 +3513,9 @@ public:
 	//! @param[in] ppEvents 待機に使用するイベントの配列です。
 	//! - 配列の要素数は eventCount である必要があります。
 	//! @param[in] srcStageMask 非シグナル状態のステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	//! - 常に ::V3D_PIPELINE_STAGE_HOST を指定する必要があります。
 	//! @param[in] dstStageMask シグナル状態のステージを表す ::V3D_PIPELINE_STAGE_FLAG 列挙定数の組み合わせです。
+	//! - IV3DCommandBuffer::SetEvent の第２引数である stageMask に指定した値である必要があります。
 	//! @remarks
 	//! - 待機に使用するイベントは必ずシグナル状態になるようにしてください。<br>
 	//! これを怠った場合、TDR が発生します。
@@ -3528,25 +3533,7 @@ public:
 	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
 	//!   </tr>
 	//! </table>
-	virtual void WaitEvents(uint32_t eventCount, IV3DEvent** ppEvents, V3DFlags srcStageMask, V3DFlags dstStageMask) = 0;
-	//! @brief イベントを待機します。
-	//! @param[in] eventCount 待機に使用するイベントの数です。
-	//! - この値は 1 以上である必要があります。
-	//! @param[in] ppEvents 待機に使用するイベントの配列です。
-	//! - 配列の要素数は eventCount である必要があります。
-	//! @param[in] pBarrierSet イベントがシグナル状態になった際に実行するバリアのセットです。
-	//! @remarks
-	//! <table class="cmdbuff">
-	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
-	//!   <tr>
-	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
-	//!     <td> 有効 </td>
-	//!     <td> </td>
-	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
-	//!   </tr>
-	//! </table>
-	//! @sa IV3DCommandBuffer::WaitEvents(uint32_t, IV3DEvent**, V3DFlags, V3DFlags)
-	virtual void WaitEvents(uint32_t eventCount, IV3DEvent** ppEvents, IV3DBarrierSet* pBarrierSet) = 0;
+	virtual void WaitEvent(uint32_t eventCount, IV3DEvent** ppEvents, V3DFlags srcStageMask, V3DFlags dstStageMask) = 0;
 
 	//! @brief バッファーを指定した値で塗りつぶします
 	//! @param[in] pDstBuffer 塗りつぶすバッファーです。
@@ -4225,7 +4212,7 @@ public:
 	//!     <td> ::V3D_QUEUE_GRAPHICS </td>
 	//!   </tr>
 	//! </table>
-	virtual void ClearAttachments(
+	virtual void ClearAttachment(
 		uint32_t colorAttachmentCount, const V3DClearColorAttachmentDesc* pColorAttachments,
 		const V3DClearDepthStencilAttachmentDesc* pDepthStencilAttachment,
 		uint32_t rangeCount, const V3DClearRange* pRanges) = 0;
@@ -4243,6 +4230,32 @@ public:
 	//!   </tr>
 	//! </table>
 	virtual void BindPipeline(IV3DPipeline* pPipeline) = 0;
+
+	//! @brief デスクリプタセットをバインドします。
+	//! @param[in] pipelineType パイプラインのタイプです。
+	//! @param[in] pPipelineLayout パイプラインのレイアウトです。
+	//! @param[in] set デスクリプタセットを設定するセット番号です。
+	//! - この値は { 0 <= set < V3DDeviceCaps::maxBoundDescriptorSets } の範囲に制限されます。
+	//! @param[in] pDescriptorSet バインドするデスクリプタセットです。
+	//! @param[in] dynamicOffsetCount ダイナミックオフセットの数です。
+	//! - この値はデスクリプタセットに格納されているダイナミックバッファーの数と一致している必要があります。
+	//! @param[in] pDynamicOffsets ダイナミックオフセットの配列です。
+	//! - dynamicOffsetCount が 1以上の場合は、dynamicOffsetCount 値の要素を持つ配列を指定してください。<br>
+	//! また dynamicOffsetCount が 0 の場合は nullptr を指定してください。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	virtual void BindDescriptorSet(
+		V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout,
+		uint32_t set, IV3DDescriptorSet* pDescriptorSet,
+		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
 
 	//! @brief デスクリプタセットをバインドします。
 	//! @param[in] pipelineType パイプラインのタイプです。
@@ -4268,22 +4281,17 @@ public:
 	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
 	//!   </tr>
 	//! </table>
-	virtual void BindDescriptorSets(
+	virtual void BindDescriptorSet(
 		V3D_PIPELINE_TYPE pipelineType,	IV3DPipelineLayout* pPipelineLayout,
 		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
 		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
 
 	//! @brief バーテックスバッファーをバインドします。
-	//! @param[in] firstBinding 最初のバインディングのインデックスです。
+	//! @param[in] binding バインディングのインデックスです。
 	//! - この値は { 0 <= firstBinding < V3DDeviceCaps::maxVertexInputBindings } の範囲に制限されます。
-	//! @param[in] bindingCount バインディングの数です。
-	//! - この値は { 1 <= bindingCount < (V3DDeviceCaps::maxVertexInputBindings - firstBinding) } の範囲に制限されます。
-	//! @param[in] ppBuffers バーテックスバッファーの配列です。
-	//! - 配列の要素数は bindingCount である必要があります。<br>
-	//! またバッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には ::V3D_BUFFER_USAGE_VERTEX が含まれている必要があります。
-	//! @param[in] pOffsets バーテックスバッファーのメモリオフセットの配列です。
-	//! - 配列の要素数は bindingCount ある必要があります。<br>
-	//! また配列の要素であるメモリオフセットは、バイト単位で指定します。
+	//! @param[in] pBuffer バーテックスバッファーです。
+	//! - バッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には ::V3D_BUFFER_USAGE_VERTEX が含まれている必要があります。
+	//! @param[in] offset バーテックスバッファーのメモリオフセットをバイト単位で指定します。
 	//! @remarks
 	//! <table class="cmdbuff">
 	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
@@ -4294,7 +4302,29 @@ public:
 	//!     <td> ::V3D_QUEUE_GRAPHICS </td>
 	//!   </tr>
 	//! </table>
-	virtual void BindVertexBuffers(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets) = 0;
+	virtual void BindVertexBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset = 0) = 0;
+	//! @brief バーテックスバッファーをバインドします。
+	//! @param[in] firstBinding 最初のバインディングのインデックスです。
+	//! - この値は { 0 <= firstBinding < V3DDeviceCaps::maxVertexInputBindings } の範囲に制限されます。
+	//! @param[in] bindingCount バインディングの数です。
+	//! - この値は { 1 <= bindingCount < (V3DDeviceCaps::maxVertexInputBindings - firstBinding) } の範囲に制限されます。
+	//! @param[in] ppBuffers バーテックスバッファーの配列です。
+	//! - 配列の要素数は bindingCount である必要があります。<br>
+	//! またバッファー作成時に指定した使用法である V3DBufferDesc::usageFlags には ::V3D_BUFFER_USAGE_VERTEX が含まれている必要があります。
+	//! @param[in] pOffsets バーテックスバッファーのメモリオフセットの配列です。
+	//! - 配列の要素数は bindingCount ある必要があり、要素であるメモリオフセットは、バイト単位で指定します。<br>
+	//! - nullptr を指定した場合はバインドする全てのバーテックスバッファのオフセットを 0 とみなします。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS </td>
+	//!   </tr>
+	//! </table>
+	virtual void BindVertexBuffer(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets = nullptr) = 0;
 
 	//! @brief インデックスバッファーをバインドします。
 	//! @param[in] pBuffer バインドするインデックスバッファーです。
@@ -4374,7 +4404,7 @@ public:
 	//! - dynamicOffsetCount が 1以上の場合は、dynamicOffsetCount 値の要素を持つ配列を指定してください。<br>
 	//! また dynamicOffsetCount が 0 の場合は nullptr を指定してください。
 	//! @remarks
-	//! - このコマンドは V3DDeviceCaps::extensionFlags に ::V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS が含まれている場合に使用することができます。
+	//! - このコマンドは V3DDeviceCaps::extensionFlags に ::V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET が含まれている場合に使用することができます。
 	//! .
 	//! <br>
 	//! <table class="basic">
@@ -4386,7 +4416,7 @@ public:
 	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
 	//!   </tr>
 	//! </table>
-	virtual void PushDescriptorSets(
+	virtual void PushDescriptorSet(
 		V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout,
 		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
 		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
@@ -4461,7 +4491,7 @@ public:
 	//!   </tr>
 	//! </table>
 	//! @sa V3D_BLEND_FACTOR
-	virtual void SetBlendConstants(const float blendConstants[4]) = 0;
+	virtual void SetBlendConstant(const float blendConstants[4]) = 0;
 
 	//! @brief クエリプールをリセットします。
 	//! @param[in] pQueryPool リセットするクエリプールです。
@@ -4629,7 +4659,7 @@ public:
 	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE <br> ::V3D_QUEUE_TRANSFER </td>
 	//!   </tr>
 	//! </table>
-	virtual void ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) = 0;
+	virtual void ExecuteCommandBuffer(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) = 0;
 
 	//! @brief デバッグマーカーを開始します。
 	//! @param[in] pName デバッグマーカーの名前です。
@@ -5010,7 +5040,7 @@ enum V3D_QUERY_CAP_FLAG : V3DFlags
 	//! @brief すべてのグラフィックスキューとコンピュートキューのタイムスタンプをサポートします。
 	V3D_QUERY_CAP_TIMESTAMP_QUERY_GRAPHICS_AND_COMPUTE = 0x00000004,
 	//! @brief プライマリコマンドバッファーでオクルージョンクエリがアクティブになっている間 ( IV3DCommandBuffer::BeginQuery ～ IV3DCommandBuffer::EndQuery ) で実行される
-	//! セカンダリコマンドバッファー ( IV3DCommandBuffer::ExecuteCommandBuffers ) がクエリを引き継ぎ、その結果を取得することができます。
+	//! セカンダリコマンドバッファー ( IV3DCommandBuffer::ExecuteCommandBuffer ) がクエリを引き継ぎ、その結果を取得することができます。
 	V3D_QUERY_CAP_INHERITED_QUERIES = 0x00000008,
 };
 
@@ -5287,8 +5317,8 @@ enum V3D_COLOR_BLEND_CAP_FLAG : V3DFlags
 enum V3D_DEVICE_EXTENSION_FLAG : V3DFlags
 {
 	//! @brief プッシュデスクリプタセットを使用することができます。
-	//! @sa IV3DCommandBuffer::PushDescriptorSets
-	V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SETS = 0x00000001,
+	//! @sa IV3DCommandBuffer::PushDescriptorSet
+	V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET = 0x00000001,
 	//! @brief デバッグマーカーを使用することができます。
 	//! @remarks
 	//! この拡張機能が使用できるレイヤーは ::V3D_LAYER_NSIGHT または ::V3D_LAYER_RENDERDOC のいずれかになります。
@@ -5336,7 +5366,7 @@ struct V3DDeviceCaps
 	uint32_t maxStorageBufferSize;
 	//! @brief IV3DCommandBuffer::PushConstant で更新できる定数の最大サイズをバイト単位で指定します。
 	uint32_t maxPushConstantsSize;
-	//! @brief IV3DCommandBuffer::PushDescriptorSets で更新できるデスクリプタの数です。<br>
+	//! @brief IV3DCommandBuffer::PushDescriptorSet で更新できるデスクリプタの数です。<br>
 	//! デスクリプタセットの数ではなく、デスクリプタセットに格納されているデスクリプタの数であるということに注意してください。
 	uint32_t maxPushDescriptors;
 	//! @brief デバイスが確保できるリソースメモリの最大数です。
@@ -5425,7 +5455,7 @@ struct V3DDeviceCaps
 	//! @brief 頂点要素の数である V3DPipelineVertexInputDesc::elementCount の最大値です。
 	uint32_t maxVertexInputElements;
 	//! @brief 一度にバインドできる頂点バッファの最大数です。
-	//! @sa IV3DCommandBuffer::BindVertexBuffers
+	//! @sa IV3DCommandBuffer::BindVertexBuffer
 	uint32_t maxVertexInputBindings;
 	//! @brief 頂点要素の最大オフセットをバイト単位で指定します。
 	uint32_t maxVertexInputElementOffset;
@@ -6130,8 +6160,8 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @remarks
-	//! - デスクリプタセットには IV3DCommandBuffer::BindDescriptorSets でバインドするスタンダードデスクリプタセットと、
-	//! IV3DCommandBuffer::PushDescriptorSets で更新するプッシュデスクリプタセットの２種類があります。<br>
+	//! - デスクリプタセットには IV3DCommandBuffer::BindDescriptorSet でバインドするスタンダードデスクリプタセットと、
+	//! IV3DCommandBuffer::PushDescriptorSet で更新するプッシュデスクリプタセットの２種類があります。<br>
 	//! 前者のスタンダードデスクリプタセットに対応したレイアウトは、poolSize が 1以上、poolResizeStep が 0 または 1以上を指定した場合に作成することができ、<br>
 	//! 後者のプッシュデスクリプタセットに対応したレイアウトは、poolSize poolResizeStep の両方に 0 を指定した場合に作成することができます。
 	virtual V3D_RESULT CreateDescriptorSetLayout(
@@ -6154,8 +6184,8 @@ public:
 	//! <br>
 	//! <table class="basic">
 	//!   <tr><th>タイプ</th><th>設定方法</th></tr>
-	//!   <tr><td>スタンダードデスクリプタセット<br> ( ::V3D_DESCRIPTOR_SET_TYPE_STANDARD )</td><td>IV3DCommandBuffer::BindDescriptorSets</td></tr>
-	//!   <tr><td>プッシュデスクリプタセット<br> ( ::V3D_DESCRIPTOR_SET_TYPE_PUSH )</td><td>IV3DCommandBuffer::PushDescriptorSets</td></tr>
+	//!   <tr><td>スタンダードデスクリプタセット<br> ( ::V3D_DESCRIPTOR_SET_TYPE_STANDARD )</td><td>IV3DCommandBuffer::BindDescriptorSet</td></tr>
+	//!   <tr><td>プッシュデスクリプタセット<br> ( ::V3D_DESCRIPTOR_SET_TYPE_PUSH )</td><td>IV3DCommandBuffer::PushDescriptorSet</td></tr>
 	//! </table>
 	//! <br>
 	virtual V3D_RESULT CreateDescriptorSet(IV3DDescriptorSetLayout* pLayout, IV3DDescriptorSet** ppDescriptorSet, const wchar_t* pDebugName = nullptr) = 0;
