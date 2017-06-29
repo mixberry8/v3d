@@ -46,6 +46,22 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	// デスクリプタセットレイアウト
 	// ----------------------------------------------------------------------------------------------------
 
+#ifdef _DEBUG
+	if (descriptorSetLayoutCount > 0)
+	{
+		V3D_DESCRIPTOR_SET_TYPE type = ppDescriptorSetLayouts[0]->GetType();
+
+		for (uint32_t i = 1; i < descriptorSetLayoutCount; i++)
+		{
+			if (type != ppDescriptorSetLayouts[i]->GetType())
+			{
+				V3D_LOG_PRINT_ERROR(Log_Error_MixingDifferentDescSetLayout, V3D_SAFE_NAME(this, pDebugName));
+				return V3D_ERROR_FAIL;
+			}
+		}
+	}
+#endif //_DEBUG
+
 	STLVector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 
 	if (descriptorSetLayoutCount > 0)
