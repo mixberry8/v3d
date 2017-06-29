@@ -209,14 +209,14 @@
     <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkyDome.cpp">
       <Filter>source\demo</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\test\source\main.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\test\source\pch.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\ViewCameraWindow.cpp">
       <Filter>source\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\main5.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

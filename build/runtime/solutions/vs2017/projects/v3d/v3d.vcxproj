@@ -44,12 +44,14 @@
     <ClInclude Include="..\..\..\..\source\stringResources.h" />
     <ClInclude Include="..\..\..\..\source\V3DAdapter.h" />
     <ClInclude Include="..\..\..\..\source\V3DBackBuffer.h" />
+    <ClInclude Include="..\..\..\..\source\V3DBarrierSet.h" />
     <ClInclude Include="..\..\..\..\source\V3DBaseDescriptorSet.h" />
     <ClInclude Include="..\..\..\..\source\V3DBaseDescriptorSetLayout.h" />
     <ClInclude Include="..\..\..\..\source\V3DBuffer.h" />
     <ClInclude Include="..\..\..\..\source\V3DBufferView.h" />
     <ClInclude Include="..\..\..\..\source\V3DCommandPool.h" />
     <ClInclude Include="..\..\..\..\source\V3DCommandBuffer.h" />
+    <ClInclude Include="..\..\..\..\source\V3DEvent.h" />
     <ClInclude Include="..\..\..\..\source\V3DPushDescriptorSet.h" />
     <ClInclude Include="..\..\..\..\source\V3DPushDescriptorSetLayout.h" />
     <ClInclude Include="..\..\..\..\source\V3DQueue.h" />
@@ -66,6 +68,7 @@
     <ClInclude Include="..\..\..\..\source\V3DRenderPass.h" />
     <ClInclude Include="..\..\..\..\source\V3DResourceMemory.h" />
     <ClInclude Include="..\..\..\..\source\V3DSampler.h" />
+    <ClInclude Include="..\..\..\..\source\V3DSemaphore.h" />
     <ClInclude Include="..\..\..\..\source\V3DShaderModule.h" />
     <ClInclude Include="..\..\..\..\source\V3DStandardDescriptorSet.h" />
     <ClInclude Include="..\..\..\..\source\V3DStandardDescriptorSetLayout.h" />
@@ -85,12 +88,14 @@
     <ClCompile Include="..\..\..\..\source\v3d.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DAdapter.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DBackBuffer.cpp" />
+    <ClCompile Include="..\..\..\..\source\V3DBarrierSet.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DBaseDescriptorSet.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DBaseDescriptorSetLayout.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DBuffer.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DBufferView.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DCommandPool.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DCommandBuffer.cpp" />
+    <ClCompile Include="..\..\..\..\source\V3DEvent.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DPushDescriptorSet.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DPushDescriptorSetLayout.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DQueue.cpp" />
@@ -107,6 +112,7 @@
     <ClCompile Include="..\..\..\..\source\V3DRenderPass.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DResourceMemory.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DSampler.cpp" />
+    <ClCompile Include="..\..\..\..\source\V3DSemaphore.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DShaderModule.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DStandardDescriptorSet.cpp" />
     <ClCompile Include="..\..\..\..\source\V3DStandardDescriptorSetLayout.cpp" />

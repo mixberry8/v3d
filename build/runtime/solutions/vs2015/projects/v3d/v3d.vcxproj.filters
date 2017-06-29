@@ -114,6 +114,15 @@
     <ClInclude Include="..\..\..\..\source\V3DStandardDescriptorSetLayout.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DBarrierSet.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DEvent.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\source\V3DSemaphore.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\source\pch.cpp">
@@ -204,6 +213,15 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\source\V3DStandardDescriptorSetLayout.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DBarrierSet.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DEvent.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\source\V3DSemaphore.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
