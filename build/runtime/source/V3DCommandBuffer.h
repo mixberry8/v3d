@@ -54,8 +54,7 @@ public:
 	virtual void Barrier(IV3DBarrierSet* pBarrierSet) override;
 	virtual void ResetEvent(IV3DEvent* pEvent, V3DFlags stageMask) override;
 	virtual void SetEvent(IV3DEvent* pEvent, V3DFlags stageMask) override;
-	virtual void WaitEvents(uint32_t eventCount, IV3DEvent** ppEvents, V3DFlags srcStageMask, V3DFlags dstStageMask) override;
-	virtual void WaitEvents(uint32_t eventCount, IV3DEvent** ppEvents, IV3DBarrierSet* pBarrierSet) override;
+	virtual void WaitEvent(uint32_t eventCount, IV3DEvent** ppEvents, V3DFlags srcStageMask, V3DFlags dstStageMask) override;
 	virtual void FillBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t size, uint32_t data) override;
 	virtual void UpdateBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, uint64_t dataSize, const void* pData) override;
 	virtual void CopyBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, IV3DBuffer* pSrcBuffer, uint64_t srcOffset, uint64_t size) override;
@@ -77,17 +76,19 @@ public:
 	virtual void NextSubpass() override;
 	virtual void ClearImage(IV3DImage* pImage, V3D_IMAGE_LAYOUT imageLayout, const V3DClearValue& clearValue) override;
 	virtual void ClearImageView(IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, const V3DClearValue& clearValue) override;
-	virtual void ClearAttachments(uint32_t colorAttachmentCount, const V3DClearColorAttachmentDesc* pColorAttachments, const V3DClearDepthStencilAttachmentDesc* pDepthStencilAttachment, uint32_t rangeCount, const V3DClearRange* pRanges) override;
+	virtual void ClearAttachment(uint32_t colorAttachmentCount, const V3DClearColorAttachmentDesc* pColorAttachments, const V3DClearDepthStencilAttachmentDesc* pDepthStencilAttachment, uint32_t rangeCount, const V3DClearRange* pRanges) override;
 	virtual void BindPipeline(IV3DPipeline* pPipeline) override;
-	virtual void BindDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
-	virtual void BindVertexBuffers(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets) override;
+	virtual void BindDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t set, IV3DDescriptorSet* pDescriptorSet, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
+	virtual void BindDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
+	virtual void BindVertexBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset) override;
+	virtual void BindVertexBuffer(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets) override;
 	virtual void BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D_INDEX_TYPE indexType) override;
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, const void* pData) override;
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) override;
-	virtual void PushDescriptorSets(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
+	virtual void PushDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
 	virtual void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const V3DViewport* pViewports) override;
 	virtual void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) override;
-	virtual void SetBlendConstants(const float blendConstants[4]) override;
+	virtual void SetBlendConstant(const float blendConstants[4]) override;
 	virtual void SetStencilReference(V3DFlags faceMask, uint32_t reference) override;
 	virtual void ResetQueryPool(IV3DQueryPool* pQueryPool, uint32_t firstQuery, uint32_t queryCount) override;
 	virtual void BeginQuery(IV3DQueryPool* pQueryPool, uint32_t query) override;
@@ -96,7 +97,7 @@ public:
 	virtual void Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) override;
 	virtual void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t firstInstance, int32_t vertexOffset) override;
 	virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
-	virtual void ExecuteCommandBuffers(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) override;
+	virtual void ExecuteCommandBuffer(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers) override;
 	virtual void BeginDebugMarker(const char* pName, const float color[4]) override;
 	virtual void EndDebugMarker() override;
 	virtual void InsertDebugMarker(const char* pName, const float color[4]) override;
@@ -118,20 +119,22 @@ private:
 	{
 		STLVector<VkClearAttachment> clearAttachments;
 		STLVector<VkClearRect> clearRects;
-		STLVector<VkViewport> viewports;
-		STLVector<VkRect2D> scissors;
-		STLVector<VkBuffer> buffers;
 		STLVector<VkEvent> events;
-		STLVector<VkDescriptorSet> descriptorSets;
-		STLVector<uint64_t> memoryOffsets;
 		STLVector<VkBufferMemoryBarrier> bufferMemoryBarriers;
 		STLVector<VkImageMemoryBarrier> imageMemoryBarriers;
 		STLVector<VkBufferCopy> bufferCopies;
+		STLVector<VkBufferImageCopy> bufferImageCopies;
 		STLVector<VkImageCopy> imageCopies;
 		STLVector<VkImageBlit> imageBlits;
 		STLVector<VkImageResolve> imageResolves;
-		STLVector<VkBufferImageCopy> bufferImageCopies;
 		STLVector<VkCommandBuffer> commandBuffers;
+
+		VkViewport* viewports;
+		VkRect2D* scissors;
+		VkBuffer* vertexBuffers;
+		uint64_t* vertexBufferOffsets;
+		VkDescriptorSet* descriptorSets;
+
 		VkDescriptorBufferInfo descriptorBufferInfos[V3D_PUSH_DESCRIPTOR_MAX];
 		VkWriteDescriptorSet writeDescriptors[V3D_PUSH_DESCRIPTOR_MAX];
 	};
