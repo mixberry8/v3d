@@ -28,24 +28,24 @@ public:
 	/*****************/
 	/* IV3DSwapChain */
 	/*****************/
-	virtual const V3DSwapChainDesc& GetDesc() const override;
-	virtual V3D_RESULT AcquireNextImage() override;
-	virtual uint32_t GetCurrentImageIndex() const override;
-	virtual void GetImage(uint32_t imageIndex, IV3DImage** ppImage) override;
-	virtual bool GetFullscreenState() const override;
-	virtual V3D_RESULT SetFullscreenState(bool bFullscreen) override;
+	const V3DSwapChainDesc& GetDesc() const override;
+	V3D_RESULT AcquireNextImage() override;
+	uint32_t GetCurrentImageIndex() const override;
+	void GetImage(uint32_t imageIndex, IV3DImage** ppImage) override;
+	bool GetFullscreenState() const override;
+	V3D_RESULT SetFullscreenState(bool bFullscreen) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	struct WindowedInfo

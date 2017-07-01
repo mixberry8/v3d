@@ -14,39 +14,39 @@ public:
 	/*****************/
 	/* IV3DImageBase */
 	/*****************/
-	virtual const IV3DImageBase::Source& GetSource() const override;
-	virtual bool CheckBindMemory() const override;
-	virtual V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset) override;
+	const IV3DImageBase::Source& GetSource() const override;
+	bool CheckBindMemory() const override;
+	V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset) override;
 
 #ifdef _DEBUG
-	virtual const wchar_t* GetDebugName() const override;
+	const wchar_t* GetDebugName() const override;
 #endif //_DEBUG
 
 	/*************/
 	/* IV3DImage */
 	/*************/
-	virtual const V3DImageDesc& GetDesc() const override;
-	virtual const V3DImageSubresourceLayout& GetSubresourceLayout(uint32_t level, uint32_t layer) const override;
+	const V3DImageDesc& GetDesc() const override;
+	const V3DImageSubresourceLayout& GetSubresourceLayout(uint32_t level, uint32_t layer) const override;
 
 	/****************/
 	/* IV3DResource */
 	/****************/
-	virtual const V3DResourceDesc& GetResourceDesc() const override;
-	virtual V3D_RESULT GetResourceMemory(IV3DResourceMemory** ppMemory) override;
-	virtual V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory) override;
-	virtual V3D_RESULT Unmap() override;
+	const V3DResourceDesc& GetResourceDesc() const override;
+	V3D_RESULT GetResourceMemory(IV3DResourceMemory** ppMemory) override;
+	V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory) override;
+	V3D_RESULT Unmap() override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	static constexpr V3DImageSubresourceLayout DummySubresource = V3DImageSubresourceLayout{};

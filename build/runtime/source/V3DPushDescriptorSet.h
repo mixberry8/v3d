@@ -18,8 +18,8 @@ public:
 	/*********************/
 	/* IV3DDescriptorSet */
 	/*********************/
-	virtual V3D_DESCRIPTOR_SET_TYPE GetType() const override;
-	virtual void Update() override;
+	V3D_DESCRIPTOR_SET_TYPE GetType() const override;
+	void Update() override;
 
 private:
 	V3DPushDescriptorSet();

@@ -15,25 +15,25 @@ public:
 	/********************/
 	/* IV3DPipelineBase */
 	/********************/
-	virtual const IV3DPipelineBase::Source& GetSource() const override;
+	const IV3DPipelineBase::Source& GetSource() const override;
 
 	/****************/
 	/* IV3DPipeline */
 	/****************/
-	virtual V3D_PIPELINE_TYPE GetType() const override;
-	virtual void GetLayout(IV3DPipelineLayout** ppPipelineLayout) override;
+	V3D_PIPELINE_TYPE GetType() const override;
+	void GetLayout(IV3DPipelineLayout** ppPipelineLayout) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

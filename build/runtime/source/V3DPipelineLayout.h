@@ -18,22 +18,22 @@ public:
 	/**********************/
 	/* IV3DPipelineLayout */
 	/**********************/
-	virtual uint32_t GetConstantCount() const override;
-	virtual const V3DConstantDesc& GetConstantDesc(uint32_t constantIndex) const override;
-	virtual uint32_t GetDescriptorSetCount() const override;
-	virtual void GetDescriptorSetLayout(uint32_t descriptorSetIndex, IV3DDescriptorSetLayout** ppDescriptorSetLayout) override;
+	uint32_t GetConstantCount() const override;
+	const V3DConstantDesc& GetConstantDesc(uint32_t constantIndex) const override;
+	uint32_t GetDescriptorSetCount() const override;
+	void GetDescriptorSetLayout(uint32_t descriptorSetIndex, IV3DDescriptorSetLayout** ppDescriptorSetLayout) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

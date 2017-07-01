@@ -28,21 +28,21 @@ public:
 	/**********************/
 	/* IV3DResourceMemory */
 	/**********************/
-	virtual const V3DResourceMemoryDesc& GetDesc() const override;
-	virtual V3D_RESULT BeginMap() override;
-	virtual V3D_RESULT EndMap() override;
+	const V3DResourceMemoryDesc& GetDesc() const override;
+	V3D_RESULT BeginMap() override;
+	V3D_RESULT EndMap() override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

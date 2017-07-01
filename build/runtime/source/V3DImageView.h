@@ -23,21 +23,21 @@ public:
 	/*****************/
 	/* IV3DImageView */
 	/*****************/
-	virtual const V3DImageViewDesc& GetDesc() const override;
-	virtual void GetImage(IV3DImage** ppImage) override;
-	virtual const V3DSize3D& GetImageSubresourceSize() const override;
+	const V3DImageViewDesc& GetDesc() const override;
+	void GetImage(IV3DImage** ppImage) override;
+	const V3DSize3D& GetImageSubresourceSize() const override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

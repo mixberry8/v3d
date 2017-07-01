@@ -27,27 +27,27 @@ public:
 	/**************/
 	/* IV3DBuffer */
 	/**************/
-	virtual const V3DBufferDesc& GetDesc() const override;
+	const V3DBufferDesc& GetDesc() const override;
 
 	/****************/
 	/* IV3DResource */
 	/****************/
-	virtual const V3DResourceDesc& GetResourceDesc() const override;
-	virtual V3D_RESULT GetResourceMemory(IV3DResourceMemory** ppMemory) override;
-	virtual V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory) override;
-	virtual V3D_RESULT Unmap() override;
+	const V3DResourceDesc& GetResourceDesc() const override;
+	V3D_RESULT GetResourceMemory(IV3DResourceMemory** ppMemory) override;
+	V3D_RESULT Map(uint64_t offset, uint64_t size, void** ppMemory) override;
+	V3D_RESULT Unmap() override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	static constexpr V3DFlags StandardBufferUsageMask = V3D_BUFFER_USAGE_TRANSFER_SRC | V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_INDEX | V3D_BUFFER_USAGE_VERTEX;

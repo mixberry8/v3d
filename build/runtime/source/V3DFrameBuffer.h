@@ -21,22 +21,22 @@ public:
 	/*******************/
 	/* IV3DFrameBuffer */
 	/*******************/
-	virtual const V3DFrameBufferDesc& GetDesc() const override;
-	virtual void GetRenderPass(IV3DRenderPass** ppRenderPass) override;
-	virtual uint32_t GetAttachmentCount() const override;
-	virtual void GetAttachment(uint32_t attachmentIndex, IV3DImageView** ppImage) override;
+	const V3DFrameBufferDesc& GetDesc() const override;
+	void GetRenderPass(IV3DRenderPass** ppRenderPass) override;
+	uint32_t GetAttachmentCount() const override;
+	void GetAttachment(uint32_t attachmentIndex, IV3DImageView** ppImage) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

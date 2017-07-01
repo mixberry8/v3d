@@ -25,14 +25,14 @@ public:
 	/******************************/
 	/* override - IV3DDeviceChild */
 	/******************************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/*************************/
 	/* override - IV3DObject */
 	/*************************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

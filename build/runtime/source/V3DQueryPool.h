@@ -18,25 +18,25 @@ public:
 	/*****************/
 	/* IV3DImageBase */
 	/*****************/
-	virtual const V3DQueryPool::Source& GetSource() const;
+	const V3DQueryPool::Source& GetSource() const;
 
 	/*****************/
 	/* IV3DQueryPool */
 	/*****************/
-	virtual const V3DQueryPoolDesc& GetDesc() const override;
-	virtual V3D_RESULT GetResult(uint32_t firstQuery, uint32_t queryCount, uint64_t dstSize, void* pDst, uint64_t dstStride, V3DFlags queryResultFlags) override;
+	const V3DQueryPoolDesc& GetDesc() const override;
+	V3D_RESULT GetResult(uint32_t firstQuery, uint32_t queryCount, uint64_t dstSize, void* pDst, uint64_t dstStride, V3DFlags queryResultFlags) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;

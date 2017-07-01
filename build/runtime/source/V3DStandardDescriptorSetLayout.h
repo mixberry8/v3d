@@ -23,8 +23,8 @@ public:
 	/***************************/
 	/* IV3DDescriptorSetLayout */
 	/***************************/
-	virtual V3D_DESCRIPTOR_SET_TYPE GetType() const override;
-	virtual const V3DDescriptorSetLayoutStatistics& GetStatistics() const override;
+	V3D_DESCRIPTOR_SET_TYPE GetType() const override;
+	const V3DDescriptorSetLayoutStatistics& GetStatistics() const override;
 
 private:
 	static constexpr VkDescriptorPoolSize DescriptorPoolSizeInitList[VK_DESCRIPTOR_TYPE_RANGE_SIZE] =

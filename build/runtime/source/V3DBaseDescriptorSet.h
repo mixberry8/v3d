@@ -30,31 +30,31 @@ public:
 	/*********************/
 	/* IV3DDescriptorSet */
 	/*********************/
-	virtual void GetLayout(IV3DDescriptorSetLayout** ppLayout) override;
-	virtual V3D_RESULT GetBuffer(uint32_t binding, IV3DBuffer** ppBuffer) override;
-	virtual V3D_RESULT SetBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset, uint64_t size) override;
-	virtual V3D_RESULT GetBufferView(uint32_t binding, IV3DBufferView** ppBufferView) override;
-	virtual V3D_RESULT SetBufferView(uint32_t binding, IV3DBufferView* pBufferView) override;
-	virtual V3D_RESULT GetImageView(uint32_t binding, IV3DImageView** ppImageView) override;
-	virtual V3D_RESULT GetImageLayout(uint32_t binding, V3D_IMAGE_LAYOUT* pImageLayout) override;
-	virtual V3D_RESULT SetImageView(uint32_t binding, IV3DImageView* pImageView) override;
-	virtual V3D_RESULT SetImageView(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout) override;
-	virtual V3D_RESULT GetSampler(uint32_t binding, IV3DSampler** ppSampler) override;
-	virtual V3D_RESULT SetSampler(uint32_t binding, IV3DSampler* pSampler) override;
-	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, IV3DSampler* pSampler) override;
-	virtual V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler) override;
+	void GetLayout(IV3DDescriptorSetLayout** ppLayout) override;
+	V3D_RESULT GetBuffer(uint32_t binding, IV3DBuffer** ppBuffer) override;
+	V3D_RESULT SetBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset, uint64_t size) override;
+	V3D_RESULT GetBufferView(uint32_t binding, IV3DBufferView** ppBufferView) override;
+	V3D_RESULT SetBufferView(uint32_t binding, IV3DBufferView* pBufferView) override;
+	V3D_RESULT GetImageView(uint32_t binding, IV3DImageView** ppImageView) override;
+	V3D_RESULT GetImageLayout(uint32_t binding, V3D_IMAGE_LAYOUT* pImageLayout) override;
+	V3D_RESULT SetImageView(uint32_t binding, IV3DImageView* pImageView) override;
+	V3D_RESULT SetImageView(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout) override;
+	V3D_RESULT GetSampler(uint32_t binding, IV3DSampler** ppSampler) override;
+	V3D_RESULT SetSampler(uint32_t binding, IV3DSampler* pSampler) override;
+	V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, IV3DSampler* pSampler) override;
+	V3D_RESULT SetImageViewAndSampler(uint32_t binding, IV3DImageView* pImageView, V3D_IMAGE_LAYOUT imageLayout, IV3DSampler* pSampler) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/**************/
 	/* IV3DObject */
 	/**************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 protected:
 	V3DDevice* m_pDevice;

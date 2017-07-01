@@ -22,25 +22,25 @@ public:
 	/*******************************/
 	/* override - IV3DQueue */
 	/*******************************/
-	virtual uint32_t GetFamily() const override;
-	virtual V3D_RESULT Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, IV3DFence* pFence) override;
-	virtual V3D_RESULT Submit(uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence) override;
-	virtual V3D_RESULT Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, IV3DFence* pFence) override;
-	virtual V3D_RESULT Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence) override;
-	virtual V3D_RESULT Present(IV3DSwapChain* pSwapChain) override;
-	virtual V3D_RESULT WaitIdle() override;
+	uint32_t GetFamily() const override;
+	V3D_RESULT Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, IV3DFence* pFence) override;
+	V3D_RESULT Submit(uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence) override;
+	V3D_RESULT Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, IV3DFence* pFence) override;
+	V3D_RESULT Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence) override;
+	V3D_RESULT Present(IV3DSwapChain* pSwapChain) override;
+	V3D_RESULT WaitIdle() override;
 
 	/******************************/
 	/* override - IV3DDeviceChild */
 	/******************************/
-	virtual void GetDevice(IV3DDevice** ppDevice) override;
+	void GetDevice(IV3DDevice** ppDevice) override;
 
 	/*************************/
 	/* override - IV3DObject */
 	/*************************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	struct Temp

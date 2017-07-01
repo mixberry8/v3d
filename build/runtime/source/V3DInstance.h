@@ -35,17 +35,17 @@ public:
 	/*************************/
 	/* override IV3DInstance */
 	/*************************/
-	virtual V3D_LAYER GetLayer() const override;
-	virtual uint32_t GetAdapterCount() const override;
-	virtual void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) override;
-	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName) override;
+	V3D_LAYER GetLayer() const override;
+	uint32_t GetAdapterCount() const override;
+	void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) override;
+	V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName) override;
 
 	/***********************/
 	/* override IV3DObject */
 	/***********************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	struct Window

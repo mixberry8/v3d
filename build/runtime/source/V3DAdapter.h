@@ -18,18 +18,18 @@ public:
 	/**************************/
 	/* override - IV3DAdapter */
 	/**************************/
-	virtual const V3DAdapterDesc& GetDesc() const override;
-	virtual uint32_t GetMemoryHeapCount() const override;
-	virtual const V3DMemoryHeapDesc& GetMemoryHeapDesc(uint32_t memoryHeap) const override;
-	virtual uint32_t GetMemoryTypeCount() const override;
-	virtual const V3DMemoryTypeDesc& GetMemoryTypeDesc(uint32_t memoryType) const override;
+	const V3DAdapterDesc& GetDesc() const override;
+	uint32_t GetMemoryHeapCount() const override;
+	const V3DMemoryHeapDesc& GetMemoryHeapDesc(uint32_t memoryHeap) const override;
+	uint32_t GetMemoryTypeCount() const override;
+	const V3DMemoryTypeDesc& GetMemoryTypeDesc(uint32_t memoryType) const override;
 
 	/*************************/
 	/* override - IV3DObject */
 	/*************************/
-	virtual int64_t GetRefCount() const override;
-	virtual void AddRef() override;
-	virtual void Release() override;
+	int64_t GetRefCount() const override;
+	void AddRef() override;
+	void Release() override;
 
 private:
 	ReferenceCounter m_RefCounter;
