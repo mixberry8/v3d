@@ -61,6 +61,8 @@ V3D_RESULT V3DQueryPool::Initialize(IV3DDevice* pDevice, const V3DQueryPoolDesc&
 		m_Source.queryControlFlags = 0;
 	}
 
+	m_Source.queryCount = desc.queryCount;
+
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queryPool, V3D_SAFE_NAME(this, pDebugName));
 
 	return V3D_OK;
@@ -84,7 +86,7 @@ const V3DQueryPoolDesc& V3DQueryPool::GetDesc() const
 	return m_Desc;
 }
 
-V3D_RESULT V3DQueryPool::GetResults(uint32_t firstQuery, uint32_t queryCount, uint32_t queryResultCount, uint64_t* pQueryResults, V3DFlags queryResultFlags)
+V3D_RESULT V3DQueryPool::GetResult(uint32_t firstQuery, uint32_t queryCount, uint64_t dstSize, void* pDst, uint64_t dstStride, V3DFlags queryResultFlags)
 {
 #ifdef _DEBUG
 	if ((m_Desc.queryCount <= firstQuery) || (m_Desc.queryCount < (firstQuery + queryCount)))
@@ -93,13 +95,22 @@ V3D_RESULT V3DQueryPool::GetResults(uint32_t firstQuery, uint32_t queryCount, ui
 	}
 #endif //_DEBUG
 
+#ifdef V3D64
 	VkResult vkResult = vkGetQueryPoolResults(
 		m_pDevice->GetSource().device,
 		m_Source.queryPool,
 		firstQuery, queryCount,
-		sizeof(uint64_t) * queryResultCount, pQueryResults,
-		sizeof(uint64_t),
-		VK_QUERY_RESULT_64_BIT | ToVkQueryResultFlags(queryResultFlags));
+		dstSize, pDst, (dstStride == 0)? 8 : dstStride,
+		ToVkQueryResultFlags(queryResultFlags) | VK_QUERY_RESULT_64_BIT);
+#else //V3D64
+	VkResult vkResult = vkGetQueryPoolResults(
+		m_pDevice->GetSource().device,
+		m_Source.queryPool,
+		firstQuery, queryCount,
+		static_cast<uint32_t>(dstSize), pDst, (dstStride == 0) ? 8 : dstStride,
+		ToVkQueryResultFlags(queryResultFlags) | VK_QUERY_RESULT_64_BIT);
+#endif //V3D64
+#
 
 	return ToV3DResult(vkResult);
 }

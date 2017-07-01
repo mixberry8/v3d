@@ -9,6 +9,7 @@ public:
 	{
 		VkQueryPool queryPool;
 		VkQueryControlFlags queryControlFlags;
+		uint32_t queryCount;
 	};
 
 	static V3DQueryPool* Create();
@@ -23,7 +24,7 @@ public:
 	/* IV3DQueryPool */
 	/*****************/
 	virtual const V3DQueryPoolDesc& GetDesc() const override;
-	virtual V3D_RESULT GetResults(uint32_t firstQuery, uint32_t queryCount, uint32_t queryResultCount, uint64_t* pQueryResults, V3DFlags queryResultFlags) override;
+	virtual V3D_RESULT GetResult(uint32_t firstQuery, uint32_t queryCount, uint64_t dstSize, void* pDst, uint64_t dstStride, V3DFlags queryResultFlags) override;
 
 	/*******************/
 	/* IV3DDeviceChild */
