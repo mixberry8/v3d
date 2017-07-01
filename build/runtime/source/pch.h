@@ -83,10 +83,10 @@ private:
 
 #endif //_DEBUG
 
-struct V3D_PTR_TO_STR_STRUCT
+struct V3D_PTR_TO_STR_STRUCT_W
 {
 public:
-	V3D_PTR_TO_STR_STRUCT(void* ptr)
+	V3D_PTR_TO_STR_STRUCT_W(void* ptr)
 	{
 #ifdef V3D64
 		uint64_t addr = reinterpret_cast<uint64_t>(ptr);
@@ -106,7 +106,32 @@ private:
 	wchar_t m_Addr[32];
 };
 
-#define V3D_SAFE_NAME(owner, name) ((name != nullptr)? name : V3D_PTR_TO_STR_STRUCT(owner))
+struct V3D_PTR_TO_STR_STRUCT_A
+{
+public:
+	V3D_PTR_TO_STR_STRUCT_A(void* ptr)
+	{
+#ifdef V3D64
+		uint64_t addr = reinterpret_cast<uint64_t>(ptr);
+		::sprintf_s(m_Addr, "0x%.16I64x", addr);
+#else //V3D64
+		uint32_t addr32 = reinterpret_cast<uint32_t>(ptr);
+		::sprintf_s(m_Addr, "0x%.8x", addr32);
+#endif //V3D64
+	}
+
+	operator const char* () const
+	{
+		return m_Addr;
+	}
+
+private:
+	char m_Addr[32];
+};
+
+#define V3D_SAFE_NAME_W(owner, name) ((name != nullptr)? name : V3D_PTR_TO_STR_STRUCT_W(owner))
+#define V3D_SAFE_NAME_A(owner, name) ((name != nullptr)? name : V3D_PTR_TO_STR_STRUCT_A(owner))
+#define V3D_SAFE_NAME(owner, name) V3D_SAFE_NAME_W(owner, name)
 
 #define V3D_SET_DEBUG_MARKER_OBJECT_NAME(device, objectType, object, name) device->Vulkan_SetDebugMarkerObjectName(objectType, object, name)
 
@@ -269,15 +294,18 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #define V3D_LOG_PRINT_INFO_A(format, ...) PrintLogA(V3D_LOG_INFORMATION, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_WARNING_A(format, ...) PrintLogA(V3D_LOG_WARNING, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_ERROR_A(format, ...) PrintLogA(V3D_LOG_ERROR, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_DEBUG_A(format, ...) PrintLogA(V3D_LOG_DEBUG, format, __VA_ARGS__)
 
 #define V3D_LOG_PRINT_W(type, format, ...) PrintLogW(type, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_INFO_W(format, ...) PrintLogW(V3D_LOG_INFORMATION, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_WARNING_W(format, ...) PrintLogW(V3D_LOG_WARNING, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_ERROR_W(format, ...) PrintLogW(V3D_LOG_ERROR, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_DEBUG_W(format, ...) PrintLogW(V3D_LOG_DEBUG, format, __VA_ARGS__)
 
 #define V3D_LOG_PRINT_INFO(format, ...) PrintLogW(V3D_LOG_INFORMATION, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_WARNING(format, ...) PrintLogW(V3D_LOG_WARNING, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_ERROR(format, ...) PrintLogW(V3D_LOG_ERROR, format, __VA_ARGS__)
+#define V3D_LOG_PRINT_DEBUG(format, ...) PrintLogW(V3D_LOG_DEBUG, format, __VA_ARGS__)
 
 #define V3D_LOG_TYPE_A(type) #type
 #define V3D_LOG_S_STR_A(str) " \"" << str << "\""
