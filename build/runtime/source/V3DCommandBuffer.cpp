@@ -1624,7 +1624,7 @@ void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuf
 	V3DFrameBuffer* pInternalFrameBuffer = static_cast<V3DFrameBuffer*>(pFrameBuffer);
 	const V3DFrameBuffer::Source& frameBufferSource = pInternalFrameBuffer->GetSource();
 
-	VkRenderPassBeginInfo info{};
+	VkRenderPassBeginInfo info;
 	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	info.pNext = nullptr;
 	info.renderPass = renserPassSource.renderPass;
@@ -2371,6 +2371,30 @@ void V3DCommandBuffer::WriteTimestamp(IV3DQueryPool* pQueryPool, V3D_PIPELINE_ST
 #endif //_DEBUG
 
 	vkCmdWriteTimestamp(m_Source.commandBuffer, ToVkPipelineStageFlagBits(pipelineStage), static_cast<V3DQueryPool*>(pQueryPool)->GetSource().queryPool, query);
+}
+
+void V3DCommandBuffer::CopyQueryPoolResult(IV3DQueryPool* pQueryPool, uint32_t firstQuery, uint32_t queryCount, IV3DBuffer* pDstBuffer, uint64_t dstBufferOffset, uint64_t dstStride, V3DFlags resultFlags)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pQueryPool == nullptr) || (pDstBuffer == nullptr))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_CopyQueryPoolResult << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pQueryPool) << V3D_LOG_S_PTR(pDstBuffer));
+		return;
+	}
+#endif //_DEBUG
+
+	const V3DQueryPool::Source& queryPoolSource = static_cast<V3DQueryPool*>(pQueryPool)->GetSource();
+
+	vkCmdCopyQueryPoolResults(
+		m_Source.commandBuffer,
+		static_cast<V3DQueryPool*>(pQueryPool)->GetSource().queryPool, firstQuery, (queryCount == 0)? (queryPoolSource.queryCount - firstQuery) : queryCount,
+		static_cast<V3DBuffer*>(pDstBuffer)->GetSource().buffer, dstBufferOffset, (dstStride == 0)? 8 : dstStride,
+		ToVkQueryResultFlags(resultFlags) | VK_QUERY_RESULT_64_BIT);
 }
 
 void V3DCommandBuffer::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)

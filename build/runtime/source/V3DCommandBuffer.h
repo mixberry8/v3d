@@ -94,6 +94,7 @@ public:
 	virtual void BeginQuery(IV3DQueryPool* pQueryPool, uint32_t query) override;
 	virtual void EndQuery(IV3DQueryPool* pQueryPool, uint32_t query) override;
 	virtual void WriteTimestamp(IV3DQueryPool* pQueryPool, V3D_PIPELINE_STAGE_FLAG pipelineStage, uint32_t query) override;
+	virtual void CopyQueryPoolResult(IV3DQueryPool* pQueryPool, uint32_t firstQuery, uint32_t queryCount, IV3DBuffer* pDstBuffer, uint64_t dstBufferOffset, uint64_t dstStride, V3DFlags resultFlags) override;
 	virtual void Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) override;
 	virtual void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t firstInstance, int32_t vertexOffset) override;
 	virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
