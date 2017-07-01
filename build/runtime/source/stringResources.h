@@ -62,6 +62,7 @@ static constexpr wchar_t* Log_IV3DCommandBuffer_ResetQueryPool = L"IV3DCommandBu
 static constexpr wchar_t* Log_IV3DCommandBuffer_BeginQuery = L"IV3DCommandBuffer::BeginQuery";
 static constexpr wchar_t* Log_IV3DCommandBuffer_EndQuery = L"IV3DCommandBuffer::EndQuery";
 static constexpr wchar_t* Log_IV3DCommandBuffer_WriteTimestamp = L"IV3DCommandBuffer::WriteTimestamp";
+static constexpr wchar_t* Log_IV3DCommandBuffer_CopyQueryPoolResult = L"IV3DCommandBuffer::CopyQueryPoolResult";
 static constexpr wchar_t* Log_IV3DCommandBuffer_Draw = L"IV3DCommandBuffer::Draw";
 static constexpr wchar_t* Log_IV3DCommandBuffer_DrawIndexed = L"IV3DCommandBuffer::DrawIndexed";
 static constexpr wchar_t* Log_IV3DCommandBuffer_Dispatch = L"IV3DCommandBuffer::Dispatch";
