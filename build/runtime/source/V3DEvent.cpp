@@ -41,7 +41,7 @@ const V3DEvent::Source& V3DEvent::GetSource() const
 /* public override - IV3DEvent */
 /*******************************/
 
-bool V3DEvent::IsSignaled() const
+bool V3DEvent::GetState() const
 {
 	return (vkGetEventStatus(m_pDevice->GetSource().device, m_Source.event) == VK_SUCCESS);
 }

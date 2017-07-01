@@ -17,7 +17,7 @@ public:
 	/************************/
 	/* override - IV3DEvent */
 	/************************/
-	virtual bool IsSignaled() const override;
+	virtual bool GetState() const override;
 	virtual V3D_RESULT Reset() override;
 	virtual V3D_RESULT Set() override;
 

@@ -41,7 +41,7 @@ const V3DFence::Source& V3DFence::GetSource() const
 /* public override - IV3DFence */
 /*******************************/
 
-bool V3DFence::IsSignaled() const
+bool V3DFence::GetState() const
 {
 	return (vkGetFenceStatus(m_pDevice->GetSource().device, m_Source.fence) == VK_SUCCESS);
 }

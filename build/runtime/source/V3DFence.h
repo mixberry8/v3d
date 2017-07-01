@@ -17,7 +17,7 @@ public:
 	/************************/
 	/* override - IV3DFence */
 	/************************/
-	virtual bool IsSignaled() const override;
+	virtual bool GetState() const override;
 	virtual V3D_RESULT Reset() override;
 	virtual V3D_RESULT Wait(uint64_t timeOut) override;
 
