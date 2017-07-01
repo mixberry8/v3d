@@ -1012,7 +1012,7 @@ class V3D_DLL_API IV3DEvent : public IV3DDeviceChild
 public:
 	//! @brief シグナル状態かどうかを確認します。
 	//! @return シグナル状態の場合は true を返します。
-	virtual bool IsSignaled() const = 0;
+	virtual bool GetState() const = 0;
 
 	//! @brief フェンスをリセットして、非シグナル状態にします。
 	//! @retval V3D_OK フェンスのリセットに成功しました。
@@ -1051,7 +1051,7 @@ class V3D_DLL_API IV3DFence : public IV3DDeviceChild
 public:
 	//! @brief シグナル状態かどうかを確認します。
 	//! @return シグナル状態の場合は true を返します。
-	virtual bool IsSignaled() const = 0;
+	virtual bool GetState() const = 0;
 
 	//! @brief フェンスをリセットして、非シグナル状態にします。
 	//! @retval V3D_OK フェンスのリセットに成功しました。
@@ -1110,7 +1110,7 @@ enum V3D_QUERY_TYPE : uint8_t
 {
 	V3D_QUERY_TYPE_OCCLUSION = 0, //!< オクルージョンクエリです。
 	V3D_QUERY_TYPE_PIPELINE_STATISTICS = 1, //!< パイプラインの統計クエリです。
-	V3D_QUERY_TYPE_TIMESTAMP = 2, //!< タイムスタンプクエリです。
+	V3D_QUERY_TYPE_TIMESTAMP = 2, //!< タイムスタンプクエリです。<br>書き込まれる値はナノ秒単位です。
 };
 
 //! @enum V3D_QUERY_RESULT_FLAG
@@ -1120,25 +1120,6 @@ enum V3D_QUERY_RESULT_FLAG : uint8_t
 	V3D_QUERY_RESULT_WAIT = 0x00000001, //!< 指定したすべてのクエリの結果が取得できるまで待機します。
 	V3D_QUERY_RESULT_WITH_AVAILABILITY = 0x00000002, //!< 結果が出ているクエリがあるかどうかを確認できるようにします。
 	V3D_QUERY_RESULT_PARTIAL = 0x00000004, //!< 指定したすべてのクエリでなくても結果を取得できるようにします。
-};
-
-//! @enum V3D_QUERY_PIPELINE_STATISTIC_TYPE
-//! @brief クエリのパイプラインの統計タイプ
-enum V3D_QUERY_PIPELINE_STATISTIC_TYPE : uint8_t
-{
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_VERTICES = 0, //!< 入力された頂点の数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_PRIMITIVES = 1, //!< 入力されたプリミティブの数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_VERTEX_SHADER_INVOCATIONS = 2, //!< バーテックスシェーダーの呼び出し回数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_GEOMETRY_SHADER_INVOCATIONS = 3, //!< ジオメトリシェーダーの呼び出し回数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_GEOMETRY_SHADER_PRIMITIVES = 4, //!< ジオメトリシェーダーによって生成されたプリミティブの数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_CLIPPING_INVOCATIONS = 5, //!< クリッピングステージで処理されたプリミティブの数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_CLIPPING_PRIMITIVES = 6, //!< クリッピングステージによって出力されたされたプリミティブの数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_FRAGMENT_SHADER_INVOCATIONS = 7, //!< フラグメントシェーダーの呼び出し回数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_TESSELLATION_CONTROL_SHADER_PATCHES = 8, //!< テッセレーション制御シェーダーのよって処理されるパッチ数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_TESSELLATION_EVALUATION_SHADER_INVOCATIONS = 9, //!< テッセレーション評価シェーダーの呼び出し回数です。
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_COMPUTE_SHADER_INVOCATIONS = 10, //!< コンピュートシェーダーの呼び出し回数です。
-
-	V3D_QUERY_PIPELINE_STATISTIC_TYPE_COUNT = 11, //!< クエリのパイプラインの統計タイプの数です。
 };
 
 //! @}
@@ -1171,10 +1152,24 @@ public:
 
 	//! @brief クエリの結果を取得します。
 	//! @param[in] firstQuery 結果を取得する最初のクエリのインデックスです。
+	//! - この値は { 0 <= firstQuery < V3DQueryPoolDesc::queryCount } の範囲に制限されます。
 	//! @param[in] queryCount 結果を取得するクエリの数です。
-	//! @param[in] queryResultCount 取得するクエリの結果の数です。
-	//! @param[in] pQueryResults queryResultCount の値の要素の数を持つクエリの結果を格納する uint64_t 型の配列です。
+	//! - この値は { 1 <= queryCount <= (V3DQueryPoolDesc::queryCount - firstQuery) } の範囲に制限されます。
+	//! @param[in] dstSize 取得するクエリの結果の数です。
+	//! - クエリのタイプが ::V3D_QUERY_TYPE_OCCLUSION または ::V3D_QUERY_TYPE_TIMESTAMP であった場合は dstSize の値は (queryCount * dstStride) になります。
+	//! - クエリのタイプが ::V3D_QUERY_TYPE_PIPELINE_STATISTICS であった場合は dstSize の値は (queryCount * dstStride * 11) になります。
+	//! - queryResultFlags に ::V3D_QUERY_RESULT_WITH_AVAILABILITY が含まれている場合は、上記のいずれかの方法で求められた dstSize に dstStride を足したサイズ必要とします。<br>
+	//! そして最後の要素にクエリの結果が取得できた場合は 1 以上の値、取得できなかった場合は 0 が書き込まれます。
+	//! @param[in] pDst クエリの結果の格納先のメモリです。
+	//! - 格納先のメモリのバイトサイズは dstSize である必要があります。
+	//! @param[in] dstStride コピー先のバッファに個々のクエリの結果を格納する際のストライドをバイト単位で指定します。
+	//! - この値は 8 の整数倍である必要があります。
+	//! - この値が 0 の場合は 8 を指定したとみなします。
 	//! @param[in] queryResultFlags クエリの結果の取得方法を表す ::V3D_QUERY_RESULT_FLAG 列挙定数の組み合わせです。
+	//! - queryResultFlags に ::V3D_QUERY_RESULT_WAIT が含まれている場合は、クエリの結果が取得できるまで待機します。<br>
+	//! ただしクエリがキューに送信されていない状態で結果を取得しようとすると、デッドロックをひきおこしますので注意が必要です。
+	//! - queryResultFlags に ::V3D_QUERY_RESULT_PARTIAL が含まれている場合は、指定したすべてのクエリでなく、部分的なクエリの途中の結果を取得できるようになります。<br>
+	//! ただし、クエリのタイプが ::V3D_QUERY_TYPE_TIMESTAMP であった場合、このフラグを含めることはできません。
 	//! @retval V3D_OK クエリの結果を取得しました。
 	//! @retval V3D_NOT_READY クエリの結果はまだ取得できていません。
 	//! @retval V3D_ERROR_FAIL クエリの結果の取得に失敗しました。
@@ -1185,21 +1180,24 @@ public:
 	//! @remarks
 	//! - 返り値が ::V3D_OK でなくてもクエリの結果を取得しようとした後は IV3DCommandBuffer::ResetQueryPool でクエリプールをリセットしてください。
 	//! .
-	//! - クエリのタイプが ::V3D_QUERY_TYPE_OCCLUSION または ::V3D_QUERY_TYPE_TIMESTAMP であった場合は queryResultCount の値は queryCount になります。
+	//! - クエリのタイプが ::V3D_QUERY_TYPE_PIPELINE_STATISTICS であった場合、格納される 11 個の値の意味は以下のとおりです。<br>
+	//! <br>
+	//! <table class="basic">
+	//! <tr><th>インデックス</th><th>説明</th></tr>
+	//! <tr><td>0</td><td>入力された頂点の数です。</td></tr>
+	//! <tr><td>1</td><td>入力されたプリミティブの数です。</td></tr>
+	//! <tr><td>2</td><td>バーテックスシェーダーの呼び出し回数です。</td></tr>
+	//! <tr><td>3</td><td>ジオメトリシェーダーの呼び出し回数です。</td></tr>
+	//! <tr><td>4</td><td>ジオメトリシェーダーによって生成されたプリミティブの数です。</td></tr>
+	//! <tr><td>5</td><td>クリッピングステージで処理されたプリミティブの数です。</td></tr>
+	//! <tr><td>6</td><td>クリッピングステージによって出力されたされたプリミティブの数です。</td></tr>
+	//! <tr><td>7</td><td>フラグメントシェーダーの呼び出し回数です。</td></tr>
+	//! <tr><td>8</td><td>テッセレーション制御シェーダーのよって処理されるパッチ数です。</td></tr>
+	//! <tr><td>9</td><td>テッセレーション評価シェーダーの呼び出し回数です。</td></tr>
+	//! <tr><td>10</td><td>コンピュートシェーダーの呼び出し回数です。</td></tr>
+	//! </table>
 	//! .
-	//! - クエリのタイプが ::V3D_QUERY_TYPE_PIPELINE_STATISTICS であった場合は queryResultCount の値は queryCount * 11 になり、それぞれの 0 ～ 10 要素の値の意味は ::V3D_QUERY_PIPELINE_STATISTIC_TYPE 列挙型を参照してください。
-	//! .
-	//! - クエリのタイプが ::V3D_QUERY_TYPE_TIMESTAMP であった場合は pQueryResults に書き込まれる数値の単位はナノ秒になります。
-	//! .
-	//! - flags に ::V3D_QUERY_RESULT_WAIT が含まれている場合は、クエリの結果が取得できるまで待機します。<br>
-	//! ただしクエリがキューに送信されていない状態で結果を取得しようとすると、デッドロックをひきおこしますので注意が必要です。
-	//! .
-	//! - flags に ::V3D_QUERY_RESULT_PARTIAL が含まれている場合は、指定したすべてのクエリでなく、部分的なクエリの途中の結果を取得できるようになります。<br>
-	//! ただし、クエリのタイプが ::V3D_QUERY_TYPE_TIMESTAMP であった場合、このフラグを指定することはできません。<br>
-	//! .
-	//! - flags に ::V3D_QUERY_RESULT_WITH_AVAILABILITY が含まれている場合は、queryResultCount は queryCount + 1 を必要とします。<br>
-	//! そして最後の要素 ( pQueryResults[queryResultCount - 1] ) にクエリの結果が取得できた場合は 1 以上の値、取得できなかった場合は 0 が書き込まれます。
-	virtual V3D_RESULT GetResults(uint32_t firstQuery, uint32_t queryCount, uint32_t queryResultCount, uint64_t* pQueryResults, V3DFlags queryResultFlags) = 0;
+	virtual V3D_RESULT GetResult(uint32_t firstQuery, uint32_t queryCount, uint64_t dstSize, void* pDst, uint64_t dstStride, V3DFlags queryResultFlags) = 0;
 
 protected:
 	//! @cond MISC
@@ -4566,6 +4564,37 @@ public:
 	//! </table>
 	virtual void WriteTimestamp(IV3DQueryPool* pQueryPool, V3D_PIPELINE_STAGE_FLAG pipelineStage, uint32_t query) = 0;
 
+	//! @brief クエリプールの結果を取得します。
+	//! @param[in] pQueryPool 結果を取得するクエリプールです。
+	//! @param[in] firstQuery 結果を取得する最初のクエリのインデックスです。
+	//! - この値は { 0 <= firstQuery < V3DQueryPoolDesc::queryCount } の範囲に制限されます。
+	//! @param[in] queryCount 結果を取得する firstQuery からのクエリの数です。
+	//! - この値は { 1 <= queryCount <= (V3DQueryPoolDesc::queryCount - firstQuery) } の範囲に制限されます。
+	//! - 指定された値が 0 の場合は firstQuery から最後のクエリまでの結果を取得します。
+	//! @param[in] pDstBuffer 取得したクエリの結果のコピー先になるバッファーです。
+	//! - 必要なバッファーのサイズは IV3DQueryPool::GetResult を参照してください。
+	//! @param[in] dstBufferOffset コピー先になるバッファーのメモリオフセットをバイト単位で指定します。
+	//! - この値は { 0 <= dstBufferOffset < V3DBufferDesc::size } の範囲に制限されます。
+	//! @param[in] dstStride コピー先のバッファに個々のクエリの結果を格納する際のストライドをバイト単位で指定します。
+	//! - この値は 8 の整数倍である必要があります。
+	//! - この値が 0 の場合は 8 を指定したとみなします。
+	//! @param[in] queryResultFlags クエリの結果の取得方法を表す ::V3D_QUERY_RESULT_FLAG 列挙定数の組み合わせです。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 無効 </td>
+	//!     <td> ::V3D_PIPELINE_STAGE_TRANSFER </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	//! @sa IV3DQueryPool::GetResult
+	virtual void CopyQueryPoolResult(
+		IV3DQueryPool* pQueryPool, uint32_t firstQuery, uint32_t queryCount,
+		IV3DBuffer* pDstBuffer, uint64_t dstBufferOffset, uint64_t dstStride,
+		V3DFlags queryResultFlags) = 0;
+
 	//! @brief 描画をします。
 	//! @param[in] vertexCount 頂点の数です。
 	//! @param[in] instanceCount インスタンスの数です。
@@ -4760,7 +4789,7 @@ public:
 	//! - この値は 1 以上である必要があります。
 	//! @param[in] ppCommandBuffers 送信するプライマリコマンドバッファーの配列です。
 	//! - 配列の要素数は commandBufferCount である必要があります。
-	//! @param[in] pFence コマンドバッファーの送信の完了の待機に使用するフェンスです。
+	//! @param[in] pFence コマンドバッファーの送信完了後にシグナル状態にするフェンスです。
 	//! - nullptr を指定した場合は、送信完了の通知を行いません。
 	//! @retval V3D_OK プライマリコマンドバッファーをキューに送信しました。
 	//! @retval V3D_ERROR_FAIL プライマリコマンドバッファーをキューに送信できませんでした。
@@ -4786,7 +4815,7 @@ public:
 	//! @param[in] ppSignalSemaphores コマンドバッファーの実行が完了した時に通知するセマフォの配列です。
 	//! - signalSemaphoreCount が 1 以上の場合は、signalSemaphoreCount の値の要素をもつ配列を指定する必要があります。
 	//! - signalSemaphoreCount が 0 の場合は nullptr を指定します。
-	//! @param[in] pFence コマンドバッファーの送信の完了の待機に使用するフェンスです。
+	//! @param[in] pFence コマンドバッファーの送信完了後にシグナル状態にするフェンスです。
 	//! - nullptr を指定した場合は、送信完了の通知を行いません。
 	//! @retval V3D_OK プライマリコマンドバッファーをキューに送信しました。
 	//! @retval V3D_ERROR_FAIL プライマリコマンドバッファーをキューに送信できませんでした。
@@ -4806,7 +4835,7 @@ public:
 	//! - この値は 1 以上である必要があります。
 	//! @param[in] ppCommandBuffers 送信するプライマリコマンドバッファーの配列です。
 	//! - 配列の要素数は commandBufferCount である必要があります。
-	//! @param[in] pFence コマンドバッファーの送信の完了の待機に使用するフェンスです。
+	//! @param[in] pFence コマンドバッファーの送信完了後にシグナル状態にするフェンスです。
 	//! - nullptr を指定した場合は、送信完了の通知を行いません。
 	//! @retval V3D_OK プライマリコマンドバッファーをキューに送信しました。
 	//! @retval V3D_ERROR_FAIL プライマリコマンドバッファーをキューに送信できませんでした。
@@ -4835,7 +4864,7 @@ public:
 	//! @param[in] ppSignalSemaphores コマンドバッファーの実行が完了した時に通知するセマフォの配列です。
 	//! - signalSemaphoreCount が 1 以上の場合は、signalSemaphoreCount の値の要素をもつ配列を指定する必要があります。
 	//! - signalSemaphoreCount が 0 の場合は nullptr を指定します。
-	//! @param[in] pFence コマンドバッファーの送信の完了の待機に使用するフェンスです。
+	//! @param[in] pFence コマンドバッファーの送信完了後にシグナル状態にするフェンスです。
 	//! - nullptr を指定した場合は、送信完了の通知を行いません。
 	//! @retval V3D_OK プライマリコマンドバッファーをキューに送信しました。
 	//! @retval V3D_ERROR_FAIL プライマリコマンドバッファーをキューに送信できませんでした。
@@ -5251,11 +5280,10 @@ enum V3D_RASTERIZER_CAP_FLAG : V3DFlags
 {
 	//! @brief 複数のビューポート、シザリングをサポートします。<br>
 	//! また、ビューポート、シザリングの最大数は V3DDeviceCaps::maxViewports になります。
-	//! @sa V3DPipelineRasterizationDesc
 	//! @sa IV3DCommandBuffer::SetViewport
 	//! @sa IV3DCommandBuffer::SetScissor
 	V3D_RASTERIZER_CAP_MULTI_VIEWPORT = 0x00000001,
-	//! @brief ポリゴンモードに ::V3D_POLYGON_MODE_LINE 、 ::V3D_POLYGON_MODE_POINT を指定することができます。
+	//! @brief ポリゴンモードに ::V3D_POLYGON_MODE_LINE 及び ::V3D_POLYGON_MODE_POINT を指定することができます。
 	//! @sa V3DPipelineRasterizationDesc::polygonMode
 	V3D_RASTERIZER_CAP_FILL_MODE_NON_SOLID = 0x00000002,
 	//! @brief 深度のクランプをサポートします。
@@ -5296,7 +5324,6 @@ enum V3D_COLOR_BLEND_CAP_FLAG : V3DFlags
 {
 	//! @brief 複数のカラーアタッチメントに異なるブレンドを指定することができます。
 	//! @sa V3DPipelineColorBlendDesc
-	//! @sa V3DPipelineColorBlendAttachment
 	V3D_COLOR_BLEND_CAP_INDEPENDENT = 0x00000001,
 	//! @brief 二つのソースを使用するブレンドをサポートします。<br>
 	//! <br>
@@ -5375,9 +5402,9 @@ struct V3DDeviceCaps
 	//! @brief デバイスが作成できるサンプラーの最大数です。
 	//! @sa IV3DDevice::CreateSampler
 	uint32_t maxSamplerCreateCount;
-	//! @brief エイリアシングのない同じメモリ内の隣接するバッファーまたはイメージを結合することができるオフセットの粒度をバイト単位で指定します。
+	//! @brief 同じメモリ内の隣接するバッファーまたはイメージを結合することができるオフセットの粒度をバイト単位で指定します。
 	uint64_t bufferImageGranularity;
-	//! @brief パイプラインで設定できるデスクリプタセットの最大数です。
+	//! @brief パイプラインにバインドできるデスクリプタセットの最大数です。
 	uint32_t maxBoundDescriptorSets;
 
 	//! @brief パイプラインレイアウトで一つのシェーダーステージにアクセスできるサンプラーの最大数です。
@@ -5772,6 +5799,8 @@ public:
 	//! @param[in] featureFlags 確認する機能を表す ::V3D_IMAGE_FORMAT_FEATURE_FLAG 列挙定数の組み合わせです。
 	//! @retval V3D_OK フォーマットは指定した機能をサポートしています。
 	//! @retval V3D_ERROR_NOT_SUPPORTED フォーマットは指定した機能をサポートしていません。
+	//! @remarks
+	//! このメソッドは ::V3D_IMAGE_TILING_OPTIMAL と ::V3D_IMAGE_TILING_LINEAR の両方をサポートしているものを確認します。
 	virtual V3D_RESULT CheckImageFormatFeature(V3D_FORMAT format, V3DFlags featureFlags) const = 0;
 	//! @brief イメージとして使用するフォーマットが指定した機能をサポートしているかどうかを確認します。
 	//! @param[in] format イメージのフォーマットです。
@@ -5841,7 +5870,9 @@ public:
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
 	//! @remarks
-	//! 作成直後のイベントは非シグナル状態です。
+	//! - 作成直後のイベントは非シグナル状態です。
+	//! .
+	//! 詳細は @ref sync_section をご覧ください。
 	virtual V3D_RESULT CreateEvent(IV3DEvent** ppEvent, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief フェンスを作成します。
@@ -5854,6 +5885,8 @@ public:
 	//! @retval V3D_ERROR_FAIL フェンスの作成に失敗しました。
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
+	//! @remarks
+	//! 詳細は @ref sync_section をご覧ください。
 	virtual V3D_RESULT CreateFence(bool initialState, IV3DFence** ppFence, const wchar_t* pDebugName = nullptr) = 0;
 
 	//! @brief セマフォを作成します。
@@ -5862,6 +5895,8 @@ public:
 	//! @retval V3D_OK セマフォを作成しました。
 	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
 	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
+	//! @remarks
+	//! 詳細は @ref sync_section をご覧ください。
 	virtual V3D_RESULT CreateSemaphore(IV3DSemaphore** ppSemaphore, const wchar_t* pDebugName) = 0;
 
 	//! @brief クエリプールを作成します。
