@@ -110,6 +110,53 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 		}
 	}
 
+#ifdef _DEBUG
+	uint32_t vLayerCount;
+	vResult = vkEnumerateDeviceLayerProperties(adapterSource.physicalDevice, &vLayerCount, nullptr);
+	if (vResult != VK_SUCCESS)
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	STLVector<VkLayerProperties> vLayerProps;
+	vLayerProps.resize(vLayerCount);
+	vResult = vkEnumerateDeviceLayerProperties(adapterSource.physicalDevice, &vLayerCount, vLayerProps.data());
+	if (vResult != VK_SUCCESS)
+	{
+		return V3D_ERROR_FAIL;
+	}
+
+	for (size_t i = 0; i < vLayerProps.size(); i++)
+	{
+		if (pDebugName != nullptr)
+		{
+			STLStringA debugNameA;
+			ToMultibyteString(pDebugName, debugNameA);
+
+			V3D_LOG_PRINT_DEBUG_A(Log_Debug_DeviceLayer, V3D_SAFE_NAME_A(this, debugNameA.c_str()), vLayerProps[i].layerName);
+		}
+		else
+		{
+			V3D_LOG_PRINT_DEBUG_A(Log_Debug_DeviceLayer, V3D_SAFE_NAME_A(this, nullptr), vLayerProps[i].layerName);
+		}
+	}
+
+	for (size_t i = 0; i < vEnableExtensions.size(); i++)
+	{
+		if (pDebugName != nullptr)
+		{
+			STLStringA debugNameA;
+			ToMultibyteString(pDebugName, debugNameA);
+
+			V3D_LOG_PRINT_DEBUG_A(Log_Debug_DeviceExtension, V3D_SAFE_NAME_A(this, debugNameA.c_str()), vEnableExtensions[i]);
+		}
+		else
+		{
+			V3D_LOG_PRINT_DEBUG_A(Log_Debug_DeviceExtension, V3D_SAFE_NAME_A(this, nullptr), vEnableExtensions[i]);
+		}
+	}
+#endif //_DEBUG
+
 	// ----------------------------------------------------------------------------------------------------
 	// デバイス情報を取得
 	// ----------------------------------------------------------------------------------------------------
@@ -198,8 +245,6 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	devInfo.flags = 0;
 	devInfo.queueCreateInfoCount = static_cast<uint32_t>(vQueueCreateInfos.size());
 	devInfo.pQueueCreateInfos = vQueueCreateInfos.data();
-//	devInfo.enabledLayerCount = static_cast<uint32_t>(vkEnableLayers.size());
-//	devInfo.ppEnabledLayerNames = vkEnableLayers.data();
 	devInfo.enabledExtensionCount = static_cast<uint32_t>(vEnableExtensions.size());
 	devInfo.ppEnabledExtensionNames = vEnableExtensions.data();
 	devInfo.pEnabledFeatures = &m_Source.deviceFeatures;

@@ -12,6 +12,13 @@
 
 static constexpr wchar_t* Log_Error_InvalidArgument = L" : 不正な引数が渡されました :";
 
+/****************/
+/* IV3DInstance */
+/****************/
+
+static constexpr char* Log_Debug_InstanceLayer = "Instance : Layer %s";
+static constexpr char* Log_Debug_InstanceExtension = "Instance : Extension %s";
+
 /**************/
 /* IV3DDevice */
 /**************/
@@ -27,6 +34,9 @@ static constexpr wchar_t* Log_Error_OutOfColorAttachment = L"IV3DDevice::CreateR
 static constexpr wchar_t* Log_Error_OutOfResolveAttachment = L"IV3DDevice::CreateRenderPass : %s : サブパス %u のリゾルブアタッチメント ( pResolveAttachments[%u].attachment = %u < %u ) が範囲を超えて指定されています。";
 static constexpr wchar_t* Log_Error_MismatchResolveAttachmentSamples = L"IV3DDevice::CreateRenderPass : %s : サブパス %u のリゾルブアタッチメント ( pResolveAttachments[%u].attachment = %u ) のサンプル数は V3D_SAMPLE_COUNT_1 にしてください。";
 static constexpr wchar_t* Log_Error_AlreadyBindResourceMemory = L"IV3DDevice::BindResourceMemory : %s : リソース %s[%u] = %s は既にメモリを確保し、バインドされています。";
+
+static constexpr char* Log_Debug_DeviceLayer = "%s : Layer %s";
+static constexpr char* Log_Debug_DeviceExtension = "%s : Extension %s";
 
 /*********************/
 /* IV3DCommandBuffer */

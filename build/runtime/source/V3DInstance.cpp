@@ -240,6 +240,16 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 		enabledExtensions.push_back(EXTENSION_debug_report);
 		debugReportEnable = true;
 	}
+
+	for (size_t i = 0; i < enableLayers.size(); i++)
+	{
+		V3D_LOG_PRINT_DEBUG_A(Log_Debug_InstanceLayer, enableLayers[i]);
+	}
+
+	for (size_t i = 0; i < enabledExtensions.size(); i++)
+	{
+		V3D_LOG_PRINT_DEBUG_A(Log_Debug_InstanceExtension, enabledExtensions[i]);
+	}
 #endif //_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
