@@ -795,14 +795,28 @@ void V3DCommandBuffer::UpdateBuffer(IV3DBuffer* pDstBuffer, uint64_t dstOffset, 
 	}
 #endif //_DEBUG
 
-	VkBuffer vBuffer = static_cast<V3DBuffer*>(pDstBuffer)->GetSource().buffer;
+	const uint8_t* pSrc = static_cast<const uint8_t*>(pData);
+	VkBuffer dst = static_cast<V3DBuffer*>(pDstBuffer)->GetSource().buffer;
 
 	do
 	{
-		vkCmdUpdateBuffer(m_Source.commandBuffer, vBuffer, dstOffset, dataSize, pData);
+		uint64_t srcSize;
+
+		if (dataSize >= 65536)
+		{
+			srcSize = 65536;
+			dataSize -= 65536;
+		}
+		else
+		{
+			srcSize = dataSize;
+			dataSize = 0;
+		}
+
+		vkCmdUpdateBuffer(m_Source.commandBuffer, dst, dstOffset, srcSize, pSrc);
 
 		dstOffset += 65536;
-		dataSize = (dataSize >= 65536) ? (dataSize - 65536) : 0;
+		pSrc += 65536;
 
 	} while (dataSize > 0);
 }
@@ -2430,7 +2444,7 @@ void V3DCommandBuffer::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, 
 	}
 #endif //_DEBUG
 
-	vkCmdDrawIndexed(m_Source.commandBuffer, indexCount, instanceCount, firstIndex, firstInstance, vertexOffset);
+	vkCmdDrawIndexed(m_Source.commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
 void V3DCommandBuffer::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
