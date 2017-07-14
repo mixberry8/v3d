@@ -62,10 +62,36 @@ static PV3DLogFunction s_pLogFunction = nullptr;
 static void* s_pLogUserData = nullptr;
 static CRITICAL_SECTION s_LogSync = CRITICAL_SECTION{};
 
+void V3D_CALLBACK DefaultLogFunction(V3D_LOG_FLAG type, const wchar_t* pMessage, void* pUserData)
+{
+	wchar_t flagText[32];
+	switch (type)
+	{
+	case V3D_LOG_INFORMATION:
+		::wcscpy_s(flagText, L"( infomation ) : ");
+		break;
+	case V3D_LOG_WARNING:
+		::wcscpy_s(flagText, L"( warning ) : ");
+		break;
+	case V3D_LOG_PERFORMANCE_WARNING:
+		::wcscpy_s(flagText, L"( performance - warning ) : ");
+		break;
+	case V3D_LOG_ERROR:
+		::wcscpy_s(flagText, L"( error ) : ");
+		break;
+	case V3D_LOG_DEBUG:
+		::wcscpy_s(flagText, L"( debug ) : ");
+		break;
+	}
+
+	::OutputDebugStringW(flagText);
+	::OutputDebugStringW(pMessage);
+}
+
 void InitializeLog(V3DFlags flags, PV3DLogFunction pFunction, void* pUserData)
 {
 	s_LogFlags = flags;
-	s_pLogFunction = pFunction;
+	s_pLogFunction = (pFunction != nullptr)? pFunction : DefaultLogFunction;
 	s_pLogUserData = pUserData;
 
 	if (s_pLogFunction != nullptr)
@@ -83,7 +109,7 @@ void FinalizeLog()
 
 void PrintLogA(V3D_LOG_FLAG type, const char* pFormat, ...)
 {
-	if ((s_pLogFunction == nullptr) || ((s_LogFlags & type) == 0))
+	if ((s_LogFlags & type) == 0)
 	{
 		return;
 	}
@@ -116,7 +142,7 @@ void PrintLogA(V3D_LOG_FLAG type, const char* pFormat, ...)
 
 void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...)
 {
-	if ((s_pLogFunction == nullptr) || ((s_LogFlags & type) == 0))
+	if ((s_LogFlags & type) == 0)
 	{
 		return;
 	}
