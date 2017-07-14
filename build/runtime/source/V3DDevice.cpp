@@ -853,6 +853,8 @@ V3D_RESULT V3DDevice::CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** pp
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
+	++m_Statistics.samplerCount;
+
 	V3D_RESULT result = pSampler->Initialize(this, desc, pDebugName);
 	if (result != V3D_OK)
 	{
@@ -860,9 +862,6 @@ V3D_RESULT V3DDevice::CreateSampler(const V3DSamplerDesc& desc, IV3DSampler** pp
 	}
 
 	(*ppSampler) = pSampler;
-
-	// ìùåv
-	++m_Statistics.samplerCount;
 
 	return V3D_OK;
 }
@@ -970,16 +969,16 @@ V3D_RESULT V3DDevice::AllocateResourceMemory(V3DFlags propertyFlags, uint64_t si
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
+	++m_Statistics.resourceMemoryCount;
+
 	V3D_RESULT result = pResourceMemory->Initialize(this, propertyFlags, size, pDebugName);
 	if (result != V3D_OK)
 	{
+		V3D_RELEASE(pResourceMemory);
 		return result;
 	}
 
 	(*ppResourceMemory) = pResourceMemory;
-
-	// ìùåv
-	++m_Statistics.resourceMemoryCount;
 
 	return V3D_OK;
 }
