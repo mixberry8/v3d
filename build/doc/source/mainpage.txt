@@ -26,7 +26,7 @@ Copyright (c) 2017 mixberry<br>
 @section prepare_section 準備
 v3d を使用するためには以下のものがインストールされている必要があります。<br>
 - Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3
-- Vulkan SDK 1.0.49.0
+- Vulkan SDK 1.0.51.0
 
 @section structure_section 構成
 - bin
@@ -126,6 +126,7 @@ Visual Studio を起動して、メインメニューの「ファイル」→「新規作成」→「プロジェ
 
 @section computeParticle_section computeParticle
 コンピュートシェーダーを使用してパーティクルの描画を行うサンプルです。<br>
+また main.cpp の先頭のほうに定義されている SYNC_MODE はキューの同期方法であり、0 はフェンスで待機、1 はセマフォで待機、2 はイベントで待機になります。<br>
 シェーダーバージョン 450<br>
 <table border="0"><tr><td>\image html computeParticle.png</td></tr></table>
 
@@ -161,6 +162,108 @@ _ _ _
 Underconstruction...<br>
 <br>
 
+@section sync_section 同期
+_ _ _
+@par
+v3d 及び Vulkan には 4つの同期が用意されています。<br>
+<br>
+- @ref sync_event_subsection <br>
+- @ref sync_fence_subsection <br>
+- @ref sync_semaphore_subsection <br>
+- @ref barrier_section <br>
+.
+<br>
+最後の @ref barrier_section についてはここでは説明しません。<br>
+別にセクションを用意してありますので、そちらをご覧ください。<br>
+<br>
+@subsection sync_event_subsection イベント
+@par
+イベントは、ホスト側の処理をデバイスに待機させたい場合や、異なるコマンドバッファー同士のデバイス内部の同期に使用します。<br>
+ホストからの操作には、シグナル状態かどうなのかを取得する IV3DEvent::GetState 、シグナル状態にする IV3DEvent::Set 、非シグナル状態にする IV3DEvent::Reset があります。<br>
+またデバイスからの操作は、シグナル状態にする IV3DCommandBuffer::SetEvent 、非シグナル状態にする IV3DCommandBuffer::ResetEvent 、シグナル状態になるまで待機する IV3DCommandBuffer::WaitEvent <b>※</b> があります。<br>
+ただし、 IV3DCommandBuffer::SetEvent でシグナル状態にし、 IV3DCommandBuffer::WaitEvent でデバイスに待機させたい場合は、イベントはフェンスとセットで使用する必要があります。<br>
+<br>
+@code
+// ----------------------------------------------------------------------------------------------------
+
+IV3DCommandBuffer* pComputeCommandBuffer;
+IV3DQueue* pComputeQueue;
+IV3DFence* pComputeFence;
+
+IV3DCommandBuffer* pGraphicsCommandBuffer;
+IV3DQueue* pGraphicsQueue;
+IV3DFence* pGraphicsFence;
+
+IV3DSwapChain* pSwapChain;
+
+// ----------------------------------------------------------------------------------------------------
+
+/****************/
+/* コンピュート */
+/****************/
+
+pComputeFence->Wait(); // コマンドの記録を開始する前に待機する
+
+pComputeCommandBuffer->Begin();
+
+// ここでリソースを生産して、イベントをセット
+pComputeCommandBuffer->SetEvent(V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE);
+
+pComputeCommandBuffer->End();
+
+pComputeFence->Reset();
+pComputeQueue->Submit(1, pComputeCommandBuffer, pComputeFence);
+
+/******************/
+/* グラフィックス */
+/******************/
+
+pGraphicsCommandBuffer->Begin();
+pComputeCommandBuffer->WaitEvent(V3D_PIPELINE_STAGE_HOST, V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE);
+
+// ここでリソースを消費して、イベントをリセット
+pComputeCommandBuffer->ResetEvent(V3D_PIPELINE_STAGE_HOST);
+
+pGraphicsCommandBuffer->End();
+
+pGraphicsFence->Reset();
+pGraphicsQueue->Submit(pSwapChain, 1, pGraphicsCommandBuffer, pGraphicsFence);
+pGraphicsFence->Wait();
+ 
+pGraphicsQueue->Present(pSwapChain);
+
+// ----------------------------------------------------------------------------------------------------
+@endcode
+<br>
+<b>※</b> 永久にシグナル状態にならないイベントを、 IV3DCommandBuffer::WaitEvent を使用してデバイス側に待機させてしまった場合、TDR が発生してデバイスがロストしますので注意してください。
+<br>
+@subsection sync_fence_subsection フェンス
+@par
+フェンスは、デバイス側のコマンドの送信完了を、ホストで待機する際に使用します。<br>
+ホストからの操作は、シグナル状態なのかどうかを確認する IV3DFence::GetState と シグナル状態になるまで待機する IV3DFence::Wait が用意されています。<br>
+また、デバイスからの操作は IV3DQueue::Submit で行われます。<br>
+主要な引数は以下のとおりです。<br>
+<br>
+- pFence<br>
+コマンド送信後にシグナル状態にするフェンスです。
+.
+<br>
+@subsection sync_semaphore_subsection セマフォ
+@par
+セマフォは異なるキュー同士の同期に使用します。<br>
+セマフォはデバイス内部での同期であり、ホストからセマフォを操作することはできません。<br>
+また、デバイスからの操作は IV3DQueue::Submit で行われます。<br>
+主要な引数は以下のとおりです。<br>
+<br>
+- waitSemaphoreCount, pWaitSemaphores, pWaitDstStageMasks<br>
+コマンド送信前の待機に使用するセマフォです。<br>
+また、pWaitDstStageMasks にはこのセマフォをシグナル状態にするキューの最後のコマンドのパイプラインステージを指定します。<br>
+ここで指定されたすべてのセマフォがシグナル状態になった時に、はじめてコマンドがキューに送信されます。
+.
+- signalSemaphoreCount, pSignalSemaphores<br>
+コマンドがキューに送信された後にシグナル状態にするセマフォです。
+.
+<br>
 
 @section barrier_section バリア
 _ _ _
@@ -188,19 +291,17 @@ B はレンダリング途中の壊れたイメージを表示してしまいます。<br>
 ステージには以下のようなものがあります。<br>
 <br>
 <table class="basic">
-<tr><td> ::V3D_PIPELINE_STAGE_TOP_OF_PIPE</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_VERTEX_INPUT</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_VERTEX_SHADER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_GEOMETRY_SHADER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_COMPUTE_SHADER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_TRANSFER</td></tr>
-<tr><td> ::V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE</td></tr>
+<tr><td class="lightGray" colspan="3"> ::V3D_PIPELINE_STAGE_TOP_OF_PIPE</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_VERTEX_INPUT</td><td  class="lightGreen" rowspan="9">::V3D_PIPELINE_STAGE_COMPUTE_SHADER</td><td class="lightBlue" rowspan="9">::V3D_PIPELINE_STAGE_TRANSFER</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_VERTEX_SHADER</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_GEOMETRY_SHADER</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS</td></tr>
+<tr><td class="lightRed"> ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT</td></tr>
+<tr><td class="lightGray"  colspan="3"> ::V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE</td></tr>
 </table>
 <br>
 A は ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT 、B は ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER といったところです。<br>
@@ -438,10 +539,7 @@ dstSubpass のアクセス方法です。
 GPU はサブパスのアタッチメントをタイル状に分割し、並列で処理しています。<br>
 そのため、次のサブパス dstSubpass に移行する際に、すべてのタイルの処理が完了している必要があるかどうかを指定する必要があります。<br>
 すべてのタイルの処理が完了している必要がある場合は 0 を、完了している必要がない場合は ::V3D_DEPENDENCY_BY_REGION を指定します。<br>
-ただし、依存関係がレンダーパス外 ( srcSubpass または dstSubpass に ::V3D_SUBPASS_EXTERNAL が含まれている ) にわたる場合は 0 を指定する必要があります。<br>
-<br>
-※ 説明にレンダーパスという表現を使用していますが、正確には @ref renderPass_frameBuffer_subsection です。<br>
-これはサブパスによって処理されたのはレンダーパスではなく、 @ref renderPass_frameBuffer_subsection に格納されているアタッチメントだからです。<br>
+また依存関係がレンダーパス外 ( srcSubpass または dstSubpass に ::V3D_SUBPASS_EXTERNAL が含まれている ) にわたる場合は 0 を指定する必要があります。<br>
 .
 <br>
 ※ srcStageMask、dstStageMask、srcAccessMask、dstAccessMask の詳細は @ref barrier_section を参照してください。<br>
