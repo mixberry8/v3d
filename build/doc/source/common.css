@@ -88,6 +88,31 @@ table.basic td {
   font-size: 14px;
 }
 
+table.basic td {
+  border: 1px solid #a8b8d9;
+  padding: 4px 8px;
+  background: #fff;
+  color: #111;
+  text-align: left;
+  font-size: 14px;
+}
+
+table.basic td.lightGray {
+  background: #eee;
+}
+
+table.basic td.lightRed {
+  background: #fee;
+}
+
+table.basic td.lightGreen {
+  background: #efe;
+}
+
+table.basic td.lightBlue {
+  background: #eef;
+}
+
 /* ************************************************ */
 
 table.cmdbuff {
