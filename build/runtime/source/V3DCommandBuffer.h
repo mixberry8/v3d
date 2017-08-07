@@ -41,6 +41,7 @@ public:
 	V3D_RESULT Reset(V3DFlags resetFlags) override;
 	V3D_RESULT Begin() override;
 	V3D_RESULT Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderPass, uint32_t subpass, IV3DFrameBuffer* pFrameBuffer) override;
+	V3D_RESULT Begin(V3DFlags usageFlags, IV3DFrameBuffer* pFrameBuffer, uint32_t subpass) override;
 	V3D_RESULT End() override;
 
 	void Barrier(const V3DPipelineBarrier& pipelineBarrier, const V3DBufferMemoryBarrier& bufferMemoryBarriers) override;
@@ -72,6 +73,7 @@ public:
 	void ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, const V3DPoint2D& dstOffset, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout, const V3DPoint2D& srcOffset, const V3DSize2D& size) override;
 	void ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_LAYOUT dstImageLayout, IV3DImageView* pSrcImageView, V3D_IMAGE_LAYOUT srcImageLayout) override;
 	void BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea) override;
+	void BeginRenderPass(IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea) override;
 	void EndRenderPass() override;
 	void NextSubpass() override;
 	void ClearImage(IV3DImage* pImage, V3D_IMAGE_LAYOUT imageLayout, const V3DClearValue& clearValue) override;
@@ -80,12 +82,17 @@ public:
 	void BindPipeline(IV3DPipeline* pPipeline) override;
 	void BindDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t set, IV3DDescriptorSet* pDescriptorSet, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
 	void BindDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
+	void BindDescriptorSet(IV3DPipeline* pPipeline, uint32_t set, IV3DDescriptorSet* pDescriptorSet, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
+	void BindDescriptorSet(IV3DPipeline* pPipeline, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
 	void BindVertexBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset) override;
 	void BindVertexBuffer(uint32_t firstBinding, uint32_t bindingCount, IV3DBuffer** ppBuffers, const uint64_t* pOffsets) override;
 	void BindIndexBuffer(IV3DBuffer* pBuffer, uint64_t offset, V3D_INDEX_TYPE indexType) override;
 	void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, const void* pData) override;
 	void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) override;
+	void PushConstant(IV3DPipeline* pPipeline, uint32_t slot, const void* pData) override;
+	void PushConstant(IV3DPipeline* pPipeline, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) override;
 	void PushDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
+	void PushDescriptorSet(IV3DPipeline* pPipeline, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) override;
 	void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const V3DViewport* pViewports) override;
 	void SetScissor(uint32_t firstScissor, uint32_t scissorCount, const V3DRectangle2D* pScissors) override;
 	void SetBlendConstant(const float blendConstants[4]) override;

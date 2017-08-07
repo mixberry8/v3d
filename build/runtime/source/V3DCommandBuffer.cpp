@@ -252,9 +252,85 @@ V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderP
 	if (m_Type == V3D_COMMAND_BUFFER_TYPE_SECONDARY)
 	{
 		VkCommandBufferInheritanceInfo& commandBufferInheritanceInfo = m_Source.commandBufferInheritanceInfo;
-		commandBufferInheritanceInfo.renderPass = (pRenderPass != nullptr) ? static_cast<V3DRenderPass*>(pRenderPass)->GetSource().renderPass : VK_NULL_HANDLE;
-		commandBufferInheritanceInfo.subpass = subpass;
-		commandBufferInheritanceInfo.framebuffer = (pFrameBuffer != nullptr) ? static_cast<V3DFrameBuffer*>(pFrameBuffer)->GetSource().framebuffer : VK_NULL_HANDLE;
+		
+		if (usageFlags & V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE)
+		{
+			commandBufferInheritanceInfo.renderPass = (pRenderPass != nullptr) ? static_cast<V3DRenderPass*>(pRenderPass)->GetSource().renderPass : VK_NULL_HANDLE;
+			commandBufferInheritanceInfo.subpass = subpass;
+			commandBufferInheritanceInfo.framebuffer = (pFrameBuffer != nullptr) ? static_cast<V3DFrameBuffer*>(pFrameBuffer)->GetSource().framebuffer : VK_NULL_HANDLE;
+		}
+		else
+		{
+			commandBufferInheritanceInfo.renderPass = VK_NULL_HANDLE;
+			commandBufferInheritanceInfo.subpass = 0;
+			commandBufferInheritanceInfo.framebuffer = VK_NULL_HANDLE;
+		}
+
+		commandBufferBeginInfo.pInheritanceInfo = &m_Source.commandBufferInheritanceInfo;
+	}
+	else
+	{
+		commandBufferBeginInfo.pInheritanceInfo = nullptr;
+	}
+
+	VkResult vkResult = vkBeginCommandBuffer(m_Source.commandBuffer, &m_Source.commandBufferBeginInfo);
+	if (vkResult != VK_SUCCESS)
+	{
+		return ToV3DResult(vkResult);
+	}
+
+#ifdef _DEBUG
+	m_Debug.isBegin = true;
+#endif //_DEBUG
+
+	return V3D_OK;
+}
+
+V3D_RESULT V3DCommandBuffer::Begin(V3DFlags usageFlags, IV3DFrameBuffer* pFrameBuffer, uint32_t subpass)
+{
+#ifdef _DEBUG
+	if (m_Debug.isBegin == true)
+	{
+		V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferAlreadyBegin, m_DebugName.c_str());
+		return V3D_ERROR_FAIL;
+	}
+
+	if (usageFlags & V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE)
+	{
+		if (m_Type == V3D_COMMAND_BUFFER_TYPE_PRIMARY)
+		{
+			V3D_LOG_PRINT_WARNING(Log_Warning_CommandBufferRenderPassContinue, m_DebugName.c_str());
+		}
+
+		if (pFrameBuffer == nullptr)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_CommandBufferRenderPassContinue, m_DebugName.c_str());
+			return V3D_ERROR_FAIL;
+		}
+	}
+#endif //_DEBUG
+
+	VkCommandBufferBeginInfo& commandBufferBeginInfo = m_Source.commandBufferBeginInfo;
+	commandBufferBeginInfo.flags = ToVkCommandBufferUsageFlags(usageFlags);
+
+	if (m_Type == V3D_COMMAND_BUFFER_TYPE_SECONDARY)
+	{
+		VkCommandBufferInheritanceInfo& commandBufferInheritanceInfo = m_Source.commandBufferInheritanceInfo;
+
+		if (usageFlags & V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE)
+		{
+			const V3DFrameBuffer::Source& frameBufferSource = static_cast<V3DFrameBuffer*>(pFrameBuffer)->GetSource();
+
+			commandBufferInheritanceInfo.renderPass = frameBufferSource.renderPass;
+			commandBufferInheritanceInfo.subpass = subpass;
+			commandBufferInheritanceInfo.framebuffer = frameBufferSource.framebuffer;
+		}
+		else
+		{
+			commandBufferInheritanceInfo.renderPass = VK_NULL_HANDLE;
+			commandBufferInheritanceInfo.subpass = 0;
+			commandBufferInheritanceInfo.framebuffer = VK_NULL_HANDLE;
+		}
 
 		commandBufferBeginInfo.pInheritanceInfo = &m_Source.commandBufferInheritanceInfo;
 	}
@@ -1664,6 +1740,51 @@ void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuf
 	vkCmdBeginRenderPass(m_Source.commandBuffer, &info, (subpassContentInline == true)? VK_SUBPASS_CONTENTS_INLINE : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 }
 
+
+void V3DCommandBuffer::BeginRenderPass(IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if (pFrameBuffer == nullptr)
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BeginRenderPass << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pFrameBuffer));
+		return;
+	}
+#endif //_DEBUG
+
+	V3DFrameBuffer* pInternalFrameBuffer = static_cast<V3DFrameBuffer*>(pFrameBuffer);
+	const V3DFrameBuffer::Source& frameBufferSource = pInternalFrameBuffer->GetSource();
+
+	VkRenderPassBeginInfo info;
+	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	info.pNext = nullptr;
+	info.renderPass = frameBufferSource.renderPass;
+	info.framebuffer = frameBufferSource.framebuffer;
+
+	if (pRenderArea != nullptr)
+	{
+		info.renderArea.offset.x = pRenderArea->x;
+		info.renderArea.offset.y = pRenderArea->y;
+		info.renderArea.extent.width = pRenderArea->width;
+		info.renderArea.extent.height = pRenderArea->height;
+	}
+	else
+	{
+		info.renderArea.offset.x = 0;
+		info.renderArea.offset.y = 0;
+		info.renderArea.extent = frameBufferSource.extent;
+	}
+
+	info.clearValueCount = frameBufferSource.clearValueCount;
+	info.pClearValues = frameBufferSource.pClearValues;
+
+	vkCmdBeginRenderPass(m_Source.commandBuffer, &info, (subpassContentInline == true) ? VK_SUBPASS_CONTENTS_INLINE : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+}
+
 void V3DCommandBuffer::EndRenderPass()
 {
 #ifdef _DEBUG
@@ -1953,6 +2074,96 @@ void V3DCommandBuffer::BindDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPip
 		dynamicOffsetCount, pDynamicOffsets);
 }
 
+void V3DCommandBuffer::BindDescriptorSet(IV3DPipeline* pPipeline, uint32_t set, IV3DDescriptorSet* pDescriptorSet, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pPipeline == nullptr) || (pDescriptorSet == nullptr))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BindDescriptorSet << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline) << V3D_LOG_S_PTR(pDescriptorSet));
+		return;
+	}
+
+	if (pDescriptorSet->GetType() != V3D_DESCRIPTOR_SET_TYPE_STANDARD)
+	{
+		V3D_LOG_PRINT_ERROR(Log_Error_NotStandardDescriptorSet, m_DebugName.c_str(), V3D_LOG_TYPE(ppDescriptorSets));
+		return;
+	}
+#endif //_DEBUG
+
+	const IV3DPipelineBase::Source& source = static_cast<IV3DPipelineBase*>(pPipeline)->GetSource();
+
+	vkCmdBindDescriptorSets(
+		m_Source.commandBuffer,
+		source.pipelineBindPoint,
+		source.pipelineLayout,
+		set, 1, &static_cast<V3DStandardDescriptorSet*>(pDescriptorSet)->GetSource().descriptorSet,
+		dynamicOffsetCount, pDynamicOffsets);
+}
+
+void V3DCommandBuffer::BindDescriptorSet(IV3DPipeline* pPipeline, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	const V3DDeviceCaps& deviceCaps = m_pDevice->GetCaps();
+
+	if ((pPipeline == nullptr) || (descriptorSetCount == 0) || ((firstSet + descriptorSetCount) > deviceCaps.maxBoundDescriptorSets) || (ppDescriptorSets == nullptr))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BindDescriptorSet << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline) << V3D_LOG_S_NUM_GREATER(descriptorSetCount, 0) << V3D_LOG_S_PTR(ppDescriptorSets));
+		return;
+	}
+
+	if ((firstSet + descriptorSetCount) > deviceCaps.maxBoundDescriptorSets)
+	{
+		V3D_LOG_PRINT_ERROR(Log_Error_OverFlowBindDescriptorSet, m_DebugName.c_str(), deviceCaps.maxBoundDescriptorSets, firstSet, descriptorSetCount);
+		return;
+	}
+
+	uint32_t debugErrorCount = 0;
+
+	for (uint32_t i = 0; i < descriptorSetCount; i++)
+	{
+		if (ppDescriptorSets[i]->GetType() != V3D_DESCRIPTOR_SET_TYPE_STANDARD)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_NotStandardDescriptorSets, m_DebugName.c_str(), V3D_LOG_TYPE(ppDescriptorSets), i);
+			debugErrorCount++;
+		}
+	}
+
+	if (debugErrorCount > 0)
+	{
+		return;
+	}
+#endif //_DEBUG
+
+	VkDescriptorSet* pDstDescriptorSet = m_Temp.descriptorSets;
+
+	V3DStandardDescriptorSet** ppSrcDescriptorSet = reinterpret_cast<V3DStandardDescriptorSet**>(ppDescriptorSets);
+	V3DStandardDescriptorSet** ppSrcDescriptorSetEnd = ppSrcDescriptorSet + descriptorSetCount;
+
+	while (ppSrcDescriptorSet != ppSrcDescriptorSetEnd)
+	{
+		*pDstDescriptorSet++ = (*ppSrcDescriptorSet++)->GetSource().descriptorSet;
+	}
+
+	const IV3DPipelineBase::Source& source = static_cast<IV3DPipelineBase*>(pPipeline)->GetSource();
+
+	vkCmdBindDescriptorSets(
+		m_Source.commandBuffer,
+		source.pipelineBindPoint,
+		source.pipelineLayout,
+		firstSet, descriptorSetCount, m_Temp.descriptorSets,
+		dynamicOffsetCount, pDynamicOffsets);
+}
+
 void V3DCommandBuffer::BindVertexBuffer(uint32_t binding, IV3DBuffer* pBuffer, uint64_t offset)
 {
 #ifdef _DEBUG
@@ -2078,6 +2289,73 @@ void V3DCommandBuffer::PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_
 	vkCmdPushConstants(m_Source.commandBuffer, static_cast<V3DPipelineLayout*>(pPipelineLayout)->GetSource().pipelineLayout, ToVkShaderStageFlags(constantDesc.shaderStageFlags), constantDesc.offset + offset, size, pData);
 }
 
+void V3DCommandBuffer::PushConstant(IV3DPipeline* pPipeline, uint32_t slot, const void* pData)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pPipeline == nullptr) || (pData == nullptr))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline) << V3D_LOG_S_PTR(pData));
+		return;
+	}
+#endif //_DEBUG
+
+	const IV3DPipelineBase::Source& source = static_cast<IV3DPipelineBase*>(pPipeline)->GetSource();
+
+#ifdef _DEBUG
+	if (source.constantCount <= slot)
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(slot, source.constantCount));
+	}
+#endif //_DEBUG
+
+	const V3DConstantDesc& constantDesc = source.pConstants[slot];
+
+	vkCmdPushConstants(m_Source.commandBuffer, source.pipelineLayout, ToVkShaderStageFlags(constantDesc.shaderStageFlags), constantDesc.offset, constantDesc.size, pData);
+}
+
+void V3DCommandBuffer::PushConstant(IV3DPipeline* pPipeline, uint32_t slot, uint32_t offset, uint32_t size, const void* pData)
+{
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pPipeline == nullptr) || (size == 0) || (pData == nullptr))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline) << V3D_LOG_S_NUM(size) << V3D_LOG_S_PTR(pData));
+		return;
+	}
+#endif //_DEBUG
+
+	const IV3DPipelineBase::Source& source = static_cast<IV3DPipelineBase*>(pPipeline)->GetSource();
+
+#ifdef _DEBUG
+	if (source.constantCount <= slot)
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS(slot, source.constantCount));
+		return;
+	}
+#endif //_DEBUG
+
+	const V3DConstantDesc& constantDesc = source.pConstants[slot];
+
+#ifdef _DEBUG
+	if (constantDesc.size < (offset + size))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushConstant << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_NUM_LESS_EQUAL((offset + size), constantDesc.size));
+		return;
+	}
+#endif //_DEBUG
+
+	vkCmdPushConstants(m_Source.commandBuffer, source.pipelineLayout, ToVkShaderStageFlags(constantDesc.shaderStageFlags), constantDesc.offset + offset, size, pData);
+}
+
 void V3DCommandBuffer::PushDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets)
 {
 	if (m_pPushDescriptorSetFunction == nullptr)
@@ -2117,6 +2395,105 @@ void V3DCommandBuffer::PushDescriptorSet(V3D_PIPELINE_TYPE pipelineType, IV3DPip
 
 	VkPipelineBindPoint vkPipelineBindPoint = ToVkPipelineBindPoint(pipelineType);
 	VkPipelineLayout vkPipelineLayout = static_cast<V3DPipelineLayout*>(pPipelineLayout)->GetSource().pipelineLayout;
+
+	V3DPushDescriptorSet** ppSrcDescriptorSet = reinterpret_cast<V3DPushDescriptorSet**>(ppDescriptorSets);
+	V3DPushDescriptorSet** ppSrcDescriptorSetEnd = ppSrcDescriptorSet + descriptorSetCount;
+
+	uint32_t setIndex = firstSet;
+
+	const VkWriteDescriptorSet* pSrcWrite;
+	const VkWriteDescriptorSet* pSrcWriteEnd;
+
+	VkDescriptorBufferInfo* pDstBufferInfoBegin = m_Temp.descriptorBufferInfos;
+	VkWriteDescriptorSet* pDstWriteBegin = m_Temp.writeDescriptors;
+
+	VkDescriptorBufferInfo* pDstBufferInfo;
+	VkWriteDescriptorSet* pDstWrite;
+
+	uint64_t dynamicBufferBit;
+
+	while (ppSrcDescriptorSet != ppSrcDescriptorSetEnd)
+	{
+		const V3DBaseDescriptorSet::Source& srcSetSource = (*ppSrcDescriptorSet)->GetSource();
+		const uint64_t& dynamicBufferMask = srcSetSource.dynamicBufferMask;
+
+		pSrcWrite = srcSetSource.pWriteDescriptors;
+		pSrcWriteEnd = pSrcWrite + srcSetSource.descriptorCount;
+
+		pDstBufferInfo = pDstBufferInfoBegin;
+		pDstWrite = pDstWriteBegin;
+
+		dynamicBufferBit = 0x1;
+
+		while (pSrcWrite != pSrcWriteEnd)
+		{
+			*pDstWrite = *pSrcWrite;
+
+			if (dynamicBufferMask & dynamicBufferBit)
+			{
+				*pDstBufferInfo = *pSrcWrite->pBufferInfo;
+				pDstBufferInfo->offset = *pDynamicOffsets++;
+
+				pDstWrite->pBufferInfo = pDstBufferInfo++;
+			}
+
+			dynamicBufferBit <<= 1;
+
+			pDstWrite++;
+			pSrcWrite++;
+		}
+
+		m_pPushDescriptorSetFunction(
+			m_Source.commandBuffer,
+			vkPipelineBindPoint, vkPipelineLayout,
+			setIndex, srcSetSource.descriptorCount, pDstWriteBegin);
+
+		setIndex++;
+		ppSrcDescriptorSet++;
+	}
+}
+
+void V3DCommandBuffer::PushDescriptorSet(IV3DPipeline* pPipeline, uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets)
+{
+	if (m_pPushDescriptorSetFunction == nullptr)
+	{
+		V3D_LOG_PRINT_ERROR(Log_Error_UnavailablePushDescriptorSet, m_DebugName.c_str());
+		return;
+	}
+
+#ifdef _DEBUG
+	if (Debug_Command_FirstCheck() == false)
+	{
+		return;
+	}
+
+	if ((pPipeline == nullptr) || (descriptorSetCount == 0) || (ppDescriptorSets == nullptr))
+	{
+		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_PushDescriptorSet << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pPipeline) << V3D_LOG_S_PTR(ppDescriptorSets));
+		return;
+	}
+
+	uint32_t debugErrorCount = 0;
+
+	for (uint32_t i = 0; i < descriptorSetCount; i++)
+	{
+		if (ppDescriptorSets[i]->GetType() != V3D_DESCRIPTOR_SET_TYPE_PUSH)
+		{
+			V3D_LOG_PRINT_ERROR(Log_Error_NotPushDescriptorSet, V3D_LOG_TYPE(ppDescriptorSets), i);
+			debugErrorCount++;
+		}
+	}
+
+	if (debugErrorCount > 0)
+	{
+		return;
+	}
+#endif //_DEBUG
+
+	const IV3DPipelineBase::Source& source = static_cast<IV3DPipelineBase*>(pPipeline)->GetSource();
+
+	VkPipelineBindPoint vkPipelineBindPoint = source.pipelineBindPoint;
+	VkPipelineLayout vkPipelineLayout = source.pipelineLayout;
 
 	V3DPushDescriptorSet** ppSrcDescriptorSet = reinterpret_cast<V3DPushDescriptorSet**>(ppDescriptorSets);
 	V3DPushDescriptorSet** ppSrcDescriptorSetEnd = ppSrcDescriptorSet + descriptorSetCount;

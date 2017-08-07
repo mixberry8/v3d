@@ -1959,6 +1959,16 @@ struct V3DSubpassDependencyDesc
 //! @sa IV3DDevice::CreateRenderPass
 class V3D_DLL_API IV3DRenderPass : public IV3DDeviceChild
 {
+public:
+	//! @brief アタッチメントのクリア値を取得します。
+	//! @param[in] attachment アタッチメントのインデックスです。
+	//! @return アタッチメントのクリア値を返します。
+	virtual V3DClearValue GetAttachmentClearValue(uint32_t attachment) = 0;
+	//! @brief アタッチメントのクリア値を設定します。
+	//! @param[in] attachment アタッチメントのインデックスです。
+	//! @param[in] clearValue アタッチメントのクリア値です。
+	virtual void SetAttachmentClearValue(uint32_t attachment, const V3DClearValue& clearValue) = 0;
+
 protected:
 	//! @cond MISC
 	virtual ~IV3DRenderPass() {}
@@ -3320,6 +3330,17 @@ public:
 	//! usageFlags に ::V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE を指定した場合は pRenderPass と subpass は必ず指定してください。<br>
 	//! また pFrameBuffer に nullptr を指定することも可能ですが、パフォーマンスを考慮したい場合は有効なフレームバッファを指定することを推奨します。
 	virtual V3D_RESULT Begin(V3DFlags usageFlags, IV3DRenderPass* pRenderPass, uint32_t subpass, IV3DFrameBuffer* pFrameBuffer) = 0;
+	//! @brief コマンドの書き込みを開始します。
+	//! @param[in] usageFlags コマンドバッファーの使用法を表す ::V3D_COMMAND_BUFFER_USAGE_FLAG 列挙定数の組み合わせです。
+	//! @param[in] pFrameBuffer プライマリコマンドバッファーから引き継ぐフレームバッファーです。
+	//! @param[in] subpass プライマリコマンドバッファーから引き継ぐサブパスです。
+	//! @retval V3D_OK コマンドの書き込みの開始に成功しました。
+	//! @retval V3D_ERROR_FAIL コマンドの書き込みの開始に失敗しました。
+	//! @retval V3D_ERROR_OUT_OF_HOST_MEMORY @copydoc V3D_ERROR_OUT_OF_HOST_MEMORY
+	//! @retval V3D_ERROR_OUT_OF_DEVICE_MEMORY @copydoc V3D_ERROR_OUT_OF_DEVICE_MEMORY
+	//! @remarks
+	//! usageFlags に ::V3D_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE を指定した場合は pRenderPass と subpass は必ず指定してください。
+	virtual V3D_RESULT Begin(V3DFlags usageFlags, IV3DFrameBuffer* pFrameBuffer, uint32_t subpass) = 0;
 	//! @brief コマンドの書き込みを終了します。
 	//! @retval V3D_OK コマンドの書き込みの終了に成功しました。
 	//! @retval V3D_ERROR_FAIL コマンドの書き込みの終了に失敗しました。
@@ -4056,6 +4077,38 @@ public:
 	//! </table>
 	virtual void BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea = nullptr) = 0;
 
+	//! @brief レンダーパスを開始します。
+	//! @param[in] pFrameBuffer フレームバッファーです。
+	//! @param[in] subpassContentInline サブパスのコマンドの記録方法です。
+	//! - サブパスのコマンドをこのコマンドバッファーに記録する場合は true を指定します。<br>
+	//! またサブパスのコマンドをセカンダリコマンドバッファーで記録して、このコマンドバッファーで実行する場合は false を指定してください。
+	//! @param[in] pRenderArea レンダリング領域です。
+	//! - レンダリング領域は、アタッチメントの範囲 ( width height ) を超えて指定してはいけません。<br>
+	//! また nullptr を指定した場合は、アタッチメント全体をレンダリング領域とします。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY </td>
+	//!     <td> 無効 </td>
+	//!     <td>
+	//!       ::V3D_PIPELINE_STAGE_TOP_OF_PIPE <br>
+	//!       ::V3D_PIPELINE_STAGE_VERTEX_INPUT <br>
+	//!       ::V3D_PIPELINE_STAGE_VERTEX_SHADER <br>
+	//!       ::V3D_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER <br>
+	//!       ::V3D_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER <br>
+	//!       ::V3D_PIPELINE_STAGE_GEOMETRY_SHADER <br>
+	//!       ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER <br>
+	//!       ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS <br>
+	//!       ::V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS <br>
+	//!       ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT <br>
+	//!       ::V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE <br>
+	//!     </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS </td>
+	//!   </tr>
+	//! </table>
+	virtual void BeginRenderPass(IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea = nullptr) = 0;
+
 	//! @brief レンダーパスを終了します。
 	//! @remarks
 	//! <table class="cmdbuff">
@@ -4284,6 +4337,59 @@ public:
 		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
 		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
 
+	//! @brief デスクリプタセットをバインドします。
+	//! @param[in] pPipeline パイプラインです。
+	//! @param[in] set デスクリプタセットを設定するセット番号です。
+	//! - この値は { 0 <= set < V3DDeviceCaps::maxBoundDescriptorSets } の範囲に制限されます。
+	//! @param[in] pDescriptorSet バインドするデスクリプタセットです。
+	//! @param[in] dynamicOffsetCount ダイナミックオフセットの数です。
+	//! - この値はデスクリプタセットに格納されているダイナミックバッファーの数と一致している必要があります。
+	//! @param[in] pDynamicOffsets ダイナミックオフセットの配列です。
+	//! - dynamicOffsetCount が 1以上の場合は、dynamicOffsetCount 値の要素を持つ配列を指定してください。<br>
+	//! また dynamicOffsetCount が 0 の場合は nullptr を指定してください。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	virtual void BindDescriptorSet(
+		IV3DPipeline* pPipeline,
+		uint32_t set, IV3DDescriptorSet* pDescriptorSet,
+		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
+
+	//! @brief デスクリプタセットをバインドします。
+	//! @param[in] pPipeline パイプラインです。
+	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。
+	//! - この値は { 0 <= firstSet < V3DDeviceCaps::maxBoundDescriptorSets } の範囲に制限されます。
+	//! @param[in] descriptorSetCount バインドするデスクリプタセットの数です。
+	//! - この値は { 1 <= descriptorSetCount <= (V3DDeviceCaps::maxBoundDescriptorSets - firstSet) } の範囲に制限されます。
+	//! @param[in] ppDescriptorSets バインドするデスクリプタセットの配列です。
+	//! - 配列の要素数は descriptorSetCount ある必要があります。
+	//! @param[in] dynamicOffsetCount ダイナミックオフセットの数です。
+	//! - この値はデスクリプタセットに格納されているダイナミックバッファーの数と一致している必要があります。
+	//! @param[in] pDynamicOffsets ダイナミックオフセットの配列です。
+	//! - dynamicOffsetCount が 1以上の場合は、dynamicOffsetCount 値の要素を持つ配列を指定してください。<br>
+	//! また dynamicOffsetCount が 0 の場合は nullptr を指定してください。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	virtual void BindDescriptorSet(
+		IV3DPipeline* pPipeline,
+		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
+		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
+
 	//! @brief バーテックスバッファーをバインドします。
 	//! @param[in] binding バインディングのインデックスです。
 	//! - この値は { 0 <= firstBinding < V3DDeviceCaps::maxVertexInputBindings } の範囲に制限されます。
@@ -4387,6 +4493,48 @@ public:
 	//! @sa IV3DDevice::CreatePipelineLayout
 	virtual void PushConstant(IV3DPipelineLayout* pPipelineLayout, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) = 0;
 
+	//! @brief プッシュ定数を更新します。
+	//! @param[in] pPipeline パイプラインです。
+	//! @param[in] slot プッシュ定数のスロットです。<br>
+	//! - pPipelineLayout の作成時に指定した V3DConstantDesc 構造体の配列のインデックスを指定します。
+	//! @param[in] pData プッシュ定数を更新するデータです。
+	//! - 更新するデータのバイトサイズは V3DConstantDesc::size である必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	//! @sa IV3DDevice::CreatePipelineLayout
+	virtual void PushConstant(IV3DPipeline* pPipeline, uint32_t slot, const void* pData) = 0;
+
+	//! @brief プッシュ定数を更新します。
+	//! @param[in] pPipeline パイプラインです。
+	//! @param[in] slot プッシュ定数のスロットです。
+	//! - pPipelineLayout 作成時に指定した V3DConstantDesc 構造体の配列のインデックスを指定します。
+	//! @param[in] offset プッシュ定数のメモリオフセットをバイト単位で指定します。
+	//! - この値は { 0 <= offset < V3DConstantDesc::size } の範囲に制限されます。
+	//! @param[in] size プッシュ定数を更新するデータのサイズをバイト単位で指定します。
+	//! - この値は { 1 <= size <= (V3DConstantDesc::size - offset) } の範囲に制限されます。
+	//! @param[in] pData プッシュ定数を更新するデータです。
+	//! - 更新するデータのバイトサイズは V3DConstantDesc::size の値である必要がある必要があります。
+	//! @remarks
+	//! <table class="cmdbuff">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	//! @sa IV3DDevice::CreatePipelineLayout
+	virtual void PushConstant(IV3DPipeline* pPipeline, uint32_t slot, uint32_t offset, uint32_t size, const void* pData) = 0;
+
 	//! @brief プッシュデスクリプタセットを更新します。
 	//! @param[in] pipelineType パイプラインのタイプです。
 	//! @param[in] pPipelineLayout パイプラインのレイアウトです。
@@ -4416,6 +4564,37 @@ public:
 	//! </table>
 	virtual void PushDescriptorSet(
 		V3D_PIPELINE_TYPE pipelineType, IV3DPipelineLayout* pPipelineLayout,
+		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
+		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
+
+	//! @brief プッシュデスクリプタセットを更新します。
+	//! @param[in] pPipeline パイプラインです。
+	//! @param[in] firstSet デスクリプタセットを設定する最初のセット番号です。
+	//! - この値は { 0 <= firstSet < V3DDeviceCaps::maxBoundDescriptorSets } の範囲に制限されます。
+	//! @param[in] descriptorSetCount バインドするデスクリプタセットの数です。
+	//! - この値は { 1 <= descriptorSetCount <= (V3DDeviceCaps::maxBoundDescriptorSets - firstSet) } の範囲に制限されます。
+	//! @param[in] ppDescriptorSets バインドするデスクリプタセットの配列です。
+	//! - 配列の要素数は descriptorSetCount ある必要があります。
+	//! @param[in] dynamicOffsetCount ダイナミックオフセットの数です。
+	//! - この値はデスクリプタセットに格納されているダイナミックバッファーの数と一致している必要があります。
+	//! @param[in] pDynamicOffsets ダイナミックオフセットの配列です。
+	//! - dynamicOffsetCount が 1以上の場合は、dynamicOffsetCount 値の要素を持つ配列を指定してください。<br>
+	//! また dynamicOffsetCount が 0 の場合は nullptr を指定してください。
+	//! @remarks
+	//! - このコマンドは V3DDeviceCaps::extensionFlags に ::V3D_DEVICE_EXTENSION_PUSH_DESCRIPTOR_SET が含まれている場合に使用することができます。
+	//! .
+	//! <br>
+	//! <table class="basic">
+	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
+	//!   <tr>
+	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY <br> ::V3D_COMMAND_BUFFER_TYPE_SECONDARY </td>
+	//!     <td> 有効 </td>
+	//!     <td> </td>
+	//!     <td> ::V3D_QUEUE_GRAPHICS <br> ::V3D_QUEUE_COMPUTE </td>
+	//!   </tr>
+	//! </table>
+	virtual void PushDescriptorSet(
+		IV3DPipeline* pPipeline,
 		uint32_t firstSet, uint32_t descriptorSetCount, IV3DDescriptorSet** ppDescriptorSets,
 		uint32_t dynamicOffsetCount = 0, const uint32_t* pDynamicOffsets = nullptr) = 0;
 
