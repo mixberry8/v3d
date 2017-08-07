@@ -368,6 +368,13 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 
 	// ----------------------------------------------------------------------------------------------------
 
+	const V3DPipelineLayout::Source& pipelineLayoutSource = m_pPipelineLayout->GetSource();
+	m_Source.pipelineLayout = pipelineLayoutSource.pipelineLayout;
+	m_Source.constantCount = pipelineLayoutSource.constantCount;
+	m_Source.pConstants = pipelineLayoutSource.pConstants;
+
+	// ----------------------------------------------------------------------------------------------------
+
 	return V3D_OK;
 }
 

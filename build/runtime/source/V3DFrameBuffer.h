@@ -8,6 +8,9 @@ class V3DFrameBuffer : public IV3DFrameBuffer
 public:
 	struct Source
 	{
+		VkRenderPass renderPass;
+		uint32_t clearValueCount;
+		VkClearValue* pClearValues;
 		VkFramebuffer framebuffer;
 		VkExtent2D extent;
 		uint32_t layerCount;

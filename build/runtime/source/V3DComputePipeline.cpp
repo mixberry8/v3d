@@ -45,6 +45,11 @@ V3D_RESULT V3DComputePipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayou
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipeline, V3D_SAFE_NAME(this, pDebugName));
 
+	const V3DPipelineLayout::Source& pipelineLayoutSource = m_pPipelineLayout->GetSource();
+	m_Source.pipelineLayout = pipelineLayoutSource.pipelineLayout;
+	m_Source.constantCount = pipelineLayoutSource.constantCount;
+	m_Source.pConstants = pipelineLayoutSource.pConstants;
+
 	return V3D_OK;
 }
 

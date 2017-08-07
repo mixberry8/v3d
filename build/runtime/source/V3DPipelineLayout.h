@@ -9,6 +9,8 @@ public:
 	{
 		VkPipelineCache pipelineCache;
 		VkPipelineLayout pipelineLayout;
+		uint32_t constantCount;
+		const V3DConstantDesc* pConstants;
 	};
 
 	static V3DPipelineLayout* Create();

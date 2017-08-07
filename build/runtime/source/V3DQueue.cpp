@@ -167,12 +167,12 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCou
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.pNext = nullptr;
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &swapChainSource.presentCompleteSemaphore;
+	submitInfo.pWaitSemaphores = &swapChainSource.pPresentCompleteSemaphores[swapChainSource.currentSyncIndex];
 	submitInfo.pWaitDstStageMask = &swapChainSource.waitDstStageMask;
 	submitInfo.commandBufferCount = commandBufferCount;
 	submitInfo.pCommandBuffers = V3DQueue::Vulkan_CreateCommandBufferArray(m_Temp.commandBuffers, commandBufferCount, ppCommandBuffers);
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &swapChainSource.renderingCompleteSemaphore;
+	submitInfo.pSignalSemaphores = &swapChainSource.pRenderingCompleteSemaphores[swapChainSource.currentSyncIndex];
 
 	VkFence fence = (pFence != nullptr) ? static_cast<V3DFence*>(pFence)->GetSource().fence : VK_NULL_HANDLE;
 	VkResult vkResult = vkQueueSubmit(m_Source.queue, 1, &submitInfo, fence);
@@ -209,13 +209,13 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCou
 	const V3DSwapChain::Source& swapChainSource = pInternalSwapChain->GetSource();
 
 	VkSemaphore* pWaitSemaphores = V3DQueue::Vulkan_CreateSemaphoreArray(m_Temp.waitSemaphores, 1, waitSemaphoreCount, ppWaitSemaphores);
-	pWaitSemaphores[0] = swapChainSource.presentCompleteSemaphore;
+	pWaitSemaphores[0] = swapChainSource.pPresentCompleteSemaphores[swapChainSource.currentSyncIndex];
 
 	uint32_t* pWaitStageMasks = V3DQueue::Vulkan_CreatePipelineStageFlags(m_Temp.waitDstStageMasks, 1, waitSemaphoreCount, pWaitDstStageMasks);
 	pWaitStageMasks[0] = ToVkPipelineStageFlags(swapChainSource.waitDstStageMask);
 
 	VkSemaphore* pSignalSemaphores = V3DQueue::Vulkan_CreateSemaphoreArray(m_Temp.signalSemaphores, 1, signalSemaphoreCount, ppSignalSemaphores);
-	pSignalSemaphores[0] = swapChainSource.renderingCompleteSemaphore;
+	pSignalSemaphores[0] = swapChainSource.pRenderingCompleteSemaphores[swapChainSource.currentSyncIndex];
 
 	VkSubmitInfo submitInfo;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -252,7 +252,7 @@ V3D_RESULT V3DQueue::Present(IV3DSwapChain* pSwapChain)
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &swapChainSource.renderingCompleteSemaphore;
+	presentInfo.pWaitSemaphores = &swapChainSource.pRenderingCompleteSemaphores[swapChainSource.currentSyncIndex];
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapChainSource.swapChain;
 	presentInfo.pImageIndices = &swapChainSource.currentImageIndex;

@@ -43,6 +43,12 @@ public:
 	const wchar_t* GetDebugName() const;
 #endif //_DEBUG
 
+	/******************/
+	/* IV3DRenderPass */
+	/******************/
+	V3DClearValue GetAttachmentClearValue(uint32_t attachment) override;
+	void SetAttachmentClearValue(uint32_t attachment, const V3DClearValue& clearValue) override;
+
 	/*******************/
 	/* IV3DDeviceChild */
 	/*******************/

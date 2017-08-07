@@ -301,6 +301,48 @@ const wchar_t* V3DRenderPass::GetDebugName() const
 
 #endif //_DEBUG
 
+/************************************/
+/* public override - IV3DRenderPass */
+/************************************/
+
+V3DClearValue V3DRenderPass::GetAttachmentClearValue(uint32_t attachment)
+{
+	static constexpr V3DClearValue dummyClearValue{};
+
+	if (m_ClearValues.size() <= attachment)
+	{
+		return dummyClearValue;
+	}
+
+	const VkClearValue& src = m_ClearValues[attachment];
+
+	V3DClearValue ret;
+	ret.color.uint32[0] = src.color.uint32[0];
+	ret.color.uint32[1] = src.color.uint32[1];
+	ret.color.uint32[2] = src.color.uint32[2];
+	ret.color.uint32[3] = src.color.uint32[3];
+	ret.depthStencil.depth = src.depthStencil.depth;
+	ret.depthStencil.stencil = src.depthStencil.stencil;
+
+	return ret;
+}
+
+void V3DRenderPass::SetAttachmentClearValue(uint32_t attachment, const V3DClearValue& clearValue)
+{
+	if (m_ClearValues.size() <= attachment)
+	{
+		return;
+	}
+
+	VkClearValue& dst = m_ClearValues[attachment];
+	dst.color.uint32[0] = clearValue.color.uint32[0];
+	dst.color.uint32[1] = clearValue.color.uint32[1];
+	dst.color.uint32[2] = clearValue.color.uint32[2];
+	dst.color.uint32[3] = clearValue.color.uint32[3];
+	dst.depthStencil.depth = clearValue.depthStencil.depth;
+	dst.depthStencil.stencil = clearValue.depthStencil.stencil;
+}
+
 /*************************************/
 /* public override - IV3DDeviceChild */
 /*************************************/

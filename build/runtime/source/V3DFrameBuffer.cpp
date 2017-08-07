@@ -120,6 +120,9 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 	m_Desc.attachmentDepth = imageViewSource.extent.depth;
 	m_Desc.attachmentLayerCount = imageViewSource.imageSubresourceRange.layerCount;
 
+	m_Source.renderPass = renderPassSource.renderPass;
+	m_Source.clearValueCount = renderPassSource.clearValueCount;
+	m_Source.pClearValues = renderPassSource.pClearValues;
 	m_Source.extent.width = imageViewSource.extent.width;
 	m_Source.extent.height = imageViewSource.extent.height;
 	m_Source.layerCount = imageViewSource.imageSubresourceRange.layerCount;
@@ -200,6 +203,7 @@ V3DFrameBuffer::V3DFrameBuffer() :
 	m_Desc({}),
 	m_pRenderPass(nullptr)
 {
+	m_Source.renderPass = VK_NULL_HANDLE;
 	m_Source.framebuffer = VK_NULL_HANDLE;
 	m_Source.extent.width = 0;
 	m_Source.extent.height = 0;

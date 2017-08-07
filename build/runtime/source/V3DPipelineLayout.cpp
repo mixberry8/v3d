@@ -117,6 +117,13 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.pipelineLayout, V3D_SAFE_NAME(this, pDebugName));
 
+	// ----------------------------------------------------------------------------------------------------
+
+	m_Source.constantCount = static_cast<uint32_t>(m_Constants.size());
+	m_Source.pConstants = m_Constants.data();
+
+	// ----------------------------------------------------------------------------------------------------
+
 	return V3D_OK;
 }
 

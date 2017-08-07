@@ -153,24 +153,57 @@ const V3DSwapChainDesc& V3DSwapChain::GetDesc() const
 
 V3D_RESULT V3DSwapChain::AcquireNextImage()
 {
+	VkDevice vDevice = m_pDevice->GetSource().device;
+
+	m_Source.currentSyncIndex = (m_Source.currentSyncIndex + 1) % m_Desc.imageCount;
+
+	// ----------------------------------------------------------------------------------------------------
+	// レンダリングイメージの獲得を待機
+	// ----------------------------------------------------------------------------------------------------
+
+	VkFence currentAcquireFence = m_AcquireFences[m_Source.currentSyncIndex];
+
+	VkResult vResult = vkWaitForFences(vDevice, 1, &currentAcquireFence, VK_TRUE, UINT64_MAX);
+	if (vResult != VK_SUCCESS)
+	{
+		return ToV3DResult(vResult);
+	}
+
+	vResult = vkResetFences(vDevice, 1, &currentAcquireFence);
+	if (vResult != VK_SUCCESS)
+	{
+		return ToV3DResult(vResult);
+	}
+
+	// ----------------------------------------------------------------------------------------------------
+	// 次のレンダリングイメージを獲得
+	// ----------------------------------------------------------------------------------------------------
+
 	V3D_RESULT result = V3D_OK;
 
-	VkResult vkResult = vkAcquireNextImageKHR(m_pDevice->GetSource().device, m_Source.swapChain, UINT64_MAX, m_Source.presentCompleteSemaphore, VK_NULL_HANDLE, &m_Source.currentImageIndex);
-	if (vkResult == VK_ERROR_OUT_OF_DATE_KHR)
+	vResult = vkAcquireNextImageKHR(
+		vDevice,
+		m_Source.swapChain,
+		UINT64_MAX,
+		m_Source.pPresentCompleteSemaphores[m_Source.currentSyncIndex],
+		currentAcquireFence,
+		&m_Source.currentImageIndex);
+
+	if (vResult == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		// スワップチェーンのサーフェイスが互換性がなくなり、レンダリングに使用できなくなった
 		// サーフェイス、スワップチェーン、セマフォのすべてを作り直す
 		result = RecreateSurfaceAndSwapChain();
 	}
-	else if (vkResult == VK_SUBOPTIMAL_KHR)
+	else if (vResult == VK_SUBOPTIMAL_KHR)
 	{
 		// スワップチェーンのサーフェイスはレンダリングに使用可能だが、ウィンドウサイズなどのプロパティが完全に一致しない
 		// スワップチェーンのみ作り直す
 		// Present で処理する
 	}
-	else if(vkResult != VK_SUCCESS)
+	else if(vResult != VK_SUCCESS)
 	{
-		result = ToV3DResult(vkResult);
+		result = ToV3DResult(vResult);
 	}
 
 	return result;
@@ -287,12 +320,12 @@ V3DSwapChain::V3DSwapChain() :
 
 	m_Source.surface = VK_NULL_HANDLE;
 	m_Source.swapChain = VK_NULL_HANDLE;
-	m_Source.presentCompleteSemaphore = VK_NULL_HANDLE;
-	m_Source.renderingCompleteSemaphore = VK_NULL_HANDLE;
 }
 
 V3DSwapChain::~V3DSwapChain()
 {
+	m_pDevice->WaitIdle();
+
 	m_pDevice->GetInternalInstancePtr()->RemoveWindow(this);
 
 	for (size_t i = 0; i < m_Images.size(); i++)
@@ -314,16 +347,41 @@ V3DSwapChain::~V3DSwapChain()
 			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.surface);
 		}
 
-		if (m_Source.renderingCompleteSemaphore != VK_NULL_HANDLE)
+		if (m_PresentCompleteSemaphores.empty() == false)
 		{
-			vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.renderingCompleteSemaphore, nullptr);
-			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderingCompleteSemaphore);
+			auto it_begin = m_PresentCompleteSemaphores.begin();
+			auto it_end = m_PresentCompleteSemaphores.end();
+
+			for (auto it = it_begin; it != it_end; ++it)
+			{
+				vkDestroySemaphore(m_pDevice->GetSource().device, (*it), nullptr);
+				V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), (*it));
+			}
 		}
 
-		if (m_Source.presentCompleteSemaphore != VK_NULL_HANDLE)
+		if (m_RenderingCompleteSemaphores.empty() == false)
 		{
-			vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.presentCompleteSemaphore, nullptr);
-			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.presentCompleteSemaphore);
+			auto it_begin = m_RenderingCompleteSemaphores.begin();
+			auto it_end = m_RenderingCompleteSemaphores.end();
+
+			for (auto it = it_begin; it != it_end; ++it)
+			{
+				vkDestroySemaphore(m_pDevice->GetSource().device, (*it), nullptr);
+				V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), (*it));
+			}
+		}
+
+		if (m_AcquireFences.empty() == false)
+		{
+			auto it_begin = m_AcquireFences.begin();
+			auto it_end = m_AcquireFences.end();
+
+			for (auto it = it_begin; it != it_end; ++it)
+			{
+				vkWaitForFences(m_pDevice->GetSource().device, 1, &(*it), VK_TRUE, UINT64_MAX);
+				vkDestroyFence(m_pDevice->GetSource().device, (*it), nullptr);
+				V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), (*it));
+			}
 		}
 	}
 
@@ -607,26 +665,67 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 	// コマンドキュート同期をとるためのオブジェクトを作成
 	// ----------------------------------------------------------------------------------------------------
 
-	VkSemaphoreCreateInfo semaphoreCreateInfo{};
+	VkFenceCreateInfo fenceCreateInfo;
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.pNext = nullptr;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	VkSemaphoreCreateInfo semaphoreCreateInfo;
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphoreCreateInfo.pNext = nullptr;
 	semaphoreCreateInfo.flags = 0;
 
-	vkResult = vkCreateSemaphore(m_pDevice->GetSource().device, &semaphoreCreateInfo, nullptr, &m_Source.presentCompleteSemaphore);
-	if (vkResult != VK_SUCCESS)
+	for (uint32_t i = 0; i < m_Desc.imageCount; i++)
 	{
-		return ToV3DResult(vkResult);
+		/************************/
+		/* イメージ獲得フェンス */
+		/************************/
+
+		VkFence acquireFence;
+
+		vkResult = vkCreateFence(m_pDevice->GetSource().device, &fenceCreateInfo, nullptr, &acquireFence);
+		if (vkResult != VK_SUCCESS)
+		{
+			return ToV3DResult(vkResult);
+		}
+
+		m_AcquireFences.push_back(acquireFence);
+		V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), acquireFence, m_DebugName.c_str());
+
+		/**************************/
+		/* プレゼント完了セマフォ */
+		/**************************/
+
+		VkSemaphore presentCompleteSemaphore;
+
+		vkResult = vkCreateSemaphore(m_pDevice->GetSource().device, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+		if (vkResult != VK_SUCCESS)
+		{
+			return ToV3DResult(vkResult);
+		}
+
+		m_PresentCompleteSemaphores.push_back(presentCompleteSemaphore);
+		V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), presentCompleteSemaphore, m_DebugName.c_str());
+
+		/****************************/
+		/* レンダリング完了セマフォ */
+		/****************************/
+
+		VkSemaphore renderingCompleteSemaphore;
+
+		vkResult = vkCreateSemaphore(m_pDevice->GetSource().device, &semaphoreCreateInfo, nullptr, &renderingCompleteSemaphore);
+		if (vkResult != VK_SUCCESS)
+		{
+			return ToV3DResult(vkResult);
+		}
+
+		m_RenderingCompleteSemaphores.push_back(renderingCompleteSemaphore);
+		V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), renderingCompleteSemaphore, m_DebugName.c_str());
 	}
 
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.presentCompleteSemaphore, m_DebugName.c_str());
-
-	vkResult = vkCreateSemaphore(m_pDevice->GetSource().device, &semaphoreCreateInfo, nullptr, &m_Source.renderingCompleteSemaphore);
-	if (vkResult != VK_SUCCESS)
-	{
-		return ToV3DResult(vkResult);
-	}
-
-	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderingCompleteSemaphore, m_DebugName.c_str());
+	m_Source.pPresentCompleteSemaphores = m_PresentCompleteSemaphores.data();
+	m_Source.pRenderingCompleteSemaphores = m_RenderingCompleteSemaphores.data();
+	m_Source.currentSyncIndex = m_Desc.imageCount - 1;
 
 	// ----------------------------------------------------------------------------------------------------
 
@@ -790,22 +889,48 @@ V3D_RESULT V3DSwapChain::RecreateSurfaceAndSwapChain()
 		m_Images.clear();
 	}
 
-	if (m_Source.renderingCompleteSemaphore != VK_NULL_HANDLE)
+	if (m_PresentCompleteSemaphores.empty() == false)
 	{
-		vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.renderingCompleteSemaphore, nullptr);
+		auto it_begin = m_PresentCompleteSemaphores.begin();
+		auto it_end = m_PresentCompleteSemaphores.end();
 
-		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderingCompleteSemaphore);
+		for (auto it = it_begin; it != it_end; ++it)
+		{
+			vkDestroySemaphore(m_pDevice->GetSource().device, (*it), nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), (*it));
+		}
 
-		m_Source.renderingCompleteSemaphore = VK_NULL_HANDLE;
+		m_PresentCompleteSemaphores.clear();
+		m_Source.pPresentCompleteSemaphores = nullptr;
 	}
 
-	if (m_Source.presentCompleteSemaphore != VK_NULL_HANDLE)
+	if (m_RenderingCompleteSemaphores.empty() == false)
 	{
-		vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.presentCompleteSemaphore, nullptr);
+		auto it_begin = m_RenderingCompleteSemaphores.begin();
+		auto it_end = m_RenderingCompleteSemaphores.end();
 
-		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.presentCompleteSemaphore);
+		for (auto it = it_begin; it != it_end; ++it)
+		{
+			vkDestroySemaphore(m_pDevice->GetSource().device, (*it), nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), (*it));
+		}
 
-		m_Source.presentCompleteSemaphore = VK_NULL_HANDLE;
+		m_RenderingCompleteSemaphores.clear();
+		m_Source.pRenderingCompleteSemaphores = nullptr;
+	}
+
+	if (m_AcquireFences.empty() == false)
+	{
+		auto it_begin = m_AcquireFences.begin();
+		auto it_end = m_AcquireFences.end();
+
+		for (auto it = it_begin; it != it_end; ++it)
+		{
+			vkDestroyFence(m_pDevice->GetSource().device, (*it), nullptr);
+			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), (*it));
+		}
+
+		m_AcquireFences.clear();
 	}
 
 	if (m_Source.swapChain != VK_NULL_HANDLE)

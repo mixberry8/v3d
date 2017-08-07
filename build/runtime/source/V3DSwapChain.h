@@ -9,11 +9,15 @@ public:
 	struct Source
 	{
 		VkSurfaceKHR surface;
+
 		VkSwapchainCreateInfoKHR swapChainCreateInfo;
 		VkSwapchainKHR swapChain;
-		VkSemaphore presentCompleteSemaphore;
-		VkSemaphore renderingCompleteSemaphore;
 		uint32_t currentImageIndex;
+
+		VkSemaphore* pPresentCompleteSemaphores;
+		VkSemaphore* pRenderingCompleteSemaphores;
+		uint32_t currentSyncIndex;
+
 		VkPipelineStageFlags waitDstStageMask;
 	};
 
@@ -63,6 +67,9 @@ private:
 	V3DSwapChainDesc m_Desc;
 	V3DSwapChainCallbacks m_Callbacks;
 	STLVector<V3DBackBuffer*> m_Images;
+	STLVector<VkFence> m_AcquireFences;
+	STLVector<VkSemaphore> m_PresentCompleteSemaphores;
+	STLVector<VkSemaphore> m_RenderingCompleteSemaphores;
 	V3DSwapChain::Source m_Source;
 	V3DSwapChain::WindowedInfo m_WindowedInfo;
 
