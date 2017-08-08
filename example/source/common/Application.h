@@ -29,6 +29,7 @@ public:
 	static uint32_t FindQueueFamily(V3DFlags queueFlags, uint32_t minQueueCount);
 
 	static double GetFps();
+	static double GetAverageFpsPreSec();
 	static double GetDeltaTime();
 
 private:
@@ -38,6 +39,7 @@ private:
 	static Application* s_pThis;
 
 	double m_Fps;
+	double m_AverageFpsPerSec;
 	double m_DeltaTime;
 
 	IV3DInstance* m_pInstance;

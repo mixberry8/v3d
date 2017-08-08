@@ -11,8 +11,9 @@
 Application* Application::s_pThis = nullptr;
 
 Application::Application() :
-m_Fps(60.0),
-m_DeltaTime(1.0 / m_Fps),
+m_Fps(0.0),
+m_AverageFpsPerSec(0.0f),
+m_DeltaTime(0.0f),
 m_pInstance(nullptr),
 m_pAdapter(nullptr),
 m_pDevice(nullptr)
@@ -53,7 +54,7 @@ int32_t Application::Execute()
 	V3DInstanceDesc instanceDesc{};
 	instanceDesc.layer = desc.layer;
 	instanceDesc.log.flags = desc.logFlags;
-	instanceDesc.log.pFunction = Application::LogFunction;
+//	instanceDesc.log.pFunction = Application::LogFunction;
 
 	V3D_RESULT result = V3DCreateInstance(instanceDesc, &m_pInstance);
 	if (result != V3D_OK)
@@ -100,6 +101,9 @@ int32_t Application::Execute()
 	MSG msg{};
 
 	auto startClock = std::chrono::high_resolution_clock::now();
+	auto averageStartClock = startClock;
+	uint64_t avarageCount = 0;
+	double averageFps = 0.0;
 	uint32_t defTimeHead = 0;
 	double defTimes[DefTimeSize] = {};
 	double sumTimes = 0.0;
@@ -160,6 +164,29 @@ int32_t Application::Execute()
 		}
 
 		m_DeltaTime = (m_Fps > FLOAT_EPSILON) ? FLOAT_RECIPROCAL(m_Fps) : 1.0;
+
+		curClock = std::chrono::high_resolution_clock::now();
+		uint64_t averageDefTime = std::chrono::duration_cast<std::chrono::duration<uint64_t, std::chrono::milliseconds::period>>(curClock - averageStartClock).count();
+		if (averageDefTime >= 1000)
+		{
+			if (avarageCount > 0)
+			{
+				m_AverageFpsPerSec = averageFps / avarageCount;
+			}
+			else
+			{
+				m_AverageFpsPerSec = 0;
+			}
+
+			averageStartClock = curClock;
+			averageFps = 0.0f;
+			avarageCount = 0;
+		}
+		else
+		{
+			averageFps += m_Fps;
+			avarageCount++;
+		}
 
 		startClock = std::chrono::high_resolution_clock::now();
 
@@ -272,6 +299,11 @@ uint32_t Application::FindQueueFamily(V3DFlags queueFlags, uint32_t minQueueCoun
 double Application::GetFps()
 {
 	return s_pThis->m_Fps;
+}
+
+double Application::GetAverageFpsPreSec()
+{
+	return s_pThis->m_AverageFpsPerSec;
 }
 
 void V3D_CALLBACK Application::LogFunction(V3D_LOG_FLAG type, const wchar_t* pMessage, void* pUserData)
