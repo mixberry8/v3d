@@ -180,8 +180,7 @@ protected:
 
 		pCommandBufer->BindPipeline(m_pPipeline);
 
-		uint64_t vertexOffset = 0;
-		pCommandBufer->BindVertexBuffers(0, 1, &m_pVertexBuffer, &vertexOffset);
+		pCommandBufer->BindVertexBuffer(0, m_pVertexBuffer);
 
 		pCommandBufer->Draw(3, 1, 0, 0);
 
@@ -260,7 +259,7 @@ protected:
 		subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
 		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		subpassDependencies[0].dependencyFlags = 0;
 
 		subpassDependencies[1].srcSubpass = 0;
 		subpassDependencies[1].dstSubpass = V3D_SUBPASS_EXTERNAL;
@@ -268,7 +267,7 @@ protected:
 		subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
 		subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;
-		subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		subpassDependencies[1].dependencyFlags = 0;
 
 		V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 			TO_UI32(attachments.size()), attachments.data(),

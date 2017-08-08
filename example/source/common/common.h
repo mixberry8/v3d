@@ -93,6 +93,13 @@ struct SimpleVertex
 class CommandHelper
 {
 public:
+	CommandHelper(IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer) :
+		m_pQueue(pQueue),
+		m_pCommandBuffer(pCommandBuffer),
+		m_pFence(nullptr)
+	{
+	}
+
 	CommandHelper(IV3DQueue* pQueue, IV3DCommandBuffer* pCommandBuffer, IV3DFence* pFence) :
 		m_pQueue(pQueue),
 		m_pCommandBuffer(pCommandBuffer),
@@ -128,6 +135,74 @@ public:
 			}
 		}
 
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool End(IV3DFence* pFence)
+	{
+		V3D_RESULT result = m_pCommandBuffer->End();
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		result = pFence->Reset();
+		if (result == V3D_OK)
+		{
+			result = m_pQueue->Submit(1, &m_pCommandBuffer, pFence);
+			if (result == V3D_OK)
+			{
+				result = pFence->Wait();
+			}
+		}
+
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool End(IV3DEvent* pSignalEvent, V3DFlags stageMask, IV3DFence* pFence)
+	{
+		m_pCommandBuffer->SetEvent(pSignalEvent, stageMask);
+
+		V3D_RESULT result = m_pCommandBuffer->End();
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		result = pFence->Reset();
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		result = m_pQueue->Submit(1, &m_pCommandBuffer, pFence);
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool End(IV3DSemaphore* pSignalSemaphore)
+	{
+		V3D_RESULT result = m_pCommandBuffer->End();
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		result = m_pQueue->Submit(0, nullptr, nullptr, 1, &m_pCommandBuffer, 1, &pSignalSemaphore, nullptr);
 		if (result != V3D_OK)
 		{
 			return false;

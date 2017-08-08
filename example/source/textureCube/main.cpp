@@ -132,7 +132,7 @@ protected:
 			std::wstring srcFilePath;
 			CreateFilePath(L"image\\textureCube.dds", srcFilePath);
 
-			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), true, V3D_PIPELINE_STAGE_FRAGMENT_SHADER, &m_pImageView);
+			result = CreateImageFromFile(Application::GetDevice(), GetWorkQueue(), GetWorkCommandBuffer(), GetWorkFence(), srcFilePath.c_str(), false, V3D_PIPELINE_STAGE_FRAGMENT_SHADER, &m_pImageView);
 			if (result != V3D_OK)
 			{
 				return false;
@@ -234,7 +234,7 @@ protected:
 
 		m_Font.Reset();
 
-		text = L"Fps " + std::to_wstring(Application::GetFps());
+		text = L"Fps " + std::to_wstring(Application::GetAverageFpsPreSec());
 		m_Font.AddText(16, 16, text.c_str());
 
 		if (m_Font.Bake() == false)
@@ -290,8 +290,8 @@ protected:
 		// サブパス 0 : メッシュの描画
 		pCommandBufer->PushConstant(m_pPipelineLayout, 0, &scene);
 		pCommandBufer->BindPipeline(m_pPipeline);
-		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
-		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_MeshDrawDesc.vertexOffset);
+		pCommandBufer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet);
+		pCommandBufer->BindVertexBuffer(0, m_pMeshBuffer, m_MeshDrawDesc.vertexOffset);
 		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_MeshDrawDesc.indexOffset, V3D_INDEX_TYPE_UINT16);
 		pCommandBufer->DrawIndexed(m_MeshDrawDesc.indexCount, m_MeshDrawDesc.instanceCount, 0, 0, 0);
 
@@ -405,16 +405,19 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageViewDesc barrier{};
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
-			pCommandBuffer->BarrierImageView(m_pDepthStencilImageView, barrier);
+			V3DPipelineBarrier pipelineBarrier{};
+			pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+			pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+
+			V3DImageViewMemoryBarrier memoryBarrier{};
+			memoryBarrier.srcAccessMask = 0;
+			memoryBarrier.dstAccessMask = V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
+			memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+			memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
+			memoryBarrier.pImageView = m_pDepthStencilImageView;
+			pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 			EndWork();
 		}
@@ -436,7 +439,7 @@ protected:
 		attachments[0].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
 		attachments[0].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
 		attachments[0].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
-		attachments[0].initialLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+		attachments[0].initialLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
 		attachments[0].finalLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
 		attachments[0].clearValue.color.float32[0] = 0.1f;
 		attachments[0].clearValue.color.float32[1] = 0.1f;
@@ -450,7 +453,7 @@ protected:
 		attachments[1].storeOp = V3D_ATTACHMENT_STORE_OP_STORE;
 		attachments[1].stencilLoadOp = V3D_ATTACHMENT_LOAD_OP_UNDEFINED;
 		attachments[1].stencilStoreOp = V3D_ATTACHMENT_STORE_OP_UNDEFINED;
-		attachments[1].initialLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
+		attachments[1].initialLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
 		attachments[1].finalLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
 		attachments[1].clearValue.depthStencil.depth = 1.0f;
 		attachments[1].clearValue.depthStencil.stencil = 0;
@@ -506,25 +509,25 @@ protected:
 
 		subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL;
 		subpassDependencies[0].dstSubpass = 0;
-		subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
 		subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
-		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 		subpassDependencies[1].srcSubpass = 0;
 		subpassDependencies[1].dstSubpass = 1;
-		subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		subpassDependencies[1].srcAccessMask = V3D_ACCESS_MEMORY_READ;
-		subpassDependencies[1].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[1].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 		subpassDependencies[2].srcSubpass = 1;
 		subpassDependencies[2].dstSubpass = V3D_SUBPASS_EXTERNAL;
 		subpassDependencies[2].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		subpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
-		subpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[2].dstAccessMask = V3D_ACCESS_MEMORY_READ;
 		subpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
@@ -534,6 +537,21 @@ protected:
 			TO_UI32(subpassDependencies.size()), subpassDependencies.data(),
 			&m_pRenderPass);
 
+/*		std::array<V3DSubpassDependencyDesc, 1> subpassDependencies;
+		subpassDependencies[0].srcSubpass = 0;
+		subpassDependencies[0].dstSubpass = 1;
+		subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		subpassDependencies[0].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+
+		V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
+			TO_UI32(attachments.size()), attachments.data(),
+			TO_UI32(subpasses.size()), subpasses.data(),
+			TO_UI32(subpassDependencies.size()), subpassDependencies.data(),
+			&m_pRenderPass);
+*/
 		// ----------------------------------------------------------------------------------------------------
 		// フレームバッファを作成
 		// ----------------------------------------------------------------------------------------------------

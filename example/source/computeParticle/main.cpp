@@ -6,6 +6,11 @@
 #define PARTICLE_MAX_AMOUNT 1024
 #define PARTICLE_MAX (PARTICLE_MAX_AMOUNT * 256)
 
+// 0 : フェンスで待機
+// 1 : セマフォで待機
+// 2 : イベントで待機 ( グラフィックスキューとコンピュートキューのファミリーが一致していないと動作しません )
+#define SYNC_MODE 2
+
 class ComputeParticleWindow : public ViewCameraWindow
 {
 public:
@@ -13,6 +18,7 @@ public:
 		m_GraphicsQueueFamily(0),
 		m_ComputeQueueFamily(0),
 		m_pComputeQueue(nullptr),
+		m_pComputeFence(nullptr),
 		m_pComputeShaderModule(nullptr),
 		m_pVertexShaderModule(nullptr),
 		m_pFragmentShaderModule(nullptr),
@@ -27,6 +33,11 @@ public:
 		m_pGraphicsPipeline(nullptr),
 		m_PointSize(1)
 	{
+#if SYNC_MODE == 1
+		m_pComputeSemaphore = nullptr;
+#elif SYNC_MODE == 2
+		m_pComputeEvent = nullptr;
+#endif //SYNC_MODE
 		for (auto i = 0; i < _countof(m_pParticleBuffer); i++)
 		{
 			m_pParticleBuffer[i] = nullptr;
@@ -52,6 +63,14 @@ public:
 		{
 			return false;
 		}
+
+#if SYNC_MODE == 2
+		if (m_GraphicsQueueFamily != m_ComputeQueueFamily)
+		{
+			// イベントを使用するときはキューファミリーは一致している必要がある
+			return false;
+		}
+#endif //SYNC_MODE
 
 		// ----------------------------------------------------------------------------------------------------
 		// キューを取得
@@ -195,6 +214,33 @@ protected:
 			{
 				return false;
 			}
+		}
+
+		// ----------------------------------------------------------------------------------------------------
+		// 同期オブジェクトを作成
+		// ----------------------------------------------------------------------------------------------------
+
+		// コンピュート
+		{
+			V3D_RESULT result = Application::GetDevice()->CreateFence(true, &m_pComputeFence, L"ComputeFence");
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+
+#if SYNC_MODE == 1
+			result = Application::GetDevice()->CreateSemaphore(&m_pComputeSemaphore, L"ComputeSemaphore");
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+#elif SYNC_MODE == 2
+			result = Application::GetDevice()->CreateEvent(&m_pComputeEvent, L"ComputeEvent");
+			if (result != V3D_OK)
+			{
+				return false;
+			}
+#endif //SYNC_MODE
 		}
 
 		// ----------------------------------------------------------------------------------------------------
@@ -348,17 +394,19 @@ protected:
 		}
 
 		// 二つ目のバッファはパーティクルの初期化用
-		V3DBarrierBufferDesc barrierBuffer{};
-		barrierBuffer.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-		barrierBuffer.dstStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
-		barrierBuffer.dependencyFlags = 0;
-		barrierBuffer.srcAccessMask = V3D_ACCESS_VERTEX_READ;
-		barrierBuffer.dstAccessMask = V3D_ACCESS_SHADER_READ;
-		barrierBuffer.srcQueueFamily = m_GraphicsQueueFamily;
-		barrierBuffer.dstQueueFamily = m_ComputeQueueFamily;
-		barrierBuffer.offset = 0;
-		barrierBuffer.size = vertexSize;
-		pCommandBuffer->BarrierBuffer(m_pParticleBuffer[1], barrierBuffer);
+		V3DPipelineBarrier pipelineBarrier{};
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
+
+		V3DBufferMemoryBarrier memoryBarrier{};
+		memoryBarrier.srcAccessMask = V3D_ACCESS_VERTEX_READ;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+		memoryBarrier.srcQueueFamily = m_GraphicsQueueFamily;
+		memoryBarrier.dstQueueFamily = m_ComputeQueueFamily;
+		memoryBarrier.pBuffer = m_pParticleBuffer[1];
+		memoryBarrier.offset = 0;
+		memoryBarrier.size = vertexSize;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		if (EndWork() == false)
 		{
@@ -412,7 +460,14 @@ protected:
 		SAFE_RELEASE(m_pFragmentShaderModule);
 		SAFE_RELEASE(m_pVertexShaderModule);
 		SAFE_RELEASE(m_pComputeShaderModule);
+		SAFE_RELEASE(m_pComputeFence);
 		SAFE_RELEASE(m_pComputeQueue);
+
+#if SYNC_MODE == 1
+		SAFE_RELEASE(m_pComputeSemaphore);
+#elif SYNC_MODE == 2
+		SAFE_RELEASE(m_pComputeEvent);
+#endif //SYNC_MODE
 
 		m_Font.Dispose();
 	}
@@ -432,7 +487,7 @@ protected:
 		m_Font.Reset();
 
 		std::wstringstream stringStream;
-		stringStream << L"Fps " << Application::GetFps();
+		stringStream << L"Fps " << Application::GetAverageFpsPreSec();
 
 		m_Font.AddText(16, 16, stringStream.str().c_str());
 
@@ -457,44 +512,63 @@ protected:
 		// コンピュート
 		// ----------------------------------------------------------------------------------------------------
 
-		CommandHelper compCommandHelper(m_pComputeQueue, m_pComputeCommandBuffer, GetWorkFence());
+#if SYNC_MODE == 2
+		m_pComputeFence->Wait(V3D_INFINITE);
+#endif //SYNC_MODE
+
+		CommandHelper compCommandHelper(m_pComputeQueue, m_pComputeCommandBuffer);
 
 		if (compCommandHelper.Begin() == nullptr)
 		{
 			return false;
 		}
 
-		V3DBarrierBufferDesc barrierBuffer{};
-		barrierBuffer.offset = 0;
-		barrierBuffer.size = 0;
+		V3DPipelineBarrier pipelineBarrier{};
 
-		barrierBuffer.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-		barrierBuffer.dstStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
-		barrierBuffer.dependencyFlags = 0;
-		barrierBuffer.srcAccessMask = V3D_ACCESS_VERTEX_READ;
-		barrierBuffer.dstAccessMask = V3D_ACCESS_SHADER_READ | V3D_ACCESS_SHADER_WRITE;
-		barrierBuffer.srcQueueFamily = m_GraphicsQueueFamily;
-		barrierBuffer.dstQueueFamily = m_ComputeQueueFamily;
-		m_pComputeCommandBuffer->BarrierBuffer(m_pParticleBuffer[0], barrierBuffer);
+		V3DBufferMemoryBarrier memoryBarrier{};
+		memoryBarrier.pBuffer = m_pParticleBuffer[0];
+		memoryBarrier.offset = 0;
+		memoryBarrier.size = 0;
+
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
+
+		memoryBarrier.srcAccessMask = V3D_ACCESS_VERTEX_READ;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_SHADER_READ | V3D_ACCESS_SHADER_WRITE;
+		memoryBarrier.srcQueueFamily = m_GraphicsQueueFamily;
+		memoryBarrier.dstQueueFamily = m_ComputeQueueFamily;
+		m_pComputeCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		m_pComputeCommandBuffer->PushConstant(m_pCompPipelineLayout, 0, &compConstant);
 		m_pComputeCommandBuffer->BindPipeline(m_pComputePipeline);
-		m_pComputeCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_COMPUTE, m_pCompPipelineLayout, 0, 1, &m_pComputeDedscriptorSet, 0, nullptr);
+		m_pComputeCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_COMPUTE, m_pCompPipelineLayout, 0, m_pComputeDedscriptorSet);
 		m_pComputeCommandBuffer->Dispatch(PARTICLE_MAX / 256, 1, 1);
 
-		barrierBuffer.srcStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
-		barrierBuffer.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-		barrierBuffer.dependencyFlags = 0;
-		barrierBuffer.srcAccessMask = V3D_ACCESS_SHADER_READ | V3D_ACCESS_SHADER_WRITE;
-		barrierBuffer.dstAccessMask = V3D_ACCESS_VERTEX_READ;
-		barrierBuffer.srcQueueFamily = m_ComputeQueueFamily;
-		barrierBuffer.dstQueueFamily = m_GraphicsQueueFamily;
-		m_pComputeCommandBuffer->BarrierBuffer(m_pParticleBuffer[0], barrierBuffer);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_COMPUTE_SHADER;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
 
-		if (compCommandHelper.End() == false)
+		memoryBarrier.srcAccessMask = V3D_ACCESS_SHADER_READ | V3D_ACCESS_SHADER_WRITE;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_VERTEX_READ;
+		memoryBarrier.srcQueueFamily = m_ComputeQueueFamily;
+		memoryBarrier.dstQueueFamily = m_GraphicsQueueFamily;
+		m_pComputeCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+#if SYNC_MODE == 0
+		if (compCommandHelper.End(m_pComputeFence) == false)
 		{
 			return false;
 		}
+#elif SYNC_MODE == 1
+		if (compCommandHelper.End(m_pComputeSemaphore) == false)
+		{
+			return false;
+		}
+#elif SYNC_MODE == 2
+		if (compCommandHelper.End(m_pComputeEvent, V3D_PIPELINE_STAGE_VERTEX_INPUT, m_pComputeFence) == false)
+		{
+			return false;
+		}
+#endif //SYNC_MODE
 
 		// ----------------------------------------------------------------------------------------------------
 		// グラフィックス
@@ -529,8 +603,11 @@ protected:
 		pCommandBufer->PushConstant(m_pGraphicsPipelineLayout, 0, &vertConstant);
 		pCommandBufer->BindPipeline(m_pGraphicsPipeline);
 
-		uint64_t vertexOffset = 0;
-		pCommandBufer->BindVertexBuffers(0, 1, &m_pParticleBuffer[0], &vertexOffset);
+#if SYNC_MODE == 2
+		pCommandBufer->WaitEvent(1, &m_pComputeEvent, V3D_PIPELINE_STAGE_HOST, V3D_PIPELINE_STAGE_VERTEX_INPUT);
+#endif //SYNC_MODE
+
+		pCommandBufer->BindVertexBuffer(0, m_pParticleBuffer[0]);
 
 		pCommandBufer->Draw(PARTICLE_MAX, 1, 0, 0);
 
@@ -541,10 +618,21 @@ protected:
 		// レンダーパスを終了
 		pCommandBufer->EndRenderPass();
 
+#if SYNC_MODE == 2
+		pCommandBufer->ResetEvent(m_pComputeEvent, V3D_PIPELINE_STAGE_HOST);
+#endif //SYNC_MODE
+
+#if (SYNC_MODE == 0) || (SYNC_MODE == 2)
 		if (EndGraphics() == false)
 		{
 			return false;
 		}
+#elif SYNC_MODE == 1
+		if (EndGraphics(m_pComputeSemaphore, V3D_PIPELINE_STAGE_VERTEX_INPUT) == false)
+		{
+			return false;
+		}
+#endif //SYNC_MODE
 
 		// ----------------------------------------------------------------------------------------------------
 		// 後処理
@@ -646,16 +734,19 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageViewDesc barrier{};
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
-			pCommandBuffer->BarrierImageView(m_pDepthStencilImageView, barrier);
+			V3DPipelineBarrier pipelineBarrier{};
+			pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+			pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+
+			V3DImageViewMemoryBarrier memoryBarrier{};
+			memoryBarrier.srcAccessMask = 0;
+			memoryBarrier.dstAccessMask = V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
+			memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+			memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
+			memoryBarrier.pImageView = m_pDepthStencilImageView;
+			pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 			EndWork();
 		}
@@ -751,7 +842,7 @@ protected:
 		subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
 		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		subpassDependencies[0].dependencyFlags = 0;
 
 		subpassDependencies[1].srcSubpass = 0;
 		subpassDependencies[1].dstSubpass = 1;
@@ -767,7 +858,7 @@ protected:
 		subpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
 		subpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[2].dstAccessMask = V3D_ACCESS_MEMORY_READ;
-		subpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		subpassDependencies[2].dependencyFlags = 0;
 
 		V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 			TO_UI32(attachments.size()), attachments.data(),
@@ -897,6 +988,12 @@ private:
 
 	IV3DQueue* m_pComputeQueue;
 	IV3DCommandBuffer* m_pComputeCommandBuffer;
+	IV3DFence* m_pComputeFence;
+#if SYNC_MODE == 1
+	IV3DSemaphore* m_pComputeSemaphore;
+#elif SYNC_MODE == 2
+	IV3DEvent* m_pComputeEvent;
+#endif //SYNC_MODE
 
 	IV3DDescriptorSetLayout* m_pComputeDedscriptorSetLayout;
 

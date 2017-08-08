@@ -47,6 +47,7 @@ public:
 
 	IV3DCommandBuffer* BeginGraphics();
 	bool EndGraphics();
+	bool EndGraphics(IV3DSemaphore* pWaitSemaphore, V3DFlags waitDstStageMask);
 
 protected:
 	virtual bool OnInitialize() { return true; }
@@ -77,6 +78,8 @@ private:
 
 	struct Frame
 	{
+		IV3DSemaphore* pGraphicsWaitSemaphore;
+		V3DFlags waitDstStageMask;
 		IV3DCommandBuffer* pGraphicsCommandBuffer;
 		IV3DFence* pGraphicsFence;
 		bool initFence;

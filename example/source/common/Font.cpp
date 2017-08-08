@@ -283,36 +283,40 @@ bool Font::Initialize(IV3DDevice* pDevice, IV3DQueue* pQueue, IV3DCommandBuffer*
 			return false;
 		}
 
-		V3DBarrierImageDesc barrier{};
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dependencyFlags = 0;
+		V3DPipelineBarrier pipelineBarrier{};
 
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_PREINITIALIZED;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
-		pCommandBuffer->BarrierImage(pHostImage, barrier);
+		V3DImageMemoryBarrier memoryBarrier{};
+		memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+		memoryBarrier.srcAccessMask = 0;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_PREINITIALIZED;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
+		memoryBarrier.pImage = pHostImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+		memoryBarrier.srcAccessMask = 0;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		memoryBarrier.pImage = pDeviceImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		pCommandBuffer->CopyImage(pDeviceImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_SRC);
 
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+
+		memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+		memoryBarrier.pImage = pDeviceImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		if (commandHelper.End() == false)
 		{
@@ -677,12 +681,12 @@ void Font::Flush(IV3DCommandBuffer* pCommandBuffer)
 
 	pCommandBuffer->PushConstant(m_pPipelineLayout, 0, &matrix);
 	pCommandBuffer->BindPipeline(m_pPipeline);
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet);
+	pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet);
 
 	while (pBlock != pBlockEnd)
 	{			
 		// •`‰æ
-		pCommandBuffer->BindVertexBuffers(0, 1, &pBlock->pVertexBuffer, &pBlock->vertexBufferOffset);
+		pCommandBuffer->BindVertexBuffer(0, pBlock->pVertexBuffer, pBlock->vertexBufferOffset);
 		pCommandBuffer->Draw(pBlock->vertexCount, 1, 0, 0);
 
 		pBlock++;

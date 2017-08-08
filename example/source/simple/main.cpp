@@ -117,7 +117,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	// フェンスを取得
 	// ----------------------------------------------------------------------------------------------------
 
-	result = g_pDevice->CreateFence(&g_pFence, L"Simple(Fence)");
+	result = g_pDevice->CreateFence(false, &g_pFence, L"Simple(Fence)");
 	if (result != V3D_OK)
 	{
 		ReleaseObjects();
@@ -245,7 +245,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	swapChainDesc.imageHeight = SCREEN_HEIGHT;
 	swapChainDesc.imageCount = 2;
 	swapChainDesc.imageUsageFlags = V3D_IMAGE_USAGE_COLOR_ATTACHMENT; // イメージの出力なので V3D_IMAGE_USAGE_COLOR_ATTACHMENT は必ず指定してください。
-	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 	swapChainDesc.fullscreenAssistEnable = true;
 	swapChainDesc.vsyncEnable = true;
 	swapChainDesc.windowed = true;
@@ -441,19 +441,19 @@ V3D_RESULT CreateSwapChainChilds()
 	// レンダーパス開始 → サブパス 0 への移行を定義します。
 	subpassDependencies[0].srcSubpass = V3D_SUBPASS_EXTERNAL; // サブパス外 ( レンダーパス開始 ) からの移行なので V3D_SUBPASS_EXTERNAL を指定します。
 	subpassDependencies[0].dstSubpass = 0;
-	subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;             // 最初のステージから
-	subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT; // カラーアタッチメントのステージへ移行します。
-	subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;            // ディスプレイに表示できる読み込みアクセスから
-	subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE; // カラーアタッチメントの書き込みアクセスへ移行します。
+	subpassDependencies[0].srcStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;          // 最後のステージから
+	subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT; // カラーアタッチメントの出力へ移行します。 ( バリアは設置されない )
+	subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ; // ディスプレイに表示できる読み込みアクセスから
+	subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE; // カラーアタッチメントの書き込みアクセスへ移行します。
 	subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 	// サブパス 0 → レンーダパス終了 への移行を定義します。
 	subpassDependencies[1].srcSubpass = 0;
 	subpassDependencies[1].dstSubpass = V3D_SUBPASS_EXTERNAL; // サブパス外 ( レンダーパス終了 ) への移行なので V3D_SUBPASS_EXTERNAL を指定します。
-	subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT; // カラーアタッチメントのステージから
-	subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;          // 最後のステージへ移行します。
-	subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE; // カラーアタッチメントの書き込みアクセスから
-	subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;            // ディスプレイに表示できる読み込みアクセスへ移行します。
+	subpassDependencies[1].srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT; // カラーアタッチメントの出力から
+	subpassDependencies[1].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;          // 最後のステージへ移行します。 ( バリアは設置されない )
+	subpassDependencies[1].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE; // カラーアタッチメントの書き込みアクセスから
+	subpassDependencies[1].dstAccessMask = V3D_ACCESS_MEMORY_READ;                                               // ディスプレイに表示できる読み込みアクセスへ移行します。
 	subpassDependencies[1].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
 
 	V3D_RESULT result = g_pDevice->CreateRenderPass(
@@ -462,7 +462,14 @@ V3D_RESULT CreateSwapChainChilds()
 		static_cast<uint32_t>(subpassDependencies.size()), subpassDependencies.data(),
 		&g_pRenderPass,
 		L"Simple(RenderPass)");
-
+/*
+	V3D_RESULT result = g_pDevice->CreateRenderPass(
+		static_cast<uint32_t>(attachments.size()), attachments.data(),
+		static_cast<uint32_t>(subpasses.size()), subpasses.data(),
+		0, nullptr,
+		&g_pRenderPass,
+		L"Simple(RenderPass)");
+*/
 	if (result != V3D_OK)
 	{
 		return result;
@@ -530,21 +537,24 @@ V3D_RESULT CreateSwapChainChilds()
 			}
 
 			pImage->Release();
-
+/*
 			// イメージビューにバリアを張って、ステージ、アクセス、レイアウトを初期化します。
-			V3DBarrierImageViewDesc barrier{};
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dependencyFlags = 0;
-			barrier.srcAccessMask = 0; // イメージ作成直後は何も指定されていないので 0 を指定します。
-			barrier.dstAccessMask = V3D_ACCESS_MEMORY_READ; // イメージレイアウトが V3D_IMAGE_LAYOUT_PRESENT_SRC の場合は V3D_ACCESS_MEMORY_READ というおまじないです。
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED; // キューファミリーの移行はないので両方に V3D_QUEUE_FAMILY_IGNORED を指定します。
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED; // スワップチェイン作成直後のイメージレイアウトは V3D_IMAGE_LAYOUT_UNDEFINED です。
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC; // イメージをウィンドウに表示できるレイアウトにします。
+			V3DPipelineBarrier pipelineBarrier{};
+			pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+			pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 
-			g_pWorkCommandBuffer->BarrierImageView(g_pFrames[i].pImageView, barrier);
-		}
+			V3DImageViewMemoryBarrier memoryBarrier{};
+			memoryBarrier.srcAccessMask = 0; // イメージ作成直後のアクセス方法は未定義なので 0 を指定します。
+			memoryBarrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_READ | V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+//			memoryBarrier.dstAccessMask = V3D_ACCESS_MEMORY_READ; // イメージレイアウトが V3D_IMAGE_LAYOUT_PRESENT_SRC の場合は V3D_ACCESS_MEMORY_READ というおまじないです。
+			memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED; // キューファミリーの移行はないので両方に V3D_QUEUE_FAMILY_IGNORED を指定します。
+			memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;   // 作成直後のイメージレイアウトは V3D_IMAGE_LAYOUT_UNDEFINED です。
+			memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC; // イメージをウィンドウに表示できるレイアウトにします。
+			memoryBarrier.pImageView = g_pFrames[i].pImageView;
+
+//			g_pWorkCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+*/		}
 
 		result = g_pWorkCommandBuffer->End();
 	}

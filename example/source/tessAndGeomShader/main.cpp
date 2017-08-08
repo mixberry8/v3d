@@ -398,7 +398,7 @@ protected:
 
 		wchar_t text[128];
 
-		swprintf_s(text, L"Fps %f", Application::GetFps());
+		swprintf_s(text, L"Fps %f", Application::GetAverageFpsPreSec());
 		m_Font.AddText(16, 16, text);
 
 		wchar_t polygonMode[5];
@@ -475,8 +475,8 @@ protected:
 		pCommandBufer->PushConstant(m_pPipelineLayout, 2, &fragConstant);
 
 		pCommandBufer->BindPipeline(m_pPipelines[m_PipelineType]);
-		pCommandBufer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
-		pCommandBufer->BindVertexBuffers(0, 1, &m_pMeshBuffer, &m_VertexOffset);
+		pCommandBufer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet);
+		pCommandBufer->BindVertexBuffer(0, m_pMeshBuffer, m_VertexOffset);
 		pCommandBufer->BindIndexBuffer(m_pMeshBuffer, m_IndexOffset, V3D_INDEX_TYPE_UINT16);
 		pCommandBufer->DrawIndexed(m_IndexCount, 1, 0, 0, 0);
 
@@ -591,16 +591,19 @@ protected:
 				return false;
 			}
 
-			V3DBarrierImageViewDesc barrier{};
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
-			pCommandBuffer->BarrierImageView(m_pDepthStencilImageView, barrier);
+			V3DPipelineBarrier pipelineBarrier{};
+			pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+			pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+
+			V3DImageViewMemoryBarrier memoryBarrier{};
+			memoryBarrier.srcAccessMask = 0;
+			memoryBarrier.dstAccessMask = V3D_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
+			memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+			memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
+			memoryBarrier.pImageView = m_pDepthStencilImageView;
+			pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 			EndWork();
 		}
@@ -696,7 +699,7 @@ protected:
 		subpassDependencies[0].dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 		subpassDependencies[0].srcAccessMask = V3D_ACCESS_MEMORY_READ;
 		subpassDependencies[0].dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		subpassDependencies[0].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		subpassDependencies[0].dependencyFlags = 0;
 
 		subpassDependencies[1].srcSubpass = 0;
 		subpassDependencies[1].dstSubpass = 1;
@@ -712,7 +715,7 @@ protected:
 		subpassDependencies[2].dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
 		subpassDependencies[2].srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
 		subpassDependencies[2].dstAccessMask = V3D_ACCESS_MEMORY_READ;
-		subpassDependencies[2].dependencyFlags = V3D_DEPENDENCY_BY_REGION;
+		subpassDependencies[2].dependencyFlags = 0;
 
 		V3D_RESULT result = Application::GetDevice()->CreateRenderPass(
 			TO_UI32(attachments.size()), attachments.data(),

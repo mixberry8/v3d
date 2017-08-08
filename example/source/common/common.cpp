@@ -435,18 +435,22 @@ V3D_RESULT CreateImageFromMemory(
 			return V3D_ERROR_FAIL;
 		}
 
-		V3DBarrierImageDesc barrier{};
-		barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		V3DPipelineBarrier pipelineBarrier{};
+
+		V3DImageMemoryBarrier memoryBarrier{};
+		memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
 		// デバイスイメージを転送先に移行
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		pCommandBuffer->BarrierImage(pHostImage, barrier);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+		memoryBarrier.srcAccessMask = 0;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		memoryBarrier.pImage = pHostImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		// ホストバッファの内容をデバイスイメージにコピー
 		V3DSize3D size;
@@ -456,34 +460,40 @@ V3D_RESULT CreateImageFromMemory(
 		pCommandBuffer->CopyBufferToImage(pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, 0, 0, imageDesc.layerCount, V3DPoint3D{}, size, pHostBuffer, 0);
 
 		// ホストイメージを転送元に移行
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
-		pCommandBuffer->BarrierImage(pHostImage, barrier);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+		memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
+		memoryBarrier.pImage = pHostImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		// デバイスイメージを転送先に移行
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+		memoryBarrier.srcAccessMask = 0;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		memoryBarrier.pImage = pDeviceImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		// ホストイメージをデバイスイメージに転送
 		pCommandBuffer->BlitImage(pDeviceImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_SRC, levelCount, copyRanges.data(), V3D_FILTER_LINEAR);
 
 		// デバイスイメージをシェーダー読み取り専用に移行
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-		barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-		barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+
+		memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+		memoryBarrier.pImage = pDeviceImage;
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 		if (commandHelper.End() == false)
 		{
@@ -531,30 +541,35 @@ V3D_RESULT CreateImageFromMemory(
 		}
 
 		{
-			V3DBarrierImageDesc barrier{};
-			barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			V3DPipelineBarrier pipelineBarrier{};
 
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-			barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-			pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+			V3DImageMemoryBarrier memoryBarrier{};
+			memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.pImage = pDeviceImage;
+
+			pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+			pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+			memoryBarrier.srcAccessMask = 0;
+			memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+			memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+			memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+			pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 			if (copyRanges.size() > 0)
 			{
 				pCommandBuffer->CopyBufferToImage(pDeviceImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, pHostBuffer, static_cast<uint32_t>(copyRanges.size()), copyRanges.data());
 			}
 
-			barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-			barrier.dstStageMask = dstStageMask;
-			barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-			barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
-			barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-			barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-			pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+			pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+			pipelineBarrier.dstStageMask = dstStageMask;
+
+			memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+			memoryBarrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+			memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+			memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+			pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 		}
 
 		if (commandHelper.End() == false)

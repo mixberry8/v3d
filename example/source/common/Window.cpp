@@ -103,7 +103,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 	swapChainDesc.vsyncEnable = waitVSync;
 	swapChainDesc.windowed = true;
 	swapChainDesc.queueFamily = m_pGraphicsQueue->GetFamily();
-	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_ALL_GRAPHICS;// V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+	swapChainDesc.queueWaitDstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 
 	V3DSwapChainCallbacks swapChainCallbacks{};
 	swapChainCallbacks.pLostFunction = Window::LostSwapChainFunction;
@@ -133,7 +133,7 @@ bool Window::Initialize(const wchar_t* pCaption, uint32_t width, uint32_t height
 			return false;
 		}
 
-		result = Application::GetDevice()->CreateFence(&m_pWorkFence, L"Example_WorkFence");
+		result = Application::GetDevice()->CreateFence(false, &m_pWorkFence, L"Example_WorkFence");
 		if (result != V3D_OK)
 		{
 			Dispose();
@@ -268,25 +268,32 @@ bool Window::CreateImageView(uint32_t index, IV3DImageView** ppImageView)
 		return false;
 	}
 
-	V3DBarrierImageViewDesc barrier{};
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	V3DPipelineBarrier pipelineBarrier{};
 
-	barrier.srcAccessMask = 0;
-	barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-	barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-	pCommandBuffer->BarrierImageView(pImageView, barrier);
+	V3DImageViewMemoryBarrier memoryBarrier{};
+	memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.pImageView = pImageView;
+
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+	memoryBarrier.srcAccessMask = 0;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+	memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	pCommandBuffer->ClearImageView(pImageView, V3D_IMAGE_LAYOUT_TRANSFER_DST, V3DClearValue{});
 
-	barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	barrier.dstAccessMask = V3D_ACCESS_MEMORY_READ;
-	barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-	barrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-	pCommandBuffer->BarrierImageView(pImageView, barrier);
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;// V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+
+	memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_MEMORY_READ;
+	memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+	memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	if (EndWork() == false)
 	{
@@ -389,6 +396,23 @@ bool Window::EndGraphics()
 	return true;
 }
 
+bool Window::EndGraphics(IV3DSemaphore* pWaitSemaphore, V3DFlags waitDstStageMask)
+{
+	Window::Frame& frame = m_Frames[m_pSwapChain->GetCurrentImageIndex()];
+
+	V3D_RESULT result = frame.pGraphicsCommandBuffer->End();
+	if (result != V3D_OK)
+	{
+		return false;
+	}
+
+	SAFE_ADD_REF(pWaitSemaphore);
+	frame.pGraphicsWaitSemaphore = pWaitSemaphore;
+	frame.waitDstStageMask = waitDstStageMask;
+
+	return true;
+}
+
 bool Window::OnMessage(UINT message, WPARAM wparam, LPARAM lparam)
 {
 	POINT point;
@@ -479,6 +503,7 @@ void Window::Dispose()
 	{
 		for (size_t i = 0; i < m_Frames.size(); i++)
 		{
+			SAFE_RELEASE(m_Frames[i].pGraphicsWaitSemaphore);
 			SAFE_RELEASE(m_Frames[i].pGraphicsCommandBuffer);
 			SAFE_RELEASE(m_Frames[i].pGraphicsFence);
 		}
@@ -518,7 +543,7 @@ V3D_RESULT Window::CreateSwapChainResources()
 			return result;
 		}
 
-		result = Application::GetDevice()->CreateFence(&frame.pGraphicsFence, L"Example_GraphicsFence");
+		result = Application::GetDevice()->CreateFence(false, &frame.pGraphicsFence, L"Example_GraphicsFence");
 		if (result != V3D_OK)
 		{
 			SAFE_RELEASE(frame.pGraphicsCommandBuffer);
@@ -571,6 +596,7 @@ void Window::ReleaseSwapChainResources()
 	{
 		for (size_t i = 0; i < m_Frames.size(); i++)
 		{
+			SAFE_RELEASE(m_Frames[i].pGraphicsWaitSemaphore);
 			SAFE_RELEASE(m_Frames[i].pGraphicsCommandBuffer);
 			SAFE_RELEASE(m_Frames[i].pGraphicsFence);
 		}
@@ -666,42 +692,50 @@ void Window::SaveScreenshot()
 			IV3DCommandBuffer* pCommandBuffer = BeginWork();
 			if (pCommandBuffer != nullptr)
 			{
-				V3DBarrierImageDesc barrier{};
-				barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-				barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+				V3DPipelineBarrier pipelineBarrier{};
 
-				barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-				barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+				V3DImageMemoryBarrier memoryBarrier{};
+				memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+				memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
-				barrier.srcAccessMask = V3D_ACCESS_MEMORY_READ;
-				barrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
-				barrier.srcLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-				barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
-				pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+				pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+				pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
 
-				barrier.srcAccessMask = 0;
-				barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-				barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-				barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-				pCommandBuffer->BarrierImage(pHostImage, barrier);
+				memoryBarrier.srcAccessMask = V3D_ACCESS_MEMORY_READ;
+				memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
+				memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+				memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
+				memoryBarrier.pImage = pDeviceImage;
+				pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+				memoryBarrier.srcAccessMask = 0;
+				memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+				memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+				memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+				memoryBarrier.pImage = pHostImage;
+				pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 				pCommandBuffer->CopyImage(pHostImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, pDeviceImage, V3D_IMAGE_LAYOUT_TRANSFER_SRC);
 
-				barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-				barrier.dstStageMask = V3D_PIPELINE_STAGE_HOST;
-				barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-				barrier.dstAccessMask = V3D_ACCESS_HOST_READ;
-				barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-				barrier.dstLayout = V3D_IMAGE_LAYOUT_GENERAL;
-				pCommandBuffer->BarrierImage(pHostImage, barrier);
+				pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+				pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_HOST;
 
-				barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-				barrier.dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
-				barrier.srcAccessMask = V3D_ACCESS_TRANSFER_READ;
-				barrier.dstAccessMask = V3D_ACCESS_MEMORY_READ;
-				barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
-				barrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
-				pCommandBuffer->BarrierImage(pDeviceImage, barrier);
+				memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+				memoryBarrier.dstAccessMask = V3D_ACCESS_HOST_READ;
+				memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+				memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_GENERAL;
+				memoryBarrier.pImage = pHostImage;
+				pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+				pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+				pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+
+				memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_READ;
+				memoryBarrier.dstAccessMask = V3D_ACCESS_MEMORY_READ;
+				memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_SRC;
+				memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+				memoryBarrier.pImage = pDeviceImage;
+				pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 				EndWork();
 			}
@@ -820,21 +854,32 @@ void Window::Process()
 	// ----------------------------------------------------------------------------------------------------
 
 	uint32_t imageIndex = m_pSwapChain->GetCurrentImageIndex();
-	IV3DCommandBuffer* pGraphicsCommandBuffer = m_Frames[imageIndex].pGraphicsCommandBuffer;
-	IV3DFence* pGraphicsFence = m_Frames[imageIndex].pGraphicsFence;
+	Window::Frame& frame = m_Frames[imageIndex];
 
-	result = pGraphicsFence->Reset();
+	result = frame.pGraphicsFence->Reset();
 	if (result != V3D_OK)
 	{
 		Halt();
 		return;
 	}
 
-	result = m_pGraphicsQueue->Submit(m_pSwapChain, 1, &pGraphicsCommandBuffer, pGraphicsFence);
-	if (result != V3D_OK)
+	if (frame.pGraphicsWaitSemaphore != nullptr)
 	{
-		Halt();
-		return;
+		result = m_pGraphicsQueue->Submit(m_pSwapChain, 1, &frame.pGraphicsWaitSemaphore, &frame.waitDstStageMask, 1, &frame.pGraphicsCommandBuffer, 0, nullptr, frame.pGraphicsFence);
+		if (result != V3D_OK)
+		{
+			Halt();
+			return;
+		}
+	}
+	else
+	{
+		result = m_pGraphicsQueue->Submit(m_pSwapChain, 1, &frame.pGraphicsCommandBuffer, frame.pGraphicsFence);
+		if (result != V3D_OK)
+		{
+			Halt();
+			return;
+		}
 	}
 
 	// ----------------------------------------------------------------------------------------------------
@@ -845,12 +890,14 @@ void Window::Process()
 
 	if (m_BufferingType == WINDOW_BUFFERING_TYPE_FAKE)
 	{
-		result = pGraphicsFence->Wait();
+		result = frame.pGraphicsFence->Wait();
 		if (result != V3D_OK)
 		{
 			Halt();
 			return;
 		}
+
+		SAFE_RELEASE(frame.pGraphicsWaitSemaphore);
 	}
 	else if (m_BufferingType == WINDOW_BUFFERING_TYPE_REAL)
 	{
@@ -863,6 +910,8 @@ void Window::Process()
 				Halt();
 				return;
 			}
+
+			SAFE_RELEASE(m_Frames[nextImageIndex].pGraphicsWaitSemaphore);
 		}
 	}
 
