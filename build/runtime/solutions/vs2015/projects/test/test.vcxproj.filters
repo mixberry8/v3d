@@ -4,213 +4,213 @@
     <Filter Include="source">
       <UniqueIdentifier>{4b99a341-c89c-43c6-8c29-ec1e5c3d5b1b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\common">
+    <Filter Include="source\common1">
       <UniqueIdentifier>{fbf19b0c-2e05-4c07-a20e-e6a554e51d64}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\demo">
+    <Filter Include="source\commno2">
       <UniqueIdentifier>{f80be7b9-93e3-4823-a230-584264c25637}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Matrix3x3.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Vector2.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Vector3.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Matrix4x4.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Quaternion.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Vector4.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Camera.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Application.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Window.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\common.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\IInputStream.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\MemoryInputStream.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\BitmapImage.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\DDSImage.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Font.h">
-      <Filter>source\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\GraphicsManager.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\Material.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\MaterialManager.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\MeshManager.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\ObjParser.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\Texture.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\TextureManager.h">
-      <Filter>source\demo</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\NamingService.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\ResourceHeap.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\ParallelManager.h">
-      <Filter>source\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\StaticMesh.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\Mesh.h">
-      <Filter>source\demo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\SkeletalMesh.h">
-      <Filter>source\demo</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\DynamicOffsetHeap.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Frustum.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Plane.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\Sphere.h">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\example\source\common\AABB.h">
-      <Filter>source\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\example\source\demo\SkyDome.h">
-      <Filter>source\demo</Filter>
+      <Filter>source\common1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\test\source\pch.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\GraphicsManager.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\Material.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\MaterialManager.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\Mesh.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\MeshManager.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\ObjParser.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\SkeletalMesh.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\SkyDome.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\StaticMesh.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\Texture.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\test\source\common\TextureManager.h">
+      <Filter>source\commno2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Matrix3x3.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Vector2.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Vector3.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Matrix4x4.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Quaternion.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Vector4.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Camera.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Application.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Window.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\common.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Font.cpp">
-      <Filter>source\common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\GraphicsManager.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\Material.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\MaterialManager.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\MeshManager.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\Texture.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\TextureManager.cpp">
-      <Filter>source\demo</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\NamingService.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\ResourceHeap.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\ParallelManager.cpp">
-      <Filter>source\common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\StaticMesh.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\Mesh.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkeletalMesh.cpp">
-      <Filter>source\demo</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\DynamicOffsetHeap.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Frustum.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Plane.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\Sphere.cpp">
-      <Filter>source\common</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\example\source\common\AABB.cpp">
-      <Filter>source\common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\example\source\demo\SkyDome.cpp">
-      <Filter>source\demo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\test\source\main.cpp">
-      <Filter>source</Filter>
+      <Filter>source\common1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\test\source\pch.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\main5.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\GraphicsManager.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\Material.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\MaterialManager.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\Mesh.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\MeshManager.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\SkeletalMesh.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\SkyDome.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\StaticMesh.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\Texture.cpp">
+      <Filter>source\commno2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\test\source\common\TextureManager.cpp">
+      <Filter>source\commno2</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
