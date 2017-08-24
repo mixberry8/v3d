@@ -54,7 +54,6 @@ int32_t Application::Execute()
 	V3DInstanceDesc instanceDesc{};
 	instanceDesc.layer = desc.layer;
 	instanceDesc.log.flags = desc.logFlags;
-//	instanceDesc.log.pFunction = Application::LogFunction;
 
 	V3D_RESULT result = V3DCreateInstance(instanceDesc, &m_pInstance);
 	if (result != V3D_OK)
