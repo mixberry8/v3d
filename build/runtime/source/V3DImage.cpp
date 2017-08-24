@@ -17,7 +17,7 @@ V3D_RESULT V3DImage::Initialize(IV3DDevice* pDevice, const V3DImageDesc& imageDe
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_IMAGE, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_IMAGE, V3D_SAFE_NAME(this, pDebugName));
 
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
@@ -283,7 +283,7 @@ V3DImage::~V3DImage()
 
 	V3D_RELEASE(m_pMemory);
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }

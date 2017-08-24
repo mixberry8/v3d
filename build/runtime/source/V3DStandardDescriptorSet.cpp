@@ -12,7 +12,7 @@ V3DStandardDescriptorSet* V3DStandardDescriptorSet::Create()
 
 V3D_RESULT V3DStandardDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout, const wchar_t* pDebugName)
 {
-	V3D_ADD_DEBUG_MEMORY_OBJECT(static_cast<V3DDevice*>(pDevice)->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET, V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// ƒx[ƒX‚ð‰Šú‰»
@@ -141,5 +141,5 @@ V3DStandardDescriptorSet::~V3DStandardDescriptorSet()
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSet);
 	}
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 }

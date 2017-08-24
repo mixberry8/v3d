@@ -26,6 +26,8 @@ V3DInstance* V3DInstance::Create()
 
 V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 {
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_INSTANCE, L"Instance");
+
 	m_Layer = instanceDesc.layer;
 
 	// ----------------------------------------------------------------------------------------------------
@@ -348,7 +350,13 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-		V3D_RESULT result = pAdapter->Initialize(this, physicalDevices[i]);
+#ifdef V3D_DEBUG
+		std::wstringstream debugName;
+		debugName << L"Adapter_" << i;
+		V3D_RESULT result = pAdapter->Initialize(physicalDevices[i], debugName.str().c_str());
+#else //V3D_DEBUG
+		V3D_RESULT result = pAdapter->Initialize(physicalDevices[i], nullptr);
+#endif //V3D_DEBUG
 		if (result != V3D_OK)
 		{
 			pAdapter->Release();
@@ -423,6 +431,11 @@ bool V3DInstance::ExistsFulscreenWindow(V3DSwapChain* pSwapChain)
 
 #ifdef V3D_DEBUG
 
+V3DInstance* V3DInstance::GetDebugInstance()
+{
+	return V3DInstance::s_pThis;
+}
+
 void V3DInstance::AddDebugObject(void* pVulkanObject, const wchar_t* pName)
 {
 	AddDebugObject(reinterpret_cast<uint64_t>(pVulkanObject), pName);
@@ -466,32 +479,6 @@ void V3DInstance::RemoveDebugObject(uint64_t vulkanObject)
 	{
 		m_DebugObjectNameMap.erase(it);
 	}
-}
-
-void V3DInstance::AddDebugMemoryObject(void* pInterface, V3D_DEBUG_OBJECT_TYPE type, const wchar_t* pName)
-{
-	V3D_ASSERT(pInterface != nullptr);
-	V3D_ASSERT(pName != nullptr);
-
-	ScopedLock lock(m_DebugSync);
-
-	V3DInstance::DebugObject debugObject;
-	debugObject.type = type;
-	debugObject.name = pName;
-
-	m_DebugMemoryObjectMap[pInterface] = debugObject;
-}
-
-void V3DInstance::RemoveDebugMemoryObject(void* pInterface)
-{
-	V3D_ASSERT(pInterface != nullptr);
-
-	ScopedLock lock(m_DebugSync);
-
-	auto it = m_DebugMemoryObjectMap.find(pInterface);
-	V3D_ASSERT(it != m_DebugMemoryObjectMap.end());
-
-	m_DebugMemoryObjectMap.erase(it);
 }
 
 #endif //V3D_DEBUG
@@ -539,14 +526,6 @@ V3D_RESULT V3DInstance::CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevic
 	(*ppDevice) = pDevice;
 
 	return V3D_OK;
-}
-
-void V3DInstance::DumpObjects()
-{
-#ifdef V3D_DEBUG
-	ScopedLock lock(m_DebugSync);
-	DumpObjects(V3D_LOG_DEBUG);
-#endif //V3D_DEBUG
 }
 
 /********************************/
@@ -613,19 +592,7 @@ V3DInstance::~V3DInstance()
 		V3D_REMOVE_DEBUG_OBJECT(this, m_Source.instance);
 	}
 
-	V3D_ASSERT(m_DebugObjectNameMap.size() == 0);
-
-#ifdef V3D_DEBUG
-	m_DebugSync.Enter();
-	if (m_DebugMemoryObjectMap.empty() == false)
-	{
-		V3D_LOG_PRINT_ERROR(L"!!! MemoryLeaks !!!");
-		DumpObjects(V3D_LOG_ERROR);
-	}
-	m_DebugSync.Leave();
-#endif //V3D_DEBUG
-
-	V3D_LOG_FIN();
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 }
 
 V3DInstance::Window* V3DInstance::GetWindow(HWND windowHandle)
@@ -832,49 +799,6 @@ const char* V3DInstance::ConvertDebugString(const char* pString)
 	}
 
 	return pString;
-}
-
-void V3DInstance::DumpObjects(V3D_LOG_FLAG type)
-{
-	const wchar_t* objectTypeTable[V3D_DEBUG_OBJECT_TYPE_COUNT] =
-	{
-		L"ADAPTER",
-		L"BACK_BUFFER",
-		L"BARRIER_SET",
-		L"BUFFER",
-		L"BUFFER_VIEW",
-		L"COMMAND_BUFFER",
-		L"COMMAND_POOL",
-		L"COMPUTE_PIPELINE",
-		L"DEVICE",
-		L"EVENT",
-		L"FENCE",
-		L"FRAME_BUFFER",
-		L"GRAPHICS_PIPELINE",
-		L"IMAGE",
-		L"IMAGE_VIEW",
-		L"PIPELINE_LAYOUT",
-		L"PUSH_DESCRIPTOR_SET",
-		L"PUSH_DESCRIPTOR_SET_LAYOUT",
-		L"QUERY_POOL",
-		L"QUEUE",
-		L"RENDER_PASS",
-		L"RESOURCE_MEMORY",
-		L"SAMPLER",
-		L"SEMAPHORE",
-		L"SHADER_MODULE",
-		L"STANDARD_DESCRIPTOR_SET",
-		L"STANDARD_DESCRIPTOR_SET_LAYOUT",
-		L"SWAPCHAIN",
-	};
-
-	auto it_begin = m_DebugMemoryObjectMap.begin();
-	auto it_end = m_DebugMemoryObjectMap.end();
-
-	for (auto it = it_begin; it != it_end; ++it)
-	{
-		V3D_LOG_PRINT_W(type, L"%s : %s", objectTypeTable[it->second.type], it->second.name.c_str());
-	}
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(

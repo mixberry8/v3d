@@ -9,6 +9,92 @@
 // メモリ
 // ----------------------------------------------------------------------------------------------------
 
+#ifdef V3D_DEBUG
+
+DebugMemoryObjectManager* DebugMemoryObjectManager::GetInstance()
+{
+	return DebugMemoryObjectManager::s_pInstance;
+}
+
+void DebugMemoryObjectManager::CreateInstance()
+{
+	DebugMemoryObjectManager::s_pInstance = V3D_NEW DebugMemoryObjectManager();
+}
+
+void DebugMemoryObjectManager::ReleaseInstance()
+{
+	V3D_DELETE(DebugMemoryObjectManager::s_pInstance);
+}
+
+void DebugMemoryObjectManager::Add(IV3DObject* pObject, V3D_DEBUG_OBJECT_TYPE type, const wchar_t* pName)
+{
+	DebugMemoryObjectManager::Info info;
+	info.type = type;
+	info.name = pName;
+
+	m_InfoMap[pObject] = info;
+}
+
+void DebugMemoryObjectManager::Remove(IV3DObject* pObject)
+{
+	m_InfoMap.erase(pObject);
+}
+
+DebugMemoryObjectManager::DebugMemoryObjectManager()
+{
+}
+
+DebugMemoryObjectManager::~DebugMemoryObjectManager()
+{
+	const wchar_t* objectTypeTable[V3D_DEBUG_OBJECT_TYPE_COUNT] =
+	{
+		L"ADAPTER",
+		L"BACK_BUFFER",
+		L"BARRIER_SET",
+		L"BUFFER",
+		L"BUFFER_VIEW",
+		L"COMMAND_BUFFER",
+		L"COMMAND_POOL",
+		L"COMPUTE_PIPELINE",
+		L"DEVICE",
+		L"EVENT",
+		L"FENCE",
+		L"FRAME_BUFFER",
+		L"GRAPHICS_PIPELINE",
+		L"IMAGE",
+		L"IMAGE_VIEW",
+		L"INSTANCE",
+		L"PIPELINE_LAYOUT",
+		L"PUSH_DESCRIPTOR_SET",
+		L"PUSH_DESCRIPTOR_SET_LAYOUT",
+		L"QUERY_POOL",
+		L"QUEUE",
+		L"RENDER_PASS",
+		L"RESOURCE_MEMORY",
+		L"SAMPLER",
+		L"SEMAPHORE",
+		L"SHADER_MODULE",
+		L"STANDARD_DESCRIPTOR_SET",
+		L"STANDARD_DESCRIPTOR_SET_LAYOUT",
+		L"SWAPCHAIN",
+	};
+
+	if (m_InfoMap.empty() == false)
+	{
+		auto it_begin = m_InfoMap.begin();
+		auto it_end = m_InfoMap.end();
+
+		V3D_LOG_PRINT_ERROR(L"Detected memory leaks!");
+
+		for (auto it = it_begin; it != it_end; ++it)
+		{
+			V3D_LOG_PRINT_ERROR(L"%s : %s (%I64u)", objectTypeTable[it->second.type], it->second.name.c_str(), it->first->GetRefCount());
+		}
+	}
+}
+
+#endif //V3D_DEBUG
+
 static PV3DAllocateMemoryFunction s_pAllocateMemoryFunction;
 static PV3DReallocateMemoryFunction s_pReallocateMemoryFunction;
 static PV3DFreeMemoryFunction s_pFreeMemoryFunction;
@@ -57,11 +143,6 @@ void FreeMemory(void* pMemory)
 
 #ifdef V3D_DEBUG
 
-static V3DFlags s_LogFlags = 0;
-static PV3DLogFunction s_pLogFunction = nullptr;
-static void* s_pLogUserData = nullptr;
-static CRITICAL_SECTION s_LogSync = CRITICAL_SECTION{};
-
 void V3D_CALLBACK DefaultLogFunction(V3D_LOG_FLAG type, const wchar_t* pMessage, void* pUserData)
 {
 	wchar_t flagText[32];
@@ -88,33 +169,52 @@ void V3D_CALLBACK DefaultLogFunction(V3D_LOG_FLAG type, const wchar_t* pMessage,
 	::OutputDebugStringW(pMessage);
 }
 
-void InitializeLog(V3DFlags flags, PV3DLogFunction pFunction, void* pUserData)
+struct Log
 {
-	s_LogFlags = flags;
-	s_pLogFunction = (pFunction != nullptr)? pFunction : DefaultLogFunction;
-	s_pLogUserData = pUserData;
+	V3DFlags flags;
+	PV3DLogFunction pFunction;
+	void* pUserData;
+	CRITICAL_SECTION sync;
 
-	if (s_pLogFunction != nullptr)
+	Log() :
+		flags(0),
+		pFunction(DefaultLogFunction),
+		pUserData(nullptr),
+		sync(CRITICAL_SECTION{})
 	{
-		setlocale(LC_ALL, "japanese");
+		::InitializeCriticalSection(&sync);
 	}
 
-	::InitializeCriticalSection(&s_LogSync);
-}
+	~Log()
+	{
+		::DeleteCriticalSection(&sync);
+	}
+};
 
-void FinalizeLog()
+static Log* s_pLog = nullptr; //Initialize で初期化する
+
+void InitializeLog(V3DFlags flags, PV3DLogFunction pFunction, void* pUserData)
 {
-	::DeleteCriticalSection(&s_LogSync);
+	s_pLog->flags = flags;
+
+	if (pFunction != nullptr)
+	{
+		s_pLog->pFunction = pFunction;
+	}
+
+	s_pLog->pUserData = pUserData;
+
+	setlocale(LC_ALL, "japanese");
 }
 
 void PrintLogA(V3D_LOG_FLAG type, const char* pFormat, ...)
 {
-	if ((s_LogFlags & type) == 0)
+	if ((s_pLog->flags & type) == 0)
 	{
 		return;
 	}
 
-	::EnterCriticalSection(&s_LogSync);
+	::EnterCriticalSection(&s_pLog->sync);
 
 	va_list args;
 	char messageA[V3D_LOG_MESSAGE_A_MAX];
@@ -134,20 +234,20 @@ void PrintLogA(V3D_LOG_FLAG type, const char* pFormat, ...)
 			::wcscat_s(messageW, L"\n");
 		}
 
-		s_pLogFunction(type, messageW, s_pLogUserData);
+		s_pLog->pFunction(type, messageW, s_pLog->pUserData);
 	}
 
-	::LeaveCriticalSection(&s_LogSync);
+	::LeaveCriticalSection(&s_pLog->sync);
 }
 
 void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...)
 {
-	if ((s_LogFlags & type) == 0)
+	if ((s_pLog->flags & type) == 0)
 	{
 		return;
 	}
 
-	::EnterCriticalSection(&s_LogSync);
+	::EnterCriticalSection(&s_pLog->sync);
 
 	va_list args;
 	wchar_t messageW[V3D_LOG_MESSAGE_W_MAX];
@@ -162,9 +262,9 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...)
 		::wcscat_s(messageW, L"\n");
 	}
 
-	s_pLogFunction(type, messageW, s_pLogUserData);
+	s_pLog->pFunction(type, messageW, s_pLog->pUserData);
 
-	::LeaveCriticalSection(&s_LogSync);
+	::LeaveCriticalSection(&s_pLog->sync);
 }
 
 #endif //V3D_DEBUG
@@ -1323,3 +1423,43 @@ VkStencilFaceFlags ToVkStencilFaceFlags(V3DFlags value)
 
 	return ret;
 }
+
+// ----------------------------------------------------------------------------------------------------
+// イニシャライザー
+// ----------------------------------------------------------------------------------------------------
+
+#ifdef V3D_DEBUG
+
+#ifdef _MSC_VER
+
+class Initializer
+{
+public:
+	Initializer(void)
+	{
+		s_pLog = V3D_NEW Log();
+
+		DebugMemoryObjectManager::CreateInstance();
+	}
+
+	~Initializer(void)
+	{
+		DebugMemoryObjectManager::ReleaseInstance();
+
+		V3D_DELETE(s_pLog);
+	}
+};
+
+#pragma warning( disable: 4074 )
+#ifdef V3D_DLL
+#pragma init_seg(compiler)
+#else //V3D_DLL
+#pragma init_seg(user)
+#endif //V3D_DLL
+Initializer init;
+
+#else //_MSC_VER
+#error init_seg not supported.
+#endif //_MSC_VER
+
+#endif //V3D_DEBUG

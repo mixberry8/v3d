@@ -21,7 +21,7 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc,
 
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_BUFFER, m_DebugName.c_str());
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_BUFFER, m_DebugName.c_str());
 
 	// ----------------------------------------------------------------------------------------------------
 	// バッファを作成
@@ -213,7 +213,7 @@ V3DBuffer::~V3DBuffer()
 
 	V3D_RELEASE(m_pMemory);
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }

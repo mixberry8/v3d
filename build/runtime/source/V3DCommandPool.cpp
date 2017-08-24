@@ -16,7 +16,7 @@ V3D_RESULT V3DCommandPool::Initialize(IV3DDevice* pDevice, const V3DCommandPoolD
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_COMMAND_POOL, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_COMMAND_POOL, V3D_SAFE_NAME(this, pDebugName));
 
 	m_Desc = desc;
 
@@ -124,7 +124,7 @@ V3DCommandPool::~V3DCommandPool()
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.commandPool);
 	}
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }

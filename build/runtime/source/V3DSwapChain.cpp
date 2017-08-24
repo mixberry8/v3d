@@ -27,7 +27,7 @@ V3D_RESULT V3DSwapChain::Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc&
 
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_SWAPCHAIN, m_DebugName.c_str());
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_SWAPCHAIN, m_DebugName.c_str());
 
 	m_Callbacks = swapChainCallbacks;
 	m_Source.waitDstStageMask = ToVkPipelineStageFlags(swapChainDesc.queueWaitDstStageMask);
@@ -387,7 +387,7 @@ V3DSwapChain::~V3DSwapChain()
 		}
 	}
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }

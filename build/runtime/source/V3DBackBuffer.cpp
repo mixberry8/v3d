@@ -23,7 +23,7 @@ V3D_RESULT V3DBackBuffer::Initialize(IV3DDevice* pDevice, VkImage image, VkForma
 
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_BACK_BUFFER, m_DebugName.c_str());
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_BACK_BUFFER, m_DebugName.c_str());
 
 	VkMemoryRequirements vkMemReq;
 	vkGetImageMemoryRequirements(m_pDevice->GetSource().device, image, &vkMemReq);
@@ -175,7 +175,7 @@ V3DBackBuffer::~V3DBackBuffer()
 	//m_Source.image はスワップチェイン側で破棄される
 	V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.image);
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }

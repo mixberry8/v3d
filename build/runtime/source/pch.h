@@ -65,47 +65,10 @@ private:
 
 #ifdef V3D_DEBUG
 
-enum V3D_DEBUG_OBJECT_TYPE
-{
-	V3D_DEBUG_OBJECT_TYPE_ADAPTER = 0,
-	V3D_DEBUG_OBJECT_TYPE_BACK_BUFFER = 1,
-	V3D_DEBUG_OBJECT_TYPE_BARRIER_SET = 2,
-	V3D_DEBUG_OBJECT_TYPE_BUFFER = 3,
-	V3D_DEBUG_OBJECT_TYPE_BUFFER_VIEW = 4,
-	V3D_DEBUG_OBJECT_TYPE_COMMAND_BUFFER = 5,
-	V3D_DEBUG_OBJECT_TYPE_COMMAND_POOL = 6,
-	V3D_DEBUG_OBJECT_TYPE_COMPUTE_PIPELINE = 7,
-	V3D_DEBUG_OBJECT_TYPE_DEVICE = 8,
-	V3D_DEBUG_OBJECT_TYPE_EVENT = 9,
-	V3D_DEBUG_OBJECT_TYPE_FENCE = 10,
-	V3D_DEBUG_OBJECT_TYPE_FRAME_BUFFER = 11,
-	V3D_DEBUG_OBJECT_TYPE_GRAPHICS_PIPELINE = 12,
-	V3D_DEBUG_OBJECT_TYPE_IMAGE = 13,
-	V3D_DEBUG_OBJECT_TYPE_IMAGE_VIEW = 14,
-	V3D_DEBUG_OBJECT_TYPE_PIPELINE_LAYOUT = 15,
-	V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET = 16,
-	V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET_LAYOUT = 17,
-	V3D_DEBUG_OBJECT_TYPE_QUERY_POOL = 18,
-	V3D_DEBUG_OBJECT_TYPE_QUEUE = 19,
-	V3D_DEBUG_OBJECT_TYPE_RENDER_PASS = 20,
-	V3D_DEBUG_OBJECT_TYPE_RESOURCE_MEMORY = 21,
-	V3D_DEBUG_OBJECT_TYPE_SAMPLER = 22,
-	V3D_DEBUG_OBJECT_TYPE_SEMAPHORE = 23,
-	V3D_DEBUG_OBJECT_TYPE_SHADER_MODULE = 24,
-	V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET = 25,
-	V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET_LAYOUT = 26,
-	V3D_DEBUG_OBJECT_TYPE_SWAPCHAIN = 27,
-
-	V3D_DEBUG_OBJECT_TYPE_COUNT = 28,
-};
-
 #define V3D_ASSERT(expression) assert(expression)
 
 #define V3D_ADD_DEBUG_OBJECT(instance, object, name) instance->AddDebugObject(object, name)
 #define V3D_REMOVE_DEBUG_OBJECT(instance, object) instance->RemoveDebugObject(object)
-
-#define V3D_ADD_DEBUG_MEMORY_OBJECT(instance, object, type, name) instance->AddDebugMemoryObject(object, type, name)
-#define V3D_REMOVE_DEBUG_MEMORY_OBJECT(instance, object) instance->RemoveDebugMemoryObject(object)
 
 #define V3D_DEBUG_CODE(code) code
 
@@ -115,9 +78,6 @@ enum V3D_DEBUG_OBJECT_TYPE
 
 #define V3D_ADD_DEBUG_OBJECT(instance, object, name)
 #define V3D_REMOVE_DEBUG_OBJECT(instance, object)
-
-#define V3D_ADD_DEBUG_MEMORY_OBJECT(instance, object, type, name)
-#define V3D_REMOVE_DEBUG_MEMORY_OBJECT(instance, object)
 
 #define V3D_DEBUG_CODE(code)
 
@@ -217,6 +177,80 @@ static constexpr T* ToAddRef(T* obj)
 // メモリ
 // ----------------------------------------------------------------------------------------------------
 
+#ifdef V3D_DEBUG
+
+enum V3D_DEBUG_OBJECT_TYPE
+{
+	V3D_DEBUG_OBJECT_TYPE_ADAPTER = 0,
+	V3D_DEBUG_OBJECT_TYPE_BACK_BUFFER = 1,
+	V3D_DEBUG_OBJECT_TYPE_BARRIER_SET = 2,
+	V3D_DEBUG_OBJECT_TYPE_BUFFER = 3,
+	V3D_DEBUG_OBJECT_TYPE_BUFFER_VIEW = 4,
+	V3D_DEBUG_OBJECT_TYPE_COMMAND_BUFFER = 5,
+	V3D_DEBUG_OBJECT_TYPE_COMMAND_POOL = 6,
+	V3D_DEBUG_OBJECT_TYPE_COMPUTE_PIPELINE = 7,
+	V3D_DEBUG_OBJECT_TYPE_DEVICE = 8,
+	V3D_DEBUG_OBJECT_TYPE_EVENT = 9,
+	V3D_DEBUG_OBJECT_TYPE_FENCE = 10,
+	V3D_DEBUG_OBJECT_TYPE_FRAME_BUFFER = 11,
+	V3D_DEBUG_OBJECT_TYPE_GRAPHICS_PIPELINE = 12,
+	V3D_DEBUG_OBJECT_TYPE_IMAGE = 13,
+	V3D_DEBUG_OBJECT_TYPE_IMAGE_VIEW = 14,
+	V3D_DEBUG_OBJECT_TYPE_INSTANCE = 15,
+	V3D_DEBUG_OBJECT_TYPE_PIPELINE_LAYOUT = 16,
+	V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET = 17,
+	V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET_LAYOUT = 18,
+	V3D_DEBUG_OBJECT_TYPE_QUERY_POOL = 19,
+	V3D_DEBUG_OBJECT_TYPE_QUEUE = 20,
+	V3D_DEBUG_OBJECT_TYPE_RENDER_PASS = 21,
+	V3D_DEBUG_OBJECT_TYPE_RESOURCE_MEMORY = 22,
+	V3D_DEBUG_OBJECT_TYPE_SAMPLER = 23,
+	V3D_DEBUG_OBJECT_TYPE_SEMAPHORE = 24,
+	V3D_DEBUG_OBJECT_TYPE_SHADER_MODULE = 25,
+	V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET = 26,
+	V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET_LAYOUT = 27,
+	V3D_DEBUG_OBJECT_TYPE_SWAPCHAIN = 28,
+
+	V3D_DEBUG_OBJECT_TYPE_COUNT = 29,
+};
+
+class DebugMemoryObjectManager
+{
+public:
+	static DebugMemoryObjectManager* GetInstance();
+	static void CreateInstance();
+	static void ReleaseInstance();
+
+	void Add(IV3DObject* pObject, V3D_DEBUG_OBJECT_TYPE type, const wchar_t* pName);
+	void Remove(IV3DObject* pObject);
+
+private:
+	struct Info
+	{
+		V3D_DEBUG_OBJECT_TYPE type;
+		std::wstring name;
+	};
+
+	static DebugMemoryObjectManager* s_pInstance;
+
+	std::map<IV3DObject*, Info> m_InfoMap;
+
+	DebugMemoryObjectManager();
+	~DebugMemoryObjectManager();
+};
+
+DebugMemoryObjectManager* DebugMemoryObjectManager::s_pInstance = nullptr;
+
+#define V3D_ADD_DEBUG_MEMORY_OBJECT(object, type, name) DebugMemoryObjectManager::GetInstance()->Add(object, type, name)
+#define V3D_REMOVE_DEBUG_MEMORY_OBJECT(object) DebugMemoryObjectManager::GetInstance()->Remove(object)
+
+#else //V3D_DEBUG
+
+#define V3D_ADD_DEBUG_MEMORY_OBJECT(object, type, name)
+#define V3D_REMOVE_DEBUG_MEMORY_OBJECT(object)
+
+#endif //V3D_DEBUG
+
 void InitializeMemory(PV3DAllocateMemoryFunction pAllocMemFunc, PV3DReallocateMemoryFunction pReallocMemFunc, PV3DFreeMemoryFunction pFreeMemFunc, void* pUserData);
 void* AllocateMemory(size_t size, size_t alignment);
 void* ReallocateMemory(void* pMemory, size_t size, size_t alignment);
@@ -245,6 +279,9 @@ void FreeMemory(void* pMemory);
 #define V3D_NEW_T(T, ...) new T(__VA_ARGS__)
 #define V3D_DELETE_T(ptr, T) if(ptr != nullptr) { ptr->~T(); FreeMemory(ptr); ptr = nullptr; }
 #define V3D_DELETE_THIS_T(ptr, T) ptr->~T(); FreeMemory(ptr);
+
+#define V3D_NEW new
+#define V3D_DELETE(ptr) if(ptr != nullptr) { delete ptr; ptr = nullptr; }
 
 // ----------------------------------------------------------------------------------------------------
 // STL
@@ -302,16 +339,22 @@ bool operator != (const STLAllocator<T>&, const STLAllocator<U>&)
 template<typename T>
 using STLVector = std::vector<T, STLAllocator<T>>;
 
+#ifdef V3D_DEBUG
 template<typename Key, typename T>
 using STLMap = std::map<Key, T, std::less<Key>, STLAllocator<T>>;
+#endif //V3D_DEBUG
 
 // 文字列
 typedef std::basic_string<char, std::char_traits<char>, STLAllocator<char>> STLStringA;
+#ifdef V3D_DEBUG
 typedef std::basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> STLStringW;
+#endif //V3D_DEBUG
 
 // 文字列ストリーム
+#ifdef V3D_DEBUG
 typedef std::basic_stringstream<char, std::char_traits<char>, STLAllocator<char>> STLStringStreamA;
 typedef std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> STLStringStreamW;
+#endif //V3D_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // ログ
@@ -320,7 +363,6 @@ typedef std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, STLAllocator
 #ifdef V3D_DEBUG
 
 void InitializeLog(V3DFlags flags, PV3DLogFunction pFunction, void* pUserData);
-void FinalizeLog();
 void PrintLogA(V3D_LOG_FLAG type, const char* pFormat, ...);
 void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 
@@ -328,7 +370,6 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #define V3D_LOG_MESSAGE_W_MAX 4096
 
 #define V3D_LOG_INIT(flags, pFunction, pUserData) InitializeLog(flags, pFunction, pUserData)
-#define V3D_LOG_FIN() FinalizeLog()
 
 #define V3D_LOG_PRINT_A(type, format, ...) PrintLogA(type, format, __VA_ARGS__)
 #define V3D_LOG_PRINT_INFO_A(format, ...) PrintLogA(V3D_LOG_INFORMATION, format, __VA_ARGS__)

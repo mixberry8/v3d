@@ -31,7 +31,7 @@ V3D_RESULT V3DStandardDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32
 {
 	V3D_ASSERT(poolSize > 0);
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET_LAYOUT, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET_LAYOUT, V3D_SAFE_NAME(this, pDebugName));
 
 	V3D_RESULT result = V3DBaseDescriptorSetLayout::Initialize(pDevice, descriptorCount, descriptors, false, pDebugName);
 	if (result != V3D_OK)
@@ -234,7 +234,7 @@ V3DStandardDescriptorSetLayout::~V3DStandardDescriptorSetLayout()
 		}
 	}
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 }
 
 V3D_RESULT V3DStandardDescriptorSetLayout::AddHandle(V3DStandardDescriptorSetLayout::HandleT** ppHandle)

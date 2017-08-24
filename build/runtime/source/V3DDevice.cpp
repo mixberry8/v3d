@@ -43,7 +43,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	m_pInstance = static_cast<V3DInstance*>(V3D_TO_ADD_REF(pInstance));
 	m_pAdapter = static_cast<V3DAdapter*>(V3D_TO_ADD_REF(pAdapter));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_DEVICE, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_DEVICE, V3D_SAFE_NAME(this, pDebugName));
 
 	const V3DAdapter::Source& adapterSource = m_pAdapter->GetSource();
 
@@ -290,7 +290,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 
 #ifdef V3D_DEBUG
 			STLStringStreamW debugStringStream;
-			debugStringStream << V3D_SAFE_NAME(this, pDebugName) << L"_Queue_F" << i << L"_I" << j;
+			debugStringStream << V3D_SAFE_NAME(this, pDebugName) << L"_Queue_" << i << L"_" << j;
 
 			STLStringW debugString = debugStringStream.str();
 
@@ -1515,7 +1515,7 @@ V3DDevice::~V3DDevice()
 
 	V3D_RELEASE(m_pAdapter);
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pInstance);
 }

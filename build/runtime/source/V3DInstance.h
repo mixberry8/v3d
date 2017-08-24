@@ -26,13 +26,12 @@ public:
 	bool ExistsFulscreenWindow(V3DSwapChain* pSwapChain);
 
 #ifdef V3D_DEBUG
+	static V3DInstance* GetDebugInstance();
+
 	void AddDebugObject(void* pVulkanObject, const wchar_t* pName);
 	void AddDebugObject(uint64_t vulkanObject, const wchar_t* pName);
 	void RemoveDebugObject(void* pVulkanObject);
 	void RemoveDebugObject(uint64_t vulkanObject);
-
-	void AddDebugMemoryObject(void* pInterface, V3D_DEBUG_OBJECT_TYPE type, const wchar_t* pName);
-	void RemoveDebugMemoryObject(void* pInterface);
 #endif //V3D_DEBUG
 
 	/*************************/
@@ -42,7 +41,6 @@ public:
 	uint32_t GetAdapterCount() const override;
 	void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) override;
 	V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName) override;
-	void DumpObjects() override;
 
 	/***********************/
 	/* override IV3DObject */
@@ -97,8 +95,6 @@ private:
 	typedef STLMap<uint64_t, STLStringA> DebugObjectNameMap;
 	V3DInstance::DebugObjectNameMap m_DebugObjectNameMap;
 
-	STLMap<void*, V3DInstance::DebugObject> m_DebugMemoryObjectMap;
-
 	CriticalSection m_DebugSync;
 	STLStringStreamA m_DebugStringStream;
 	STLStringA m_DebugString;
@@ -108,8 +104,6 @@ private:
 	const char* GetDebugObjectName(uint64_t objectAddr);
 	const char* ConvertDebugMessage(const char* pMessage);
 	const char* ConvertDebugString(const char* pString);
-
-	void DumpObjects(V3D_LOG_FLAG type);
 #endif //V3D_DEBUG
 
 #ifdef V3D_DEBUG

@@ -22,7 +22,7 @@ V3D_RESULT V3DComputePipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayou
 	m_pPipelineLayout = V3D_TO_ADD_REF(static_cast<V3DPipelineLayout*>(pPipelineLayout));
 	m_pShaderModule = V3D_TO_ADD_REF(static_cast<V3DShaderModule*>(pipelineDesc.computeShader.pModule));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_COMPUTE_PIPELINE, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_COMPUTE_PIPELINE, V3D_SAFE_NAME(this, pDebugName));
 
 	VkComputePipelineCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -136,7 +136,7 @@ V3DComputePipeline::~V3DComputePipeline()
 	V3D_RELEASE(m_pShaderModule);
 	V3D_RELEASE(m_pPipelineLayout);
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }

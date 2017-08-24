@@ -16,7 +16,7 @@ V3D_RESULT V3DEvent::Initialize(IV3DDevice* pDevice, const wchar_t* pDebugName)
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
-	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_EVENT, V3D_SAFE_NAME(this, pDebugName));
+	V3D_ADD_DEBUG_MEMORY_OBJECT(this, V3D_DEBUG_OBJECT_TYPE_EVENT, V3D_SAFE_NAME(this, pDebugName));
 
 	VkEventCreateInfo createInfo;
 	createInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
@@ -116,7 +116,7 @@ V3DEvent::~V3DEvent()
 		}
 	}
 
-	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(this);
 
 	V3D_RELEASE(m_pDevice);
 }
