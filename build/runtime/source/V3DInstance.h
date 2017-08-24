@@ -1,8 +1,8 @@
 #pragma once
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 #include "CriticalSection.h"
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 class V3DAdapter;
 class V3DSwapChain;
@@ -25,12 +25,15 @@ public:
 	void RemoveWindow(V3DSwapChain* pSwapChain);
 	bool ExistsFulscreenWindow(V3DSwapChain* pSwapChain);
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	void AddDebugObject(void* pVulkanObject, const wchar_t* pName);
 	void AddDebugObject(uint64_t vulkanObject, const wchar_t* pName);
 	void RemoveDebugObject(void* pVulkanObject);
 	void RemoveDebugObject(uint64_t vulkanObject);
-#endif //_DEBUG
+
+	void AddDebugMemoryObject(void* pInterface, V3D_DEBUG_OBJECT_TYPE type, const wchar_t* pName);
+	void RemoveDebugMemoryObject(void* pInterface);
+#endif //V3D_DEBUG
 
 	/*************************/
 	/* override IV3DInstance */
@@ -39,6 +42,7 @@ public:
 	uint32_t GetAdapterCount() const override;
 	void GetAdapter(uint32_t adapterIndex, IV3DAdapter** ppAdapter) override;
 	V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName) override;
+	void DumpObjects() override;
 
 	/***********************/
 	/* override IV3DObject */
@@ -54,6 +58,14 @@ private:
 		WNDPROC pProc;
 		V3DSwapChain* pSwapChain;
 	};
+
+#ifdef V3D_DEBUG
+	struct DebugObject
+	{
+		V3D_DEBUG_OBJECT_TYPE type;
+		STLStringW name;
+	};
+#endif //V3D_DEBUG
 
 	static V3DInstance* s_pThis;
 
@@ -75,7 +87,7 @@ private:
 
 	static LRESULT CALLBACK WindowProc(HWND windowHandle, UINT message, WPARAM eparam, LPARAM lparam);
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	VkDebugReportCallbackEXT m_DebugReportCallbackEXT;
 
 	STLMap<STLStringA, STLStringA> m_DebugHandleNameMap;
@@ -84,6 +96,8 @@ private:
 
 	typedef STLMap<uint64_t, STLStringA> DebugObjectNameMap;
 	V3DInstance::DebugObjectNameMap m_DebugObjectNameMap;
+
+	STLMap<void*, V3DInstance::DebugObject> m_DebugMemoryObjectMap;
 
 	CriticalSection m_DebugSync;
 	STLStringStreamA m_DebugStringStream;
@@ -94,9 +108,11 @@ private:
 	const char* GetDebugObjectName(uint64_t objectAddr);
 	const char* ConvertDebugMessage(const char* pMessage);
 	const char* ConvertDebugString(const char* pString);
-#endif //_DEBUG
 
-#ifdef _DEBUG
+	void DumpObjects(V3D_LOG_FLAG type);
+#endif //V3D_DEBUG
+
+#ifdef V3D_DEBUG
 	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallbackEXT(
 		VkDebugReportFlagsEXT flags,
 		VkDebugReportObjectTypeEXT objectType,
@@ -106,7 +122,7 @@ private:
 		const char* pLayerPrefix,
 		const char* pMessage,
 		void* pUserData);
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3D_DECLARE_ALLOCATOR
 };

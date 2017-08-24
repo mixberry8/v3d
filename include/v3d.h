@@ -6621,6 +6621,9 @@ public:
 	//! @retval V3D_ERROR_DEVICE_LOST @copydoc V3D_ERROR_DEVICE_LOST
 	virtual V3D_RESULT CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevice, const wchar_t* pDebugName = nullptr) = 0;
 
+	//! @brief 現在作成されているオブジェクトを表示します。
+	virtual void DumpObjects() = 0;
+
 protected:
 	//! @cond MISC
 	virtual ~IV3DInstance() {}

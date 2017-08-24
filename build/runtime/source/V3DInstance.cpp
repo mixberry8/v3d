@@ -4,9 +4,9 @@
 #include "V3DSwapChain.h"
 #include <algorithm>
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 #include "ScopedLock.h"
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 V3DInstance* V3DInstance::s_pThis = nullptr;
 
@@ -34,7 +34,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 
 	V3D_LOG_INIT(instanceDesc.log.flags, instanceDesc.log.pFunction, instanceDesc.log.pUserData);
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	// 定数
 	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_UNDEFINED"] = "V3D_IMAGE_LAYOUT_UNDEFINED";
 	m_DebugConstantNameMap["VK_IMAGE_LAYOUT_GENERAL"] = "V3D_IMAGE_LAYOUT_GENERAL";
@@ -119,7 +119,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	m_DebugFunctionNameMap["vkCmdDrawIndexed"] = "IV3DCommandBuffer::DrawIndexed ( vkCmdDrawIndexed )";
 	m_DebugFunctionNameMap["vkCmdDispatch"] = "IV3DCommandBuffer::Dispatch ( vkCmdDispatch )";
 	m_DebugFunctionNameMap["vkCmdExecuteCommands"] = "IV3DCommandBuffer::ExecuteCommandBuffers ( vkCmdExecuteCommands )";
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// アロケーター
@@ -182,9 +182,9 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	const char* EXTENSION_surface = VK_KHR_SURFACE_EXTENSION_NAME;
 	const char* EXTENSION_win32_surface = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 	const char* EXTENSION_get_physical_device_properties2 = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME;
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	const char* EXTENSION_debug_report = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	uint32_t extensionPropCount;
 	STLVector<VkExtensionProperties> extensionProps;
@@ -233,7 +233,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 		return V3D_ERROR_FAIL;
 	}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	bool debugReportEnable = false;
 	if (std::find_if(extensionProps.begin(), extensionProps.end(), V3DFindExtension(EXTENSION_debug_report)) != extensionProps.end())
 	{
@@ -250,7 +250,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	{
 		V3D_LOG_PRINT_DEBUG_A(Log_Debug_InstanceExtension, enabledExtensions[i]);
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// インスタンスを作成
@@ -288,7 +288,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 	// デバッグレポート用のコールバックを登録
 	// ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if ((instanceDesc.log.flags != 0) && (debugReportEnable == true))
 	{
 		PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Source.instance, "vkCreateDebugReportCallbackEXT");
@@ -316,7 +316,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 			return V3D_ERROR_FAIL;
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// 物理デバイスの列挙
@@ -348,7 +348,7 @@ V3D_RESULT V3DInstance::Initialize(const V3DInstanceDesc& instanceDesc)
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-		V3D_RESULT result = pAdapter->Initialize(physicalDevices[i]);
+		V3D_RESULT result = pAdapter->Initialize(this, physicalDevices[i]);
 		if (result != V3D_OK)
 		{
 			pAdapter->Release();
@@ -374,10 +374,10 @@ void V3DInstance::AddWindow(V3DSwapChain* pSwapChain)
 
 	HWND windowHandle = pSwapChain->GetDesc().windowHandle;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLVector<V3DInstance::Window>::iterator it_debug = std::find_if(m_Windows.begin(), m_Windows.end(), [windowHandle](const V3DInstance::Window& window) { return window.handle == windowHandle; });
 	V3D_ASSERT(it_debug == m_Windows.end());
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	WNDPROC pWindowProc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(windowHandle, GWLP_WNDPROC));
 	::SetWindowLongPtr(windowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(V3DInstance::WindowProc));
@@ -421,7 +421,7 @@ bool V3DInstance::ExistsFulscreenWindow(V3DSwapChain* pSwapChain)
 	return (it_window != m_Windows.end());
 }
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 void V3DInstance::AddDebugObject(void* pVulkanObject, const wchar_t* pName)
 {
@@ -468,7 +468,33 @@ void V3DInstance::RemoveDebugObject(uint64_t vulkanObject)
 	}
 }
 
-#endif //_DEBUG
+void V3DInstance::AddDebugMemoryObject(void* pInterface, V3D_DEBUG_OBJECT_TYPE type, const wchar_t* pName)
+{
+	V3D_ASSERT(pInterface != nullptr);
+	V3D_ASSERT(pName != nullptr);
+
+	ScopedLock lock(m_DebugSync);
+
+	V3DInstance::DebugObject debugObject;
+	debugObject.type = type;
+	debugObject.name = pName;
+
+	m_DebugMemoryObjectMap[pInterface] = debugObject;
+}
+
+void V3DInstance::RemoveDebugMemoryObject(void* pInterface)
+{
+	V3D_ASSERT(pInterface != nullptr);
+
+	ScopedLock lock(m_DebugSync);
+
+	auto it = m_DebugMemoryObjectMap.find(pInterface);
+	V3D_ASSERT(it != m_DebugMemoryObjectMap.end());
+
+	m_DebugMemoryObjectMap.erase(it);
+}
+
+#endif //V3D_DEBUG
 
 /********************************/
 /* public override IV3DInstance */
@@ -515,6 +541,14 @@ V3D_RESULT V3DInstance::CreateDevice(IV3DAdapter* pAdapter, IV3DDevice** ppDevic
 	return V3D_OK;
 }
 
+void V3DInstance::DumpObjects()
+{
+#ifdef V3D_DEBUG
+	ScopedLock lock(m_DebugSync);
+	DumpObjects(V3D_LOG_DEBUG);
+#endif //V3D_DEBUG
+}
+
 /********************************/
 /* public override - IV3DObject */
 /********************************/
@@ -544,10 +578,11 @@ void V3DInstance::Release()
 
 V3DInstance::V3DInstance() :
 	m_RefCounter(1),
-	m_AllocationCallbacks({ nullptr }),
 	m_Source({})
 {
 	V3DInstance::s_pThis = this;
+
+	m_AllocationCallbacks = {};
 
 	m_Source.instance = VK_NULL_HANDLE;
 
@@ -565,13 +600,13 @@ V3DInstance::~V3DInstance()
 			m_Adapters[i]->Release();
 		}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Source.instance, "vkDestroyDebugReportCallbackEXT");
 		if ((dbgDestroyDebugReportCallback != nullptr) && (m_DebugReportCallbackEXT != VK_NULL_HANDLE))
 		{
 			dbgDestroyDebugReportCallback(m_Source.instance, m_DebugReportCallbackEXT, nullptr);
 		}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 		vkDestroyInstance(m_Source.instance, &m_AllocationCallbacks);
 
@@ -579,6 +614,16 @@ V3DInstance::~V3DInstance()
 	}
 
 	V3D_ASSERT(m_DebugObjectNameMap.size() == 0);
+
+#ifdef V3D_DEBUG
+	m_DebugSync.Enter();
+	if (m_DebugMemoryObjectMap.empty() == false)
+	{
+		V3D_LOG_PRINT_ERROR(L"!!! MemoryLeaks !!!");
+		DumpObjects(V3D_LOG_ERROR);
+	}
+	m_DebugSync.Leave();
+#endif //V3D_DEBUG
 
 	V3D_LOG_FIN();
 }
@@ -681,7 +726,7 @@ LRESULT CALLBACK V3DInstance::WindowProc(HWND windowHandle, UINT message, WPARAM
 	return ::CallWindowProc(pWindowProc, windowHandle, message, wparam, lparam);
 }
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 const char* V3DInstance::GetDebugObjectName(uint64_t objectAddr)
 {
@@ -789,6 +834,49 @@ const char* V3DInstance::ConvertDebugString(const char* pString)
 	return pString;
 }
 
+void V3DInstance::DumpObjects(V3D_LOG_FLAG type)
+{
+	const wchar_t* objectTypeTable[V3D_DEBUG_OBJECT_TYPE_COUNT] =
+	{
+		L"ADAPTER",
+		L"BACK_BUFFER",
+		L"BARRIER_SET",
+		L"BUFFER",
+		L"BUFFER_VIEW",
+		L"COMMAND_BUFFER",
+		L"COMMAND_POOL",
+		L"COMPUTE_PIPELINE",
+		L"DEVICE",
+		L"EVENT",
+		L"FENCE",
+		L"FRAME_BUFFER",
+		L"GRAPHICS_PIPELINE",
+		L"IMAGE",
+		L"IMAGE_VIEW",
+		L"PIPELINE_LAYOUT",
+		L"PUSH_DESCRIPTOR_SET",
+		L"PUSH_DESCRIPTOR_SET_LAYOUT",
+		L"QUERY_POOL",
+		L"QUEUE",
+		L"RENDER_PASS",
+		L"RESOURCE_MEMORY",
+		L"SAMPLER",
+		L"SEMAPHORE",
+		L"SHADER_MODULE",
+		L"STANDARD_DESCRIPTOR_SET",
+		L"STANDARD_DESCRIPTOR_SET_LAYOUT",
+		L"SWAPCHAIN",
+	};
+
+	auto it_begin = m_DebugMemoryObjectMap.begin();
+	auto it_end = m_DebugMemoryObjectMap.end();
+
+	for (auto it = it_begin; it != it_end; ++it)
+	{
+		V3D_LOG_PRINT_W(type, L"%s : %s", objectTypeTable[it->second.type], it->second.name.c_str());
+	}
+}
+
 VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 	VkDebugReportFlagsEXT flags,
 	VkDebugReportObjectTypeEXT objectType,
@@ -889,4 +977,4 @@ VKAPI_ATTR VkBool32 VKAPI_CALL V3DInstance::DebugReportCallbackEXT(
 	return VK_FALSE;
 }
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
