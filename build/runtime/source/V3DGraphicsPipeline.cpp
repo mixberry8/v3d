@@ -22,9 +22,11 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 	m_pPipelineLayout = V3D_TO_ADD_REF(static_cast<V3DPipelineLayout*>(pPipelineLayout));
 	m_pRenderPass = V3D_TO_ADD_REF(static_cast<V3DRenderPass*>(pipelineDesc.pRenderPass));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_GRAPHICS_PIPELINE, V3D_SAFE_NAME(this, pDebugName));
+
 	const V3DRenderPass::Source& renderPassSource = m_pRenderPass->GetSource();
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (renderPassSource.debug.subpasses.size() <= pipelineDesc.subpass)
 	{
 		V3D_LOG_PRINT_ERROR(Log_Error_InvalidSubpass, V3D_SAFE_NAME(this, pDebugName), pipelineDesc.subpass);
@@ -36,7 +38,7 @@ V3D_RESULT V3DGraphicsPipeline::Initialize(IV3DDevice* pDevice, IV3DPipelineLayo
 		V3D_LOG_PRINT_ERROR(Log_Error_MismatchSubpassColorAttachmentCount, V3D_SAFE_NAME(this, pDebugName), m_pRenderPass->GetDebugName(), pipelineDesc.subpass);
 		return V3D_ERROR_FAIL;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// シェーダーステージ
@@ -471,6 +473,9 @@ V3DGraphicsPipeline::~V3DGraphicsPipeline()
 
 	V3D_RELEASE(m_pRenderPass);
 	V3D_RELEASE(m_pPipelineLayout);
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+
 	V3D_RELEASE(m_pDevice);
 }
 

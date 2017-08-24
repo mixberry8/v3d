@@ -16,6 +16,9 @@ V3D_RESULT V3DSampler::Initialize(IV3DDevice* pDevice, const V3DSamplerDesc& des
 	V3D_ASSERT(pDevice != nullptr);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
+
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_SAMPLER, V3D_SAFE_NAME(this, pDebugName));
+
 	m_Desc = desc;
 
 	// ----------------------------------------------------------------------------------------------------
@@ -124,6 +127,8 @@ V3DSampler::~V3DSampler()
 		vkDestroySampler(m_pDevice->GetSource().device, m_Source.sampler, nullptr);
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.sampler);
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 
 	V3D_RELEASE(m_pDevice);
 }

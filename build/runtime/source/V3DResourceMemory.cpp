@@ -20,6 +20,9 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 	V3D_ASSERT(size != 0);
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
+
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_RESOURCE_MEMORY, V3D_SAFE_NAME(this, pDebugName));
+
 	m_Source.memoryPropertyFlags = ToVkMemoryPropertyFlags(propertyFlags);
 
 	// ----------------------------------------------------------------------------------------------------
@@ -63,6 +66,8 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_RESOURCE_MEMORY, V3D_SAFE_NAME(this, pDebugName));
+
 	// ----------------------------------------------------------------------------------------------------
 	// リソースをアライメントの大きい順にソート
 	// ----------------------------------------------------------------------------------------------------
@@ -72,7 +77,7 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 
 	for (uint32_t i = 0; i < resourceCount; i++)
 	{
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		switch (ppResources[i]->GetResourceDesc().type)
 		{
 		case V3D_RESOURCE_TYPE_BUFFER:
@@ -90,7 +95,7 @@ V3D_RESULT V3DResourceMemory::Initialize(IV3DDevice* pDevice, V3DFlags propertyF
 			}
 			break;
 		}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 		resources.push_back(ppResources[i]);
 	}
@@ -260,14 +265,14 @@ V3D_RESULT V3DResourceMemory::Unmap()
 	return result;
 }
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 bool V3DResourceMemory::Debug_CheckMemory(uint64_t offset, uint64_t size)
 {
 	return (m_Desc.size >= (offset + size));
 }
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 /****************************************/
 /* public override - IV3DResourceMemory */
@@ -394,6 +399,8 @@ V3DResourceMemory::~V3DResourceMemory()
 		vkFreeMemory(m_pDevice->GetSource().device, m_Source.deviceMemory, nullptr);
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.deviceMemory);
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 
 	V3D_RELEASE(m_pDevice);
 }

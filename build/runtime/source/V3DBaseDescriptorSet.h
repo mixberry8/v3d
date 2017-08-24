@@ -65,9 +65,9 @@ protected:
 	STLVector<V3DSampler*> m_Samplers;
 	V3DBaseDescriptorSet::Source m_Source;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DBaseDescriptorSet();
 	virtual ~V3DBaseDescriptorSet();

@@ -1,5 +1,7 @@
 #pragma once
 
+class V3DInstance;
+
 class V3DAdapter : public IV3DAdapter
 {
 public:
@@ -10,7 +12,7 @@ public:
 	};
 
 	static V3DAdapter* Create();
-	V3D_RESULT Initialize(const VkPhysicalDevice physicalDevice);
+	V3D_RESULT Initialize(V3DInstance* pInstance, const VkPhysicalDevice physicalDevice);
 	V3DAdapter::Source& GetSource();
 
 	uint32_t Vulkan_GetMemoryTypeIndex(VkMemoryPropertyFlags memoryPropertyFlags);
@@ -37,6 +39,10 @@ private:
 	STLVector<V3DMemoryHeapDesc> m_MemoryHeaps;
 	STLVector<V3DMemoryTypeDesc> m_MemoryTypes;
 	V3DAdapter::Source m_Source;
+
+#ifdef V3D_DEBUG
+	V3DInstance* m_pInstance;
+#endif //V3D_DEBUG
 
 	V3DAdapter();
 	virtual ~V3DAdapter();

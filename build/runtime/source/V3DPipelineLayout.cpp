@@ -17,6 +17,8 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_PIPELINE_LAYOUT, V3D_SAFE_NAME(this, pDebugName));
+
 	// ----------------------------------------------------------------------------------------------------
 	// コンスタント
 	// ----------------------------------------------------------------------------------------------------
@@ -46,7 +48,7 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 	// デスクリプタセットレイアウト
 	// ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (descriptorSetLayoutCount > 0)
 	{
 		V3D_DESCRIPTOR_SET_TYPE type = ppDescriptorSetLayouts[0]->GetType();
@@ -60,7 +62,7 @@ V3D_RESULT V3DPipelineLayout::Initialize(IV3DDevice* pDevice, uint32_t constantC
 			}
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	STLVector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 
@@ -225,6 +227,8 @@ V3DPipelineLayout::~V3DPipelineLayout()
 			V3D_RELEASE((*it));
 		}
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 
 	V3D_RELEASE(m_pDevice);
 }

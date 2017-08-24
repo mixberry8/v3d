@@ -15,22 +15,22 @@ public:
 		VkCommandBufferBeginInfo commandBufferBeginInfo;
 	};
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	struct Debug
 	{
 		bool isBegin;
 	};
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	static V3DCommandBuffer* Create();
 	V3D_RESULT Initialize(IV3DDevice* pDevice, IV3DCommandPool* pCommandPool, V3D_COMMAND_BUFFER_TYPE commandBufferType, const wchar_t* pDebugName);
 	const V3DCommandBuffer::Source& GetSource() const;
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	const V3DCommandBuffer::Debug& GetDebug() const
 	{
 		return m_Debug;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	/********************************/
 	/* override - IV3DCommandBuffer */
@@ -159,15 +159,15 @@ private:
 	PFN_vkCmdDebugMarkerEndEXT m_pDebugMarkerEndFunction;
 	PFN_vkCmdDebugMarkerInsertEXT m_pDebugMarkerInsertFunction;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
 	V3DCommandBuffer::Debug m_Debug;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DCommandBuffer();
 	virtual ~V3DCommandBuffer();
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	bool Debug_Command_FirstCheck()
 	{
 		if (m_Debug.isBegin == false)
@@ -178,7 +178,7 @@ private:
 
 		return true;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3D_DECLARE_ALLOCATOR
 };

@@ -73,9 +73,9 @@ private:
 	V3DSwapChain::Source m_Source;
 	V3DSwapChain::WindowedInfo m_WindowedInfo;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DSwapChain();
 	virtual ~V3DSwapChain();

@@ -43,6 +43,8 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 	m_pInstance = static_cast<V3DInstance*>(V3D_TO_ADD_REF(pInstance));
 	m_pAdapter = static_cast<V3DAdapter*>(V3D_TO_ADD_REF(pAdapter));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_DEVICE, V3D_SAFE_NAME(this, pDebugName));
+
 	const V3DAdapter::Source& adapterSource = m_pAdapter->GetSource();
 
 	// ----------------------------------------------------------------------------------------------------
@@ -110,7 +112,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 		}
 	}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	uint32_t vLayerCount;
 	vResult = vkEnumerateDeviceLayerProperties(adapterSource.physicalDevice, &vLayerCount, nullptr);
 	if (vResult != VK_SUCCESS)
@@ -155,7 +157,7 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 			V3D_LOG_PRINT_DEBUG_A(Log_Debug_DeviceExtension, V3D_SAFE_NAME_A(this, nullptr), vEnableExtensions[i]);
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// デバイス情報を取得
@@ -286,16 +288,16 @@ V3D_RESULT V3DDevice::Initialize(V3DInstance* pInstance, IV3DAdapter* pAdapter, 
 				return V3D_ERROR_OUT_OF_HOST_MEMORY;
 			}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 			STLStringStreamW debugStringStream;
 			debugStringStream << V3D_SAFE_NAME(this, pDebugName) << L"_Queue_F" << i << L"_I" << j;
 
 			STLStringW debugString = debugStringStream.str();
 
 			V3D_RESULT result = pQueue->Initialize(this, i, vSrcQueue, debugString.c_str());
-#else //_DEBUG
+#else //V3D_DEBUG
 			V3D_RESULT result = pQueue->Initialize(this, i, vSrcQueue, nullptr);
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 			if (result != V3D_OK)
 			{
@@ -1512,5 +1514,8 @@ V3DDevice::~V3DDevice()
 	}
 
 	V3D_RELEASE(m_pAdapter);
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(GetInternalInstancePtr(), this);
+
 	V3D_RELEASE(m_pInstance);
 }

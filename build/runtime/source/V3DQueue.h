@@ -57,9 +57,9 @@ private:
 	V3DQueue::Source m_Source;
 	V3DQueue::Temp m_Temp;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DQueue();
 	virtual ~V3DQueue();

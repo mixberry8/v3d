@@ -26,22 +26,22 @@ public:
 		uint32_t clearValueCount;
 		VkClearValue* pClearValues;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		struct Debug
 		{
 			STLVector<V3DRenderPass::Attachment> attachments;
 			STLVector<V3DRenderPass::Subpass> subpasses;
 		}debug;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 	};
 
 	static V3DRenderPass* Create();
 	V3D_RESULT Initialize(IV3DDevice* pDevice, uint32_t attachmentCount, const V3DAttachmentDesc* pAttachments, uint32_t subpassCount, const V3DSubpassDesc* pSubpasses, uint32_t subpassDependencyCount, const V3DSubpassDependencyDesc* pSubpassDependencies, const wchar_t* pDebugName);
 	const V3DRenderPass::Source& GetSource() const;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	const wchar_t* GetDebugName() const;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	/******************/
 	/* IV3DRenderPass */
@@ -67,9 +67,9 @@ private:
 	STLVector<VkClearValue> m_ClearValues;
 	V3DRenderPass::Source m_Source;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DRenderPass();
 	virtual ~V3DRenderPass();

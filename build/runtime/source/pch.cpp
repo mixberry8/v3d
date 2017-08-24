@@ -1,9 +1,9 @@
 #include "pch.h"
 #include <memory>
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 #include <locale>
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // ÉÅÉÇÉä
@@ -55,7 +55,7 @@ void FreeMemory(void* pMemory)
 // ÉçÉO
 // ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 static V3DFlags s_LogFlags = 0;
 static PV3DLogFunction s_pLogFunction = nullptr;
@@ -167,7 +167,7 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...)
 	::LeaveCriticalSection(&s_LogSync);
 }
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // ëSî 

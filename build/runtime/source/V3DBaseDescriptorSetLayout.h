@@ -56,9 +56,9 @@ protected:
 	V3DDevice* m_pDevice;
 	V3DBaseDescriptorSetLayout::Source m_Source;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DBaseDescriptorSetLayout();
 	virtual ~V3DBaseDescriptorSetLayout();

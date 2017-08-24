@@ -2,7 +2,7 @@
 #include "V3DDevice.h"
 #include "V3DRenderPass.h"
 #include "V3DImageView.h"
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 #include "V3DImage.h"
 #endif //_SEBUG
 
@@ -23,13 +23,15 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 	m_pRenderPass = V3D_TO_ADD_REF(static_cast<V3DRenderPass*>(pRenderPass));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_FRAME_BUFFER, V3D_SAFE_NAME(this, pDebugName));
+
 	// ----------------------------------------------------------------------------------------------------
 	// フレームバッファを作成
 	// ----------------------------------------------------------------------------------------------------
 
 	const V3DRenderPass::Source& renderPassSource = m_pRenderPass->GetSource();
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (renderPassSource.debug.attachments.size() != attachmentCount)
 	{
 		V3D_LOG_PRINT_ERROR(Log_Error_MismatchFrameBufferAttachmentCount, V3D_SAFE_NAME(this, pDebugName), m_pRenderPass->GetDebugName());
@@ -38,7 +40,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 
 	bool debugSizeError = false;
 	uint32_t debugErrorCount = 0;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	STLVector<VkImageView> vkImageViews;
 	vkImageViews.reserve(attachmentCount);
@@ -52,7 +54,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 		V3DImageView* pImageView = static_cast<V3DImageView*>(ppAttachments[i]);
 		const V3DImageView::Source& compImageViewSource = pImageView->GetSource();
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		if ((imageViewSource.extent.width != compImageViewSource.extent.width) ||
 			(imageViewSource.extent.height != compImageViewSource.extent.height) ||
 			(imageViewSource.extent.depth != compImageViewSource.extent.depth) ||
@@ -73,14 +75,14 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 			V3D_LOG_PRINT_ERROR(Log_Error_MismatchFrameBufferAttachmentFormatOrSamples, V3D_SAFE_NAME(this, pDebugName), i);
 			debugErrorCount++;
 		}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 		vkImageViews.push_back(compImageViewSource.imageView);
 
 		m_ImageViews.push_back(V3D_TO_ADD_REF(pImageView));
 	}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (debugSizeError == true)
 	{
 		for (uint32_t i = 0; i < attachmentCount; i++)
@@ -96,7 +98,7 @@ V3D_RESULT V3DFrameBuffer::Initialize(IV3DDevice* pDevice, IV3DRenderPass* pRend
 	{
 		return V3D_ERROR_FAIL;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	VkFramebufferCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -230,5 +232,8 @@ V3DFrameBuffer::~V3DFrameBuffer()
 	}
 
 	V3D_RELEASE(m_pRenderPass);
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+
 	V3D_RELEASE(m_pDevice);
 }

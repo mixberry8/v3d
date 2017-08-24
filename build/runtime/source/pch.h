@@ -8,10 +8,10 @@
 #include <atomic>
 #include <algorithm>
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 #include <cassert>
 #include <sstream>
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // 定数
@@ -63,25 +63,65 @@ private:
 /* デバッグ */
 /************/
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
+
+enum V3D_DEBUG_OBJECT_TYPE
+{
+	V3D_DEBUG_OBJECT_TYPE_ADAPTER = 0,
+	V3D_DEBUG_OBJECT_TYPE_BACK_BUFFER = 1,
+	V3D_DEBUG_OBJECT_TYPE_BARRIER_SET = 2,
+	V3D_DEBUG_OBJECT_TYPE_BUFFER = 3,
+	V3D_DEBUG_OBJECT_TYPE_BUFFER_VIEW = 4,
+	V3D_DEBUG_OBJECT_TYPE_COMMAND_BUFFER = 5,
+	V3D_DEBUG_OBJECT_TYPE_COMMAND_POOL = 6,
+	V3D_DEBUG_OBJECT_TYPE_COMPUTE_PIPELINE = 7,
+	V3D_DEBUG_OBJECT_TYPE_DEVICE = 8,
+	V3D_DEBUG_OBJECT_TYPE_EVENT = 9,
+	V3D_DEBUG_OBJECT_TYPE_FENCE = 10,
+	V3D_DEBUG_OBJECT_TYPE_FRAME_BUFFER = 11,
+	V3D_DEBUG_OBJECT_TYPE_GRAPHICS_PIPELINE = 12,
+	V3D_DEBUG_OBJECT_TYPE_IMAGE = 13,
+	V3D_DEBUG_OBJECT_TYPE_IMAGE_VIEW = 14,
+	V3D_DEBUG_OBJECT_TYPE_PIPELINE_LAYOUT = 15,
+	V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET = 16,
+	V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET_LAYOUT = 17,
+	V3D_DEBUG_OBJECT_TYPE_QUERY_POOL = 18,
+	V3D_DEBUG_OBJECT_TYPE_QUEUE = 19,
+	V3D_DEBUG_OBJECT_TYPE_RENDER_PASS = 20,
+	V3D_DEBUG_OBJECT_TYPE_RESOURCE_MEMORY = 21,
+	V3D_DEBUG_OBJECT_TYPE_SAMPLER = 22,
+	V3D_DEBUG_OBJECT_TYPE_SEMAPHORE = 23,
+	V3D_DEBUG_OBJECT_TYPE_SHADER_MODULE = 24,
+	V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET = 25,
+	V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET_LAYOUT = 26,
+	V3D_DEBUG_OBJECT_TYPE_SWAPCHAIN = 27,
+
+	V3D_DEBUG_OBJECT_TYPE_COUNT = 28,
+};
 
 #define V3D_ASSERT(expression) assert(expression)
 
 #define V3D_ADD_DEBUG_OBJECT(instance, object, name) instance->AddDebugObject(object, name)
 #define V3D_REMOVE_DEBUG_OBJECT(instance, object) instance->RemoveDebugObject(object)
 
+#define V3D_ADD_DEBUG_MEMORY_OBJECT(instance, object, type, name) instance->AddDebugMemoryObject(object, type, name)
+#define V3D_REMOVE_DEBUG_MEMORY_OBJECT(instance, object) instance->RemoveDebugMemoryObject(object)
+
 #define V3D_DEBUG_CODE(code) code
 
-#else //_DEBUG
+#else //V3D_DEBUG
 
 #define V3D_ASSERT(expression)
 
 #define V3D_ADD_DEBUG_OBJECT(instance, object, name)
 #define V3D_REMOVE_DEBUG_OBJECT(instance, object)
 
+#define V3D_ADD_DEBUG_MEMORY_OBJECT(instance, object, type, name)
+#define V3D_REMOVE_DEBUG_MEMORY_OBJECT(instance, object)
+
 #define V3D_DEBUG_CODE(code)
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 struct V3D_PTR_TO_STR_STRUCT_W
 {
@@ -277,7 +317,7 @@ typedef std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, STLAllocator
 // ログ
 // ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 void InitializeLog(V3DFlags flags, PV3DLogFunction pFunction, void* pUserData);
 void FinalizeLog();
@@ -359,7 +399,7 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 
 #define V3D_LOG_S_PRINT_ERROR(stream) V3D_LOG_S_PRINT_ERROR_W(stream)
 
-#else //_DEBUG
+#else //V3D_DEBUG
 
 #define V3D_LOG_INIT(flags, pFunction, pUserData)
 #define V3D_LOG_FIN()
@@ -409,7 +449,7 @@ void PrintLogW(V3D_LOG_FLAG type, const wchar_t* pFormat, ...);
 #define V3D_LOG_S_PRINT_ERROR_W(stream)
 #define V3D_LOG_S_PRINT_ERROR(stream)
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 // ----------------------------------------------------------------------------------------------------
 // グローバル関数
@@ -473,6 +513,6 @@ VkStencilFaceFlags ToVkStencilFaceFlags(V3DFlags value);
 // 定義に依存するインクルード
 // ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 #include "V3DInstance.h"
-#endif //_DEBUG
+#endif //V3D_DEBUG

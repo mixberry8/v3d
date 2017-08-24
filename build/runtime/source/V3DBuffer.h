@@ -20,9 +20,9 @@ public:
 	bool CheckBindMemory() const;
 	V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset);
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	const wchar_t* GetDebugName() const;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	/**************/
 	/* IV3DBuffer */
@@ -62,9 +62,9 @@ private:
 	V3DBufferDesc m_Desc;
 	V3DBuffer::Source m_Source;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DBuffer();
 	virtual ~V3DBuffer();

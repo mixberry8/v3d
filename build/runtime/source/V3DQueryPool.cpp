@@ -18,6 +18,8 @@ V3D_RESULT V3DQueryPool::Initialize(IV3DDevice* pDevice, const V3DQueryPoolDesc&
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_QUERY_POOL, V3D_SAFE_NAME(this, pDebugName));
+
 	VkQueryPoolCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 	createInfo.pNext = nullptr;
@@ -88,12 +90,12 @@ const V3DQueryPoolDesc& V3DQueryPool::GetDesc() const
 
 V3D_RESULT V3DQueryPool::GetResult(uint32_t firstQuery, uint32_t queryCount, uint64_t dstSize, void* pDst, uint64_t dstStride, V3DFlags queryResultFlags)
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if ((m_Desc.queryCount <= firstQuery) || (m_Desc.queryCount < (firstQuery + queryCount)))
 	{
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 #ifdef V3D64
 	VkResult vkResult = vkGetQueryPoolResults(
@@ -167,6 +169,8 @@ V3DQueryPool::~V3DQueryPool()
 		vkDestroyQueryPool(m_pDevice->GetSource().device, m_Source.queryPool, nullptr);
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queryPool);
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 
 	V3D_RELEASE(m_pDevice);
 }

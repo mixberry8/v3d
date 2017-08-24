@@ -19,6 +19,8 @@ V3D_RESULT V3DImageView::Initialize(IV3DDevice* pDevice, IV3DImage* pImage, cons
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 	m_pImage = V3D_TO_ADD_REF(static_cast<IV3DImageBase*>(pImage));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_IMAGE_VIEW, V3D_SAFE_NAME(this, pDebugName));
+
 	// ----------------------------------------------------------------------------------------------------
 
 	VkImageViewCreateInfo createInfo{};
@@ -155,5 +157,8 @@ V3DImageView::~V3DImageView()
 	}
 
 	V3D_RELEASE(m_pImage);
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+
 	V3D_RELEASE(m_pDevice);
 }

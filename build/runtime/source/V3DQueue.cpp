@@ -20,6 +20,8 @@ V3D_RESULT V3DQueue::Initialize(IV3DDevice* pDevice, uint32_t family, VkQueue qu
 	m_Family = family;
 	m_Source.queue = queue;
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_QUEUE, V3D_SAFE_NAME(this, pDebugName));
+
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
 	V3D_ADD_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue, m_DebugName.c_str());
@@ -34,8 +36,6 @@ void V3DQueue::Dispose()
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.queue);
 		m_Source.queue = VK_NULL_HANDLE;
 	}
-
-	m_pDevice = nullptr;
 }
 
 const V3DQueue::Source& V3DQueue::GetSource() const
@@ -54,7 +54,7 @@ uint32_t V3DQueue::GetFamily() const
 
 V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, IV3DFence* pFence)
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if ((commandBufferCount == 0) || (ppCommandBuffers == nullptr))
 	{
 		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
@@ -75,7 +75,7 @@ V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppC
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	VkSubmitInfo submitInfo;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -96,7 +96,7 @@ V3D_RESULT V3DQueue::Submit(uint32_t commandBufferCount, IV3DCommandBuffer** ppC
 
 V3D_RESULT V3DQueue::Submit(uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence)
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (((waitSemaphoreCount != 0) && ((ppWaitSemaphores == nullptr) || (pWaitDstStageMasks == nullptr))) || (commandBufferCount == 0) || (ppCommandBuffers == nullptr) || ((signalSemaphoreCount != 0) && (ppSignalSemaphores == nullptr)))
 	{
 		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM(waitSemaphoreCount) << V3D_LOG_S_PTR(ppWaitSemaphores) << V3D_LOG_S_PTR(pWaitDstStageMasks) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers) << V3D_LOG_S_NUM(signalSemaphoreCount) << V3D_LOG_S_PTR(ppSignalSemaphores));
@@ -117,7 +117,7 @@ V3D_RESULT V3DQueue::Submit(uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitS
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	VkSubmitInfo submitInfo;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -138,7 +138,7 @@ V3D_RESULT V3DQueue::Submit(uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitS
 
 V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, IV3DFence* pFence)
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if ((pSwapChain == nullptr) || (commandBufferCount == 0) || (ppCommandBuffers == nullptr))
 	{
 		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pSwapChain) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers));
@@ -159,7 +159,7 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCou
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	const V3DSwapChain::Source& swapChainSource = static_cast<V3DSwapChain*>(pSwapChain)->GetSource();
 
@@ -182,7 +182,7 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t commandBufferCou
 
 V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCount, IV3DSemaphore** ppWaitSemaphores, const V3DFlags* pWaitDstStageMasks, uint32_t commandBufferCount, IV3DCommandBuffer** ppCommandBuffers, uint32_t signalSemaphoreCount, IV3DSemaphore** ppSignalSemaphores, IV3DFence* pFence)
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (((waitSemaphoreCount != 0) && (ppWaitSemaphores == nullptr)) || (commandBufferCount == 0) || (ppCommandBuffers == nullptr) || ((signalSemaphoreCount != 0) && (ppSignalSemaphores == nullptr)))
 	{
 		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Submit << Log_Error_InvalidArgument << V3D_LOG_S_NUM_GREATER(waitSemaphoreCount, 0) << V3D_LOG_S_NUM(waitSemaphoreCount) << V3D_LOG_S_PTR(ppWaitSemaphores) << V3D_LOG_S_PTR(pWaitDstStageMasks) << V3D_LOG_S_NUM_GREATER(commandBufferCount, 0) << V3D_LOG_S_PTR(ppCommandBuffers) << V3D_LOG_S_NUM(signalSemaphoreCount) << V3D_LOG_S_PTR(ppSignalSemaphores));
@@ -203,7 +203,7 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCou
 			return V3D_ERROR_INVALID_ARGUMENT;
 		}
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DSwapChain* pInternalSwapChain = static_cast<V3DSwapChain*>(pSwapChain);
 	const V3DSwapChain::Source& swapChainSource = pInternalSwapChain->GetSource();
@@ -237,13 +237,13 @@ V3D_RESULT V3DQueue::Submit(IV3DSwapChain* pSwapChain, uint32_t waitSemaphoreCou
 
 V3D_RESULT V3DQueue::Present(IV3DSwapChain* pSwapChain)
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (pSwapChain == nullptr)
 	{
 		V3D_LOG_S_PRINT_ERROR(Log_IV3DQueue_Present << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pSwapChain));
 		return V3D_ERROR_INVALID_ARGUMENT;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3DSwapChain* pInternalSwapChain = static_cast<V3DSwapChain*>(pSwapChain);
 	const V3DSwapChain::Source& swapChainSource = pInternalSwapChain->GetSource();
@@ -330,4 +330,5 @@ V3DQueue::V3DQueue() :
 
 V3DQueue::~V3DQueue()
 {
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 }

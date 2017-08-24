@@ -12,6 +12,8 @@ V3DStandardDescriptorSet* V3DStandardDescriptorSet::Create()
 
 V3D_RESULT V3DStandardDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout, const wchar_t* pDebugName)
 {
+	V3D_ADD_DEBUG_MEMORY_OBJECT(static_cast<V3DDevice*>(pDevice)->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET, V3D_SAFE_NAME(this, pDebugName));
+
 	// ----------------------------------------------------------------------------------------------------
 	// ÉxÅ[ÉXÇèâä˙âª
 	// ----------------------------------------------------------------------------------------------------
@@ -58,7 +60,7 @@ V3D_DESCRIPTOR_SET_TYPE V3DStandardDescriptorSet::GetType() const
 
 void V3DStandardDescriptorSet::Update()
 {
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	uint32_t debugErrorCount = 0;
 
 	for (uint32_t i = 0; i < m_Source.descriptorCount; i++)
@@ -117,7 +119,7 @@ void V3DStandardDescriptorSet::Update()
 	{
 		return;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	vkUpdateDescriptorSets(m_pDevice->GetSource().device, m_Source.descriptorCount, m_Source.pWriteDescriptors, 0, nullptr);
 }
@@ -138,4 +140,6 @@ V3DStandardDescriptorSet::~V3DStandardDescriptorSet()
 		static_cast<V3DStandardDescriptorSetLayout*>(m_pLayout)->Vulkan_DestroyDescriptorSet(m_PoolHandle, m_Source.descriptorSet);
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.descriptorSet);
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 }

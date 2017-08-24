@@ -4,7 +4,7 @@
 // ログ
 // ----------------------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 /********/
 /* 共通 */
@@ -118,4 +118,4 @@ static constexpr wchar_t* Log_Error_PrimaryCommandBufferNotEnd = L"IV3DCommandQu
 static constexpr wchar_t* Log_Error_DescriptorNotSet = L"IV3DDescriptorSet::Update : %s : バインディング %u にリソース ( %s ) がセットされていません。";
 static constexpr wchar_t* Log_Error_DescriptorSetNoNeedUpdate = L"IV3DDescriptorSet::Update : %s : プッシュデスクリプタセットの更新は必要はありません。";
 
-#endif //_DEBUG
+#endif //V3D_DEBUG

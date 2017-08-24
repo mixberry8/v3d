@@ -21,6 +21,8 @@ V3D_RESULT V3DBuffer::Initialize(IV3DDevice* pDevice, const V3DBufferDesc& desc,
 
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_BUFFER, m_DebugName.c_str());
+
 	// ----------------------------------------------------------------------------------------------------
 	// バッファを作成
 	// ----------------------------------------------------------------------------------------------------
@@ -83,12 +85,12 @@ V3D_RESULT V3DBuffer::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffs
 	m_pMemory = V3D_TO_ADD_REF(pMemory);
 	m_Source.memoryOffset = memoryOffset;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (m_pMemory->Debug_CheckMemory(memoryOffset, m_ResourceDesc.memorySize) == false)
 	{
 		return V3D_ERROR_FAIL;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	VkResult vkResult = vkBindBufferMemory(m_pDevice->GetSource().device, m_Source.buffer, m_pMemory->GetSource().deviceMemory, memoryOffset);
 	if (vkResult != VK_SUCCESS)
@@ -99,14 +101,14 @@ V3D_RESULT V3DBuffer::BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffs
 	return V3D_OK;
 }
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 const wchar_t* V3DBuffer::GetDebugName() const
 {
 	return m_DebugName.c_str();
 }
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 /********************************/
 /* public override - IV3DBuffer */
@@ -210,5 +212,8 @@ V3DBuffer::~V3DBuffer()
 	}
 
 	V3D_RELEASE(m_pMemory);
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+
 	V3D_RELEASE(m_pDevice);
 }

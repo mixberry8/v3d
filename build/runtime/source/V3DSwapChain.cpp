@@ -25,11 +25,13 @@ V3D_RESULT V3DSwapChain::Initialize(IV3DDevice* pDevice, const V3DSwapChainDesc&
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
+	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
+
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_SWAPCHAIN, m_DebugName.c_str());
+
 	m_Callbacks = swapChainCallbacks;
 	m_Source.waitDstStageMask = ToVkPipelineStageFlags(swapChainDesc.queueWaitDstStageMask);
 	m_InitialDesc = m_Desc = swapChainDesc;
-
-	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
 	// ウィンドウ情報を初期化
@@ -385,6 +387,8 @@ V3DSwapChain::~V3DSwapChain()
 		}
 	}
 
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
+
 	V3D_RELEASE(m_pDevice);
 }
 
@@ -647,11 +651,11 @@ V3D_RESULT V3DSwapChain::CreateSurfaceAndSwapChain()
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, m_DebugName.c_str());
-#else //_DEBUG
+#else //V3D_DEBUG
 		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, images[i], imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, nullptr);
-#endif //_DEBUG
+#endif //V3D_DEBUG
 		if (result != V3D_OK)
 		{
 			V3D_RELEASE(pBackBuffer);
@@ -838,11 +842,11 @@ V3D_RESULT V3DSwapChain::RecreateSwapChain()
 			return V3D_ERROR_OUT_OF_HOST_MEMORY;
 		}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, m_DebugName.c_str());
-#else //_DEBUG
+#else //V3D_DEBUG
 		V3D_RESULT result = pBackBuffer->Initialize(m_pDevice, vkImages[i], m_Source.swapChainCreateInfo.imageFormat, m_Desc.imageWidth, m_Desc.imageHeight, m_Source.swapChainCreateInfo.imageUsage, nullptr);
-#endif //_DEBUG
+#endif //V3D_DEBUG
 		if (result != V3D_OK)
 		{
 			V3D_RELEASE(pBackBuffer);

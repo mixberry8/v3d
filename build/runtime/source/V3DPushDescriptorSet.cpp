@@ -12,6 +12,8 @@ V3DPushDescriptorSet* V3DPushDescriptorSet::Create()
 
 V3D_RESULT V3DPushDescriptorSet::Initialize(IV3DDevice* pDevice, IV3DDescriptorSetLayout* pLayout, const wchar_t* pDebugName)
 {
+	V3D_ADD_DEBUG_MEMORY_OBJECT(static_cast<V3DDevice*>(pDevice)->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_PUSH_DESCRIPTOR_SET, V3D_SAFE_NAME(this, pDebugName));
+
 	// ----------------------------------------------------------------------------------------------------
 	// ƒx[ƒX‚ð‰Šú‰»
 	// ----------------------------------------------------------------------------------------------------
@@ -73,4 +75,5 @@ V3DPushDescriptorSet::V3DPushDescriptorSet()
 
 V3DPushDescriptorSet::~V3DPushDescriptorSet()
 {
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 }

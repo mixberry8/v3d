@@ -18,9 +18,9 @@ public:
 	bool CheckBindMemory() const override;
 	V3D_RESULT BindMemory(V3DResourceMemory* pMemory, uint64_t memoryOffset) override;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	const wchar_t* GetDebugName() const override;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	/*************/
 	/* IV3DImage */
@@ -51,9 +51,9 @@ public:
 private:
 	static constexpr V3DImageSubresourceLayout DummySubresource = V3DImageSubresourceLayout{};
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	STLStringW m_DebugName;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	ReferenceCounter m_RefCounter;
 	V3DDevice* m_pDevice;

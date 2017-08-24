@@ -17,6 +17,8 @@ V3D_RESULT V3DSemaphore::Initialize(IV3DDevice* pDevice, const wchar_t* pDebugNa
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_SEMAPHORE, V3D_SAFE_NAME(this, pDebugName));
+
 	VkSemaphoreCreateInfo createInfo;
 	createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	createInfo.pNext = nullptr;
@@ -89,6 +91,8 @@ V3DSemaphore::~V3DSemaphore()
 		vkDestroySemaphore(m_pDevice->GetSource().device, m_Source.semaphore, nullptr);
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.semaphore);
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 
 	V3D_RELEASE(m_pDevice);
 }

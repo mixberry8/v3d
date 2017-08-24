@@ -5,9 +5,12 @@ V3DAdapter* V3DAdapter::Create()
 	return V3D_NEW_T(V3DAdapter);
 }
 
-V3D_RESULT V3DAdapter::Initialize(const VkPhysicalDevice physicalDevice)
+V3D_RESULT V3DAdapter::Initialize(V3DInstance* pInstance, const VkPhysicalDevice physicalDevice)
 {
 	V3D_ASSERT(physicalDevice != VK_NULL_HANDLE);
+
+	V3D_DEBUG_CODE(m_pInstance = pInstance);
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pInstance, this, V3D_DEBUG_OBJECT_TYPE_ADAPTER, L"Adapter");
 
 	m_Source.physicalDevice = physicalDevice;
 
@@ -140,8 +143,12 @@ V3DAdapter::V3DAdapter() :
 	m_RefCounter(1),
 	m_Desc({})
 {
+#ifdef V3D_DEBUG
+	m_pInstance = nullptr;
+#endif //m_pInstance
 }
 
 V3DAdapter::~V3DAdapter()
 {
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pInstance, this);
 }

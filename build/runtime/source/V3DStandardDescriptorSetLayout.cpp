@@ -11,9 +11,9 @@ struct V3DStandardDescriptorSetLayout::HandleT
 	VkDescriptorPool pool;
 	STLVector<VkDescriptorSet> sets;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	void* pDebugPtr;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	V3D_DECLARE_ALLOCATOR
 };
@@ -30,6 +30,8 @@ V3DStandardDescriptorSetLayout* V3DStandardDescriptorSetLayout::Create()
 V3D_RESULT V3DStandardDescriptorSetLayout::Initialize(V3DDevice* pDevice, uint32_t descriptorCount, const V3DDescriptorDesc* descriptors, uint32_t poolSize, uint32_t poolResizeStep, const wchar_t* pDebugName)
 {
 	V3D_ASSERT(poolSize > 0);
+
+	V3D_ADD_DEBUG_MEMORY_OBJECT(pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_STANDARD_DESCRIPTOR_SET_LAYOUT, V3D_SAFE_NAME(this, pDebugName));
 
 	V3D_RESULT result = V3DBaseDescriptorSetLayout::Initialize(pDevice, descriptorCount, descriptors, false, pDebugName);
 	if (result != V3D_OK)
@@ -224,11 +226,15 @@ V3DStandardDescriptorSetLayout::~V3DStandardDescriptorSetLayout()
 		for (it = it_begin; it != it_end; ++it)
 		{
 			V3DStandardDescriptorSetLayout::HandleT* pHandle = (*it);
+
 			vkDestroyDescriptorPool(vkDevice, pHandle->pool, nullptr);
+
 			V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), pHandle->pool);
 			V3D_DELETE_T(pHandle, HandleT);
 		}
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 }
 
 V3D_RESULT V3DStandardDescriptorSetLayout::AddHandle(V3DStandardDescriptorSetLayout::HandleT** ppHandle)
@@ -247,13 +253,14 @@ V3D_RESULT V3DStandardDescriptorSetLayout::AddHandle(V3DStandardDescriptorSetLay
 	if (pHandle == nullptr)
 	{
 		vkDestroyDescriptorPool(m_pDevice->GetSource().device, vkDescriptorPool, nullptr);
+
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), vkDescriptorPool);
 		return V3D_ERROR_OUT_OF_HOST_MEMORY;
 	}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	pHandle->pDebugPtr = this;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 	pHandle->pool = vkDescriptorPool;
 	pHandle->maxCount = m_PoolCreateInfo.maxSets;
 	pHandle->count = 0;

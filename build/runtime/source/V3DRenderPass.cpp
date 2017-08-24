@@ -24,6 +24,8 @@ V3D_RESULT V3DRenderPass::Initialize(
 
 	m_pDevice = V3D_TO_ADD_REF(static_cast<V3DDevice*>(pDevice));
 
+	V3D_ADD_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this, V3D_DEBUG_OBJECT_TYPE_RENDER_PASS, V3D_SAFE_NAME(this, pDebugName));
+
 	V3D_DEBUG_CODE(m_DebugName = V3D_SAFE_NAME(this, pDebugName));
 
 	// ----------------------------------------------------------------------------------------------------
@@ -44,10 +46,10 @@ V3D_RESULT V3DRenderPass::Initialize(
 	m_ClearValues.resize(attachmentCount, VkClearValue{});
 	VkClearValue* pDstClearValue = m_ClearValues.data();
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	m_Source.debug.attachments.resize(attachmentCount);
 	V3DRenderPass::Attachment* pDebugAttachments = m_Source.debug.attachments.data();
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	while (pSrcAttachment != pSrcAttachmentEnd)
 	{
@@ -72,12 +74,12 @@ V3D_RESULT V3DRenderPass::Initialize(
 			clearAttachmentCount++;
 		}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		pDebugAttachments->attachment = attachmentIndex;
 		pDebugAttachments->format = pSrcAttachment->format;
 		pDebugAttachments->samples = pSrcAttachment->samples;
 		pDebugAttachments++;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 		attachmentIndex++;
 
@@ -137,12 +139,12 @@ V3D_RESULT V3DRenderPass::Initialize(
 	vkSubpasses.resize(subpassCount);
 	VkSubpassDescription* pDstSubpass = vkSubpasses.data();
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	m_Source.debug.subpasses.resize(subpassCount);
 	V3DRenderPass::Subpass* pDebugSubpass = m_Source.debug.subpasses.data();
 	uint32_t debugSubpassCount = 0;
 	uint32_t debugErrorCount = 0;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	pSrcSubpass = pSrcSubpassBegin;
 	while (pSrcSubpass != pSrcSubpassEnd)
@@ -158,7 +160,7 @@ V3D_RESULT V3DRenderPass::Initialize(
 		pDstSubpass->preserveAttachmentCount = pSrcSubpass->preserveAttachmentCount;
 		pDstSubpass->pPreserveAttachments = pSrcSubpass->pPreserveAttachments;
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 		pDebugSubpass->inputAttachments.reserve(pSrcSubpass->inputAttachmentCount);
 		for (uint32_t i = 0; i < pSrcSubpass->inputAttachmentCount; i++)
 		{
@@ -218,18 +220,18 @@ V3D_RESULT V3DRenderPass::Initialize(
 
 		debugSubpassCount++;
 		pDebugSubpass++;
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 		pDstSubpass++;
 		pSrcSubpass++;
 	}
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 	if (debugErrorCount > 0)
 	{
 		return V3D_ERROR_FAIL;
 	}
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 	// ----------------------------------------------------------------------------------------------------
 	// サブパスの依存性
@@ -292,14 +294,14 @@ const V3DRenderPass::Source& V3DRenderPass::GetSource() const
 	return m_Source;
 }
 
-#ifdef _DEBUG
+#ifdef V3D_DEBUG
 
 const wchar_t* V3DRenderPass::GetDebugName() const
 {
 	return m_DebugName.c_str();
 }
 
-#endif //_DEBUG
+#endif //V3D_DEBUG
 
 /************************************/
 /* public override - IV3DRenderPass */
@@ -394,6 +396,8 @@ V3DRenderPass::~V3DRenderPass()
 		vkDestroyRenderPass(m_pDevice->GetSource().device, m_Source.renderPass, nullptr);
 		V3D_REMOVE_DEBUG_OBJECT(m_pDevice->GetInternalInstancePtr(), m_Source.renderPass);
 	}
+
+	V3D_REMOVE_DEBUG_MEMORY_OBJECT(m_pDevice->GetInternalInstancePtr(), this);
 
 	V3D_RELEASE(m_pDevice);
 }
