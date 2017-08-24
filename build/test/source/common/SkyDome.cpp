@@ -513,8 +513,8 @@ void SkyDome::Draw(IV3DCommandBuffer* pCommandBuffer)
 {
 	pCommandBuffer->BindPipeline(m_PipelineHandle->GetPtr());
 	pCommandBuffer->PushConstant(m_pPipelineLayout, 0, &m_VertConstant);
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 0, nullptr);
-	pCommandBuffer->BindVertexBuffers(0, 1, &m_pVertexIndexBuffer, &m_VertexOffset);
+	pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet);
+	pCommandBuffer->BindVertexBuffer(0, m_pVertexIndexBuffer, m_VertexOffset);
 	pCommandBuffer->BindIndexBuffer(m_pVertexIndexBuffer, m_IndexOffset, V3D_INDEX_TYPE_UINT16);
 	pCommandBuffer->DrawIndexed(m_IndexCount, 1, 0, 0, 0);
 }

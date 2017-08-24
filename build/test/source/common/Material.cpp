@@ -299,6 +299,50 @@ V3D_RESULT Material::Update()
 		return result;
 	}
 
+	V3DBufferDesc tempBufferDesc;
+	tempBufferDesc.size = sizeof(Material::Uniform);
+	tempBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_SRC;
+
+	IV3DBuffer* pTempBuffer;
+	result = m_pGraphicsManager->GetDevicePtr()->CreateBuffer(tempBufferDesc, &pTempBuffer);
+	if (result != V3D_OK)
+	{
+		return result;
+	}
+
+	result = m_pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_HOST_VISIBLE, pTempBuffer);
+	if (result != V3D_OK)
+	{
+		pTempBuffer->Release();
+		return result;
+	}
+
+	void* pMemory;
+
+	result = pTempBuffer->Map(0, sizeof(Material::Uniform), &pMemory);
+	if (result != V3D_OK)
+	{
+		pTempBuffer->Release();
+		return result;
+	}
+
+	MemCopy(pMemory, sizeof(Material::Uniform), &m_Uniform, sizeof(Material::Uniform));
+
+	result = pTempBuffer->Unmap();
+	if (result != V3D_OK)
+	{
+		pTempBuffer->Release();
+		return result;
+	}
+
+	IV3DCommandBuffer* pCommandBuffer = m_pGraphicsManager->ResetCommandBuffer();
+
+	pCommandBuffer->CopyBuffer(m_pUniformBuffer, m_UniformDynamicOffsetHandle.GetOffset(), pTempBuffer, 0, sizeof(Material::Uniform));
+
+	m_pGraphicsManager->FlushCommandBuffer();
+
+	pTempBuffer->Release();
+/*
 	void* pMemory;
 
 	result = m_pUniformBuffer->Map(m_UniformDynamicOffsetHandle.GetOffset(), sizeof(Material::Uniform), &pMemory);
@@ -314,7 +358,7 @@ V3D_RESULT Material::Update()
 	{
 		return result;
 	}
-
+*/
 	m_pDescriptorSet->Update();
 
 	return V3D_OK;
@@ -325,7 +369,7 @@ void Material::Bind(IV3DCommandBuffer* pCommandBuffer, RENDER_TYPE renderType)
 	uint32_t dynamicOffset = m_UniformDynamicOffsetHandle.GetOffset();
 
 	pCommandBuffer->BindPipeline(m_PipelineHandles[renderType]->GetPtr());
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_PipelineLayouts[renderType], 1, 1, &m_pDescriptorSet, 1, &dynamicOffset);
+	pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_PipelineLayouts[renderType], 1, m_pDescriptorSet, 1, &dynamicOffset);
 }
 
 V3D_RESULT Material::Initialize(GraphicsManager* pGraphicsManager, MaterialManager* pMaterialManager, const wchar_t* pName)

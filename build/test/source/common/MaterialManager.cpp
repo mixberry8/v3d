@@ -37,17 +37,17 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, Textur
 	// ------------------------------------------------------------------------------------------
 
 	BufferSubresourceDesc uniformBufferSubresource;
-	uniformBufferSubresource.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	uniformBufferSubresource.usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_UNIFORM;
 	uniformBufferSubresource.size = sizeof(Material::Uniform);
 	uniformBufferSubresource.count = maxMaterial;
 
 	BufferMemoryLayout uniformBufferMemoryLayout;
 	uint64_t uniformBufferMemorySize;
 
-	CalcBufferMemoryLayout(pGraphicsManager->GetDevicePtr(), V3D_MEMORY_PROPERTY_HOST_VISIBLE, 1, &uniformBufferSubresource, &uniformBufferMemoryLayout, &uniformBufferMemorySize);
+	CalcBufferMemoryLayout(pGraphicsManager->GetDevicePtr(), V3D_MEMORY_PROPERTY_DEVICE_LOCAL, 1, &uniformBufferSubresource, &uniformBufferMemoryLayout, &uniformBufferMemorySize);
 
 	V3DBufferDesc uniformBufferDesc{};
-	uniformBufferDesc.usageFlags = V3D_BUFFER_USAGE_UNIFORM;
+	uniformBufferDesc.usageFlags = V3D_BUFFER_USAGE_TRANSFER_DST | V3D_BUFFER_USAGE_UNIFORM;
 	uniformBufferDesc.size = uniformBufferMemorySize;
 
 	V3D_RESULT result = pGraphicsManager->GetDevicePtr()->CreateBuffer(uniformBufferDesc, &m_pUniformBuffer);
@@ -55,15 +55,15 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, Textur
 	{
 		return result;
 	}
-
+/*
 	V3DFlags memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE | V3D_MEMORY_PROPERTY_HOST_COHERENT;
 	result = pGraphicsManager->GetDevicePtr()->CheckResourceMemoryProperty(memoryPropertyFlags, m_pUniformBuffer);
 	if (result != V3D_OK)
 	{
 		memoryPropertyFlags = V3D_MEMORY_PROPERTY_HOST_VISIBLE;
 	}
-
-	result = pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(memoryPropertyFlags, m_pUniformBuffer);
+*/
+	result = pGraphicsManager->GetDevicePtr()->AllocateResourceMemoryAndBind(V3D_MEMORY_PROPERTY_DEVICE_LOCAL, m_pUniformBuffer);
 	if (result != V3D_OK)
 	{
 		return result;
@@ -127,20 +127,28 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, Textur
 		return V3D_ERROR_FAIL;
 	}
 
-	V3DBarrierImageDesc barrier{};
-	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	V3DPipelineBarrier pipelineBarrier{};
 
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-	barrier.srcAccessMask = 0;
-	barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	barrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
-	barrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-	pCommandBuffer->BarrierImage(pDummyDiffuseImage, barrier);
-	pCommandBuffer->BarrierImage(pDummySpecularImage, barrier);
-	pCommandBuffer->BarrierImage(pDummyMaskImage, barrier);
-	pCommandBuffer->BarrierImage(pDummyNormalImage, barrier);
+	V3DImageMemoryBarrier memoryBarrier{};
+	memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+
+	memoryBarrier.srcAccessMask = 0;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_UNDEFINED;
+	memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+
+	memoryBarrier.pImage = pDummyDiffuseImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+	memoryBarrier.pImage = pDummySpecularImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+	memoryBarrier.pImage = pDummyMaskImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+	memoryBarrier.pImage = pDummyNormalImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	V3DClearValue clearValue{};
 
@@ -168,16 +176,22 @@ V3D_RESULT MaterialManager::Initialize(GraphicsManager* pGraphicsManager, Textur
 	clearValue.color.float32[3] = 0.0f;
 	pCommandBuffer->ClearImage(pDummyNormalImage, V3D_IMAGE_LAYOUT_TRANSFER_DST, clearValue);
 
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-	barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	barrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
-	barrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
-	barrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-	pCommandBuffer->BarrierImage(pDummyDiffuseImage, barrier);
-	pCommandBuffer->BarrierImage(pDummySpecularImage, barrier);
-	pCommandBuffer->BarrierImage(pDummyMaskImage, barrier);
-	pCommandBuffer->BarrierImage(pDummyNormalImage, barrier);
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+
+	memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_SHADER_READ;
+	memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_TRANSFER_DST;
+	memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+
+	memoryBarrier.pImage = pDummyDiffuseImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+	memoryBarrier.pImage = pDummySpecularImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+	memoryBarrier.pImage = pDummyMaskImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+	memoryBarrier.pImage = pDummyNormalImage;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	if (m_pGraphicsManager->FlushCommandBuffer() == false)
 	{

@@ -740,6 +740,7 @@ private:
 	friend class TextureManager;
 	friend class MaterialManager;
 	friend class Mesh;
+	friend class Material;
 	friend class SkyDome;
 	friend class StaticMesh;
 	friend class MeshManager;

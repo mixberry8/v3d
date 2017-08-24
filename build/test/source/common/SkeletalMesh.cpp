@@ -71,7 +71,7 @@ void SkeletalMeshNode::BindDescriptorSet(IV3DCommandBuffer* pCommandBuffer)
 {
 	uint32_t dynamicOffset = m_UniformDynamicOffsetHandle.GetOffset();
 
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 1, &dynamicOffset);
+	pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet, 1, &dynamicOffset);
 }
 
 V3D_RESULT SkeletalMeshNode::Update(const Matrix4x4& parentWorldMatrix)
@@ -181,13 +181,13 @@ void SkeletalMesh::SetWorldMatrix(const Matrix4x4& worldMatrix)
 
 void SkeletalMesh::BindVertexIndexBuffer(IV3DCommandBuffer* pCommandBuffer)
 {
-	pCommandBuffer->BindVertexBuffers(0, 1, &m_pBuffer, &m_VertexOffset);
+	pCommandBuffer->BindVertexBuffer(0, m_pBuffer, m_VertexOffset);
 	pCommandBuffer->BindIndexBuffer(m_pBuffer, m_IndexOffset, m_IndexType);
 }
 
 void SkeletalMesh::Draw(IV3DCommandBuffer* pCommandBuffer)
 {
-	pCommandBuffer->BindVertexBuffers(0, 1, &m_pBuffer, &m_VertexOffset);
+	pCommandBuffer->BindVertexBuffer(0, m_pBuffer, m_VertexOffset);
 	pCommandBuffer->BindIndexBuffer(m_pBuffer, m_IndexOffset, m_IndexType);
 
 	std::vector<SkeletalMeshNodePtr>::iterator it_node_begin = m_MeshNodes.begin();

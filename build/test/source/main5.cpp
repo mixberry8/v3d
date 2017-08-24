@@ -56,7 +56,7 @@ static constexpr float SPACE_ACC = static_cast<float>(SPACE_ACC_I);
 
 #define ENABLE_MULTITHREAD
 
-#define DEBUG_MARKER_ENABLE
+//#define DEBUG_MARKER_ENABLE
 
 #if defined(DEBUG_MARKER_ENABLE)
 #define DEBUG_MARKER_CODE(code) code
@@ -96,16 +96,12 @@ public:
 		m_CameraRot.SetRotationAxis(Vector3::XAxis(), DEG_TO_RAD(4.0f));
 		m_CameraRot.RotationAxis(Vector3::YAxis(), DEG_TO_RAD(15.0f));
 		m_CameraDistance = 24.0f;
-/*
-		m_CameraRot.x = 0.00532207079f;
-		m_CameraRot.y = 0.684026539f;
-		m_CameraRot.z = -0.0219468754f;
-		m_CameraRot.w = 0.729107499f;
 
-		m_CameraDistance = 17.0f;
+//		m_CameraRot.SetRotationAxis(Vector3::XAxis(), DEG_TO_RAD(4.0f));
+//		m_CameraRot.RotationAxis(Vector3::YAxis(), DEG_TO_RAD(90.0f));
+//		m_CameraDistance = 19.0f;
+//		m_CameraAt.Set(0.0f, 14.0f, 0.0f);
 
-		m_CameraAt.Set(0.291472316f, 12.0804720f, -0.783526421f);
-*/
 		m_DirectionalLightUniform.shadowParam.z = 0.0f;
 		m_DirectionalLightUniform.shadowParam.w = 0.8f;
 
@@ -272,9 +268,9 @@ protected:
 //			std::wstring meshName = L"mesh\\house";
 //			std::wstring meshName = L"mesh\\Room";
 //			std::wstring meshName = L"mesh\\shadow";
-//			std::wstring meshName = L"mesh\\sibenik";
+			std::wstring meshName = L"mesh\\sibenik";
 //			std::wstring meshName = L"mesh\\sponza";
-			std::wstring meshName = L"mesh\\dabrovic-sponza";
+//			std::wstring meshName = L"mesh\\dabrovic-sponza";
 //			std::wstring meshName = L"mesh\\sanMiguel";
 
 			SkeletalMeshPtr mesh;
@@ -1165,20 +1161,20 @@ protected:
 		// テキスト
 		// ----------------------------------------------------------------------------------------------------
 
-		uint64_t data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_COUNT] = {};
+		uint64_t data[11] = {};
 
 		if (m_bQueryActive == true)
 		{
-			m_pQueryPool->GetResults(0, 1, V3D_QUERY_PIPELINE_STATISTIC_TYPE_COUNT, data, 0);
+			m_pQueryPool->GetResult(0, 1, sizeof(data), data, 0, 0);
 		}
 
 		std::wstringstream text;
 
 		m_Font.Reset();
 
-		text << L"Fps " << Application::GetFps();
+		text << L"Fps " << Application::GetAverageFpsPreSec();
 		m_Font.AddText(16, 16, text.str().c_str());
-
+/*
 		float dt = static_cast<float>(Application::GetDeltaTime());
 
 		int32_t textY = 48;
@@ -1201,41 +1197,41 @@ protected:
 			m_Font.AddText(16, textY, text.str().c_str());
 			textY += 16;
 		}
-/*
+*/
 		if (m_bQueryEnable == true)
 		{
 			text.str(L"");
-			text << L"VertexCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_VERTICES];
+			text << L"VertexCount " << data[0];
 			m_Font.AddText(16, 48, text.str().c_str());
 			text.str(L"");
-			text << L"PrimiitiveCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_PRIMITIVES];
+			text << L"PrimiitiveCount " << data[1];
 			m_Font.AddText(16, 64, text.str().c_str());
 			text.str(L"");
-			text << L"VertexShaderInvocationCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_VERTEX_SHADER_INVOCATIONS];
+			text << L"VertexShaderInvocationCount " << data[2];
 			m_Font.AddText(16, 80, text.str().c_str());
 			text.str(L"");
-			text << L"GeometryShaderInvocationCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_GEOMETRY_SHADER_INVOCATIONS];
+			text << L"GeometryShaderInvocationCount " << data[3];
 			m_Font.AddText(16, 96, text.str().c_str());
 			text.str(L"");
-			text << L"GeometryShaderPrimitiveCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_GEOMETRY_SHADER_PRIMITIVES];
+			text << L"GeometryShaderPrimitiveCount " << data[4];
 			m_Font.AddText(16, 112, text.str().c_str());
 			text.str(L"");
-			text << L"ClippingInvocationCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_CLIPPING_INVOCATIONS];
+			text << L"ClippingInvocationCount " << data[5];
 			m_Font.AddText(16, 128, text.str().c_str());
 			text.str(L"");
-			text << L"ClippingPrimitiveCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_CLIPPING_PRIMITIVES];
+			text << L"ClippingPrimitiveCount " << data[6];
 			m_Font.AddText(16, 144, text.str().c_str());
 			text.str(L"");
-			text << L"FragmentShaderInvocationCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_FRAGMENT_SHADER_INVOCATIONS];
+			text << L"FragmentShaderInvocationCount " << data[7];
 			m_Font.AddText(16, 160, text.str().c_str());
 			text.str(L"");
-			text << L"TessellationControlPatchCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_TESSELLATION_CONTROL_SHADER_PATCHES];
+			text << L"TessellationControlPatchCount " << data[8];
 			m_Font.AddText(16, 176, text.str().c_str());
 			text.str(L"");
-			text << L"TessellationEvaluationShaderInvocationCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_TESSELLATION_EVALUATION_SHADER_INVOCATIONS];
+			text << L"TessellationEvaluationShaderInvocationCount " << data[9];
 			m_Font.AddText(16, 192, text.str().c_str());
 			text.str(L"");
-			text << L"ComnputeShaderInvocationCount " << data[V3D_QUERY_PIPELINE_STATISTIC_TYPE_COMPUTE_SHADER_INVOCATIONS];
+			text << L"ComnputeShaderInvocationCount " << data[10];
 			m_Font.AddText(16, 208, text.str().c_str());
 		}
 /*
@@ -1455,6 +1451,8 @@ protected:
 			}
 			m_OverlayFrameBuffers.clear();
 		}
+
+		SAFE_RELEASE(m_pFinishBarrierSet);
 
 		m_GraphicsManager.Lost();
 		m_Font.Lost();
@@ -1687,6 +1685,66 @@ protected:
 		SAFE_RELEASE(pNormalImageView);
 		SAFE_RELEASE(pColorImageView1);
 		SAFE_RELEASE(pColorImageView0);
+
+		// ----------------------------------------------------------------------------------------------------
+		// フィニッシュバリア
+		// ----------------------------------------------------------------------------------------------------
+
+		static constexpr V3DImageViewMemoryBarrier memoryBarrierOne =
+		{
+			V3D_ACCESS_SHADER_READ,
+			V3D_ACCESS_COLOR_ATTACHMENT_WRITE,
+			V3D_QUEUE_FAMILY_IGNORED,
+			V3D_QUEUE_FAMILY_IGNORED,
+			V3D_IMAGE_LAYOUT_SHADER_READ_ONLY,
+			V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT,
+			nullptr,
+		};
+
+		static V3DImageViewMemoryBarrier memoryBarriers[8] =
+		{
+			memoryBarrierOne,
+			memoryBarrierOne,
+			memoryBarrierOne,
+			memoryBarrierOne,
+			memoryBarrierOne,
+			memoryBarrierOne,
+			memoryBarrierOne,
+			memoryBarrierOne,
+		};
+
+		static uint32_t memoryBarrierCount = _countof(memoryBarriers);
+
+		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_0, &memoryBarriers[0].pImageView);
+		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_1, &memoryBarriers[1].pImageView);
+		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_0, &memoryBarriers[2].pImageView);
+		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_1, &memoryBarriers[3].pImageView);
+
+		m_pSsaoFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_SSAO_COLOR, &memoryBarriers[4].pImageView);
+		m_pShadowFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_SHADOW_BUFFER, &memoryBarriers[5].pImageView);
+
+		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_LDR_COLOR_1, &memoryBarriers[6].pImageView);
+
+		m_pBrightPassFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_BRIGHT_PASS_COLOR, &memoryBarriers[7].pImageView);
+
+		V3DPipelineBarrier pipelineBarrier{};
+
+		V3DBarrierSetDesc barrierSetDesc{};
+		barrierSetDesc.pipeline.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		barrierSetDesc.pipeline.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		barrierSetDesc.imageViewMemoryCount = memoryBarrierCount;
+		barrierSetDesc.pImageViewMemories = memoryBarriers;
+
+		V3D_RESULT result = Application::GetDevice()->CreateBarrierSet(barrierSetDesc, &m_pFinishBarrierSet, nullptr);
+		if (result != V3D_OK)
+		{
+			return false;
+		}
+
+		for (uint32_t i = 0; i < memoryBarrierCount; i++)
+		{
+			SAFE_RELEASE(memoryBarriers[i].pImageView);
+		}
 
 		// ----------------------------------------------------------------------------------------------------
 		// 並列処理用のデータを作成
@@ -2146,7 +2204,7 @@ protected:
 		std::vector<IV3DCommandBuffer*>& commandBuffers = m_DrawGeometryParallelData.commandBuffers[frame];
 
 		pCommandBuffer->BeginRenderPass(m_GeometryRenderPassHandle->GetPtr(), m_pGeometryFrameBuffer, false);
-		pCommandBuffer->ExecuteCommandBuffers(TO_UI32(commandBuffers.size()), commandBuffers.data());
+		pCommandBuffer->ExecuteCommandBuffer(TO_UI32(commandBuffers.size()), commandBuffers.data());
 
 #else //ENABLE_MULTITHREAD
 
@@ -2181,11 +2239,13 @@ protected:
 
 	void DrawIllumination(IV3DCommandBuffer* pCommandBuffer, uint32_t frame)
 	{
-		uint64_t simpleVertexOffset = 0;
-
 		// ----------------------------------------------------------------------------------------------------
 		// アンビエントオクルージョン
 		// ----------------------------------------------------------------------------------------------------
+
+		float color[4]{};
+
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Ssao", color));
 
 		pCommandBuffer->BeginRenderPass(m_SsaoRenderPassHandle->GetPtr(), m_pSsaoFrameBuffer, true);
 
@@ -2209,17 +2269,21 @@ protected:
 			pCommandBuffer->PushConstant(m_pSsaoPipelineLayout, 0, &constant);
 
 			pCommandBuffer->BindPipeline(m_SsaoPipelineHandle->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pSsaoPipelineLayout, 0, 1, &m_pSsaoDescriptorSet, 0, nullptr);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pSsaoPipelineLayout, 0, m_pSsaoDescriptorSet);
 //			pCommandBuffer->PushDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pSsaoPipelineLayout, 0, m_pSsaoDescriptorSet);
-			pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+			pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 			pCommandBuffer->Draw(4, 1, 0, 0);
 		}
 
 		pCommandBuffer->EndRenderPass();
 
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
+
 		/**********/
 		/* ブラー */
 		/**********/
+
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Ssao (Blur)", color));
 
 		// サンプリング元のサイズ
 		const V3DFrameBufferDesc& frameBufferDesc = m_pBlurFrameBuffer[0]->GetDesc();
@@ -2251,8 +2315,8 @@ protected:
 
 		pCommandBuffer->PushConstant(m_pBlurDawnSamplingPipelineLayout, 0, &samplingConstant);
 		pCommandBuffer->BindPipeline(m_BlurDawnSamplingPipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurDawnSamplingPipelineLayout, 0, 1, &m_pSsaoBlurDawnSamplingDescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurDawnSamplingPipelineLayout, 0, m_pSsaoBlurDawnSamplingDescriptorSet);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 
 		// ガウシアン
@@ -2273,25 +2337,30 @@ protected:
 
 			pCommandBuffer->PushConstant(m_pBlurGaussianPipelineLayout, 0, &constant);
 			pCommandBuffer->BindPipeline(m_BlurGaussianPipelineHandle[i]->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurGaussianPipelineLayout, 0, 1, &m_pBlurGaussianDescriptorSet[0][i], 0, nullptr);
-			pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurGaussianPipelineLayout, 0, m_pBlurGaussianDescriptorSet[0][i]);
+			pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 			pCommandBuffer->Draw(4, 1, 0, 0);
 		}
 
 		pCommandBuffer->EndRenderPass();
 
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
+
 		// ----------------------------------------------------------------------------------------------------
 		// シャドウ
 		// ----------------------------------------------------------------------------------------------------
 
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Shadow", color));
+
 		if ((m_UpdateParallelData.shadowEnable == true) && (m_DrawShadowParallelData.pDrawObjects->empty() == false))
 		{
+
 #ifdef ENABLE_MULTITHREAD
 
 			std::vector<IV3DCommandBuffer*>& commandBuffers = m_DrawShadowParallelData.commandBuffers[frame];
 
 			pCommandBuffer->BeginRenderPass(m_ShadowRenderPassHandle->GetPtr(), m_pShadowFrameBuffer, false);
-			pCommandBuffer->ExecuteCommandBuffers(TO_UI32(commandBuffers.size()), commandBuffers.data());
+			pCommandBuffer->ExecuteCommandBuffer(TO_UI32(commandBuffers.size()), commandBuffers.data());
 
 #else //ENABLE_MULTITHREAD
 
@@ -2314,9 +2383,13 @@ protected:
 			pCommandBuffer->EndRenderPass();
 		}
 
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
+
 		// ----------------------------------------------------------------------------------------------------
 		// ライティング
 		// ----------------------------------------------------------------------------------------------------
+
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Lighting", color));
 
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
@@ -2325,50 +2398,54 @@ protected:
 
 		// サブパス 0 : ディレクショナル
 		pCommandBuffer->BindPipeline(m_DirectionalLightingStage.pipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_DirectionalLightingStage.pPipelineLayout, 0, 1, &m_DirectionalLightingStage.pDescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_DirectionalLightingStage.pPipelineLayout, 0, m_DirectionalLightingStage.pDescriptorSet);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 
 		// サブパス 1 : ポイント
 		pCommandBuffer->NextSubpass();
 		pCommandBuffer->BindPipeline(m_PointLightingStage.pipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_PointLightingStage.pPipelineLayout, 0, 1, &m_PointLightingStage.pDescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_PointLightingStage.pPipelineLayout, 0, m_PointLightingStage.pDescriptorSet);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 
 		// サブパス 2 : フィニッシュ
 		pCommandBuffer->NextSubpass();
 		pCommandBuffer->BindPipeline(m_FinishLightingStage.pipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_FinishLightingStage.pPipelineLayout, 0, 1, &m_FinishLightingStage.pDescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_FinishLightingStage.pPipelineLayout, 0, 1, &m_FinishLightingStage.pDescriptorSet, 0, nullptr);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 
 		pCommandBuffer->EndRenderPass();
+
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
 
 		// ----------------------------------------------------------------------------------------------------
 		// 後処理
 		// ----------------------------------------------------------------------------------------------------
 
-		Array1<IV3DImageView*, 3> imageViews;
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Cleanup", color));
 
-		m_pSsaoFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_SSAO_COLOR, &imageViews[0]);
-		m_pShadowFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_SHADOW_BUFFER, &imageViews[1]);
-		m_pBlurFrameBuffer[0]->GetAttachment(0, &imageViews[2]);
+		// ブラーのイメージをカラーアタッチメントの書き込みアクセスへ移行
+		V3DPipelineBarrier pipelineBarrier{};
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 
-		V3DBarrierImageViewDesc barrier{};
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		barrier.srcAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		V3DImageViewMemoryBarrier memoryBarrier{};
+		memoryBarrier.srcAccessMask = V3D_ACCESS_SHADER_READ;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
 
-		pCommandBuffer->BarrierImageViews(TO_UI32(imageViews.size()), imageViews.data(), barrier);
+		m_pBlurFrameBuffer[0]->GetAttachment(0, &memoryBarrier.pImageView);
 
-		for (IV3DImageView* pImageView : imageViews)
-		{
-			SAFE_RELEASE(pImageView);
-		}
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+		SAFE_RELEASE(memoryBarrier.pImageView);
+
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
 	}
 
 	void DrawBloom(IV3DCommandBuffer* pCommandBuffer)
@@ -2387,20 +2464,28 @@ protected:
 		// ブライトパス
 		// ----------------------------------------------------------------------------------------------------
 
+		DEBUG_MARKER_CODE(float color[4]{});
+
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Brightpass", color));
+
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
 		pCommandBuffer->PushConstant(m_pBrightPassPipelineLayout, 0, &m_BrightPassConstant);
 		pCommandBuffer->BeginRenderPass(m_BrightPassRenderPassHandle->GetPtr(), m_pBrightPassFrameBuffer, true);
 		pCommandBuffer->BindPipeline(m_BrightPassPipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pBrightPassPipelineLayout, 0, 1, &m_pBrightPassDescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pBrightPassPipelineLayout, 0, m_pBrightPassDescriptorSet);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 		pCommandBuffer->EndRenderPass();
+
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
 
 		// ----------------------------------------------------------------------------------------------------
 		// ブラー
 		// ----------------------------------------------------------------------------------------------------
+
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Blur", color));
 
 		for (uint32_t i = 0; i < 2; i++)
 		{
@@ -2432,8 +2517,8 @@ protected:
 
 			pCommandBuffer->PushConstant(m_pBlurDawnSamplingPipelineLayout, 0, &samplingConstant);
 			pCommandBuffer->BindPipeline(m_BlurDawnSamplingPipelineHandle->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurDawnSamplingPipelineLayout, 0, 1, &m_pBloomBlurDawnSamplingDescriptorSet[i], 0, nullptr);
-			pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurDawnSamplingPipelineLayout, 0, m_pBloomBlurDawnSamplingDescriptorSet[i]);
+			pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 			pCommandBuffer->Draw(4, 1, 0, 0);
 
 			// ガウシアン
@@ -2454,17 +2539,21 @@ protected:
 
 				pCommandBuffer->PushConstant(m_pBlurGaussianPipelineLayout, 0, &constant);
 				pCommandBuffer->BindPipeline(m_BlurGaussianPipelineHandle[j]->GetPtr());
-				pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurGaussianPipelineLayout, 0, 1, &m_pBlurGaussianDescriptorSet[i][j], 0, nullptr);
-				pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+				pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pBlurGaussianPipelineLayout, 0, m_pBlurGaussianDescriptorSet[i][j]);
+				pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 				pCommandBuffer->Draw(4, 1, 0, 0);
 			}
 
 			pCommandBuffer->EndRenderPass();
 		}
 
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
+
 		// ----------------------------------------------------------------------------------------------------
 		// 合成
 		// ----------------------------------------------------------------------------------------------------
+
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Composite", color));
 
 		Composite2Constant comp2Constant;
 		comp2Constant.color0.Set(1.0f, 1.0f, 1.0f, 0.0f);
@@ -2476,38 +2565,56 @@ protected:
 		pCommandBuffer->PushConstant(m_pComposite2PipelineLayout, 0, &comp2Constant);
 		pCommandBuffer->BeginRenderPass(m_CompositeRenderPassHandle->GetPtr(), m_pCompositeFrameBuffer, true);
 		pCommandBuffer->BindPipeline(m_Composite2PipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pComposite2PipelineLayout, 0, 1, &m_pBloomComposite2DescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pComposite2PipelineLayout, 0, m_pBloomComposite2DescriptorSet);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 		pCommandBuffer->EndRenderPass();
+
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
 
 		// ----------------------------------------------------------------------------------------------------
 		// 後処理
 		// ----------------------------------------------------------------------------------------------------
 
-		Array1<IV3DImageView*, 3> imageViews;
+		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Cleanup", color));
 
-		m_pBrightPassFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_BRIGHT_PASS_COLOR, &imageViews[0]);
+		// ブラーのイメージをカラーアタッチメントの書き込みアクセスへ移行
+		static constexpr V3DImageViewMemoryBarrier memoryBarrierOne =
+		{
+			V3D_ACCESS_SHADER_READ,
+			V3D_ACCESS_COLOR_ATTACHMENT_WRITE,
+			V3D_QUEUE_FAMILY_IGNORED,
+			V3D_QUEUE_FAMILY_IGNORED,
+			V3D_IMAGE_LAYOUT_SHADER_READ_ONLY,
+			V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT,
+			nullptr,
+		};
+
+		static V3DImageViewMemoryBarrier memoryBarriers[2] =
+		{
+			memoryBarrierOne,
+			memoryBarrierOne,
+		};
+
+		static uint32_t memoryBarrierCount = _countof(memoryBarriers);
 
 		for (uint32_t i = 0; i < 2; i++)
 		{
-			m_pBlurFrameBuffer[i]->GetAttachment(0, &imageViews[1 + i]);
+			m_pBlurFrameBuffer[i]->GetAttachment(0, &memoryBarriers[i].pImageView);
 		}
 
-		V3DBarrierImageViewDesc barrier{};
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		barrier.srcAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		V3DPipelineBarrier pipelineBarrier{};
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
 
-		pCommandBuffer->BarrierImageViews(TO_UI32(imageViews.size()), imageViews.data(), barrier);
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrierCount, memoryBarriers);
 
-		for (IV3DImageView* pImageView : imageViews)
+		for (uint32_t i = 0; i < memoryBarrierCount; i++)
 		{
-			SAFE_RELEASE(pImageView);
+			SAFE_RELEASE(memoryBarriers[i].pImageView);
 		}
+
+		DEBUG_MARKER_CODE(pCommandBuffer->EndDebugMarker());
 	}
 
 	void DrawImageEffect(IV3DCommandBuffer* pCommandBuffer)
@@ -2536,22 +2643,18 @@ protected:
 
 	void DrawImageEffect_Copy(IV3DCommandBuffer* pCommandBuffer, uint32_t page)
 	{
-		uint64_t simpleVertexOffset = 0;
-
 		pCommandBuffer->BindPipeline(m_PeCopyPipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CopyPipelineLayout, 0, 1, &m_pImageEffectDescriptorSet[page], 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CopyPipelineLayout, 0, m_pImageEffectDescriptorSet[page]);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 	}
 
 	void DrawImageEffect_Correction(IV3DCommandBuffer* pCommandBuffer, uint32_t page)
 	{
-		uint64_t simpleVertexOffset = 0;
-
 		pCommandBuffer->PushConstant(m_pIE_CorrectionPipelineLayout, 0, &m_CorrectionConstant);
 		pCommandBuffer->BindPipeline(m_PeCorrectionPipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CorrectionPipelineLayout, 0, 1, &m_pImageEffectDescriptorSet[page], 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CorrectionPipelineLayout, 0, m_pImageEffectDescriptorSet[page]);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 	}
 
@@ -2562,22 +2665,20 @@ protected:
 		if (m_ToneMappingEnable == true)
 		{
 			pCommandBuffer->BindPipeline(m_PeToneMappingPipelineHandle->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_ToneMappingPipelineLayout, 0, 1, &m_pImageEffectDescriptorSet[page], 0, nullptr);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_ToneMappingPipelineLayout, 0, m_pImageEffectDescriptorSet[page]);
 		}
 		else
 		{
 			pCommandBuffer->BindPipeline(m_PeCopyPipelineHandle->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CopyPipelineLayout, 0, 1, &m_pImageEffectDescriptorSet[page], 0, nullptr);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CopyPipelineLayout, 0, m_pImageEffectDescriptorSet[page]);
 		}
 
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 	}
 
 	void DrawImageEffect_Fxaa(IV3DCommandBuffer* pCommandBuffer, uint32_t page)
 	{
-		uint64_t simpleVertexOffset = 0;
-
 		if (m_FxaaEnable == true)
 		{
 			float invWidth = 1.0f / TO_F32(m_DrawGeometryParallelData.viewport.rect.width);
@@ -2596,15 +2697,15 @@ protected:
 
 			pCommandBuffer->PushConstant(m_pIE_FxaaPipelineLayout, 0, &m_PeFxaaConstant);
 			pCommandBuffer->BindPipeline(m_PeFxaaPipelineHandle->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_FxaaPipelineLayout, 0, 1, &m_pImageEffectDescriptorSet[page], 0, nullptr);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_FxaaPipelineLayout, 0, m_pImageEffectDescriptorSet[page]);
 		}
 		else
 		{
 			pCommandBuffer->BindPipeline(m_PeCopyPipelineHandle->GetPtr());
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CopyPipelineLayout, 0, 1, &m_pImageEffectDescriptorSet[page], 0, nullptr);
+			pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pIE_CopyPipelineLayout, 0, m_pImageEffectDescriptorSet[page]);
 		}
 
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 	}
 
@@ -2613,7 +2714,6 @@ protected:
 		const V3DSwapChainDesc& swapChainDesc = GetSwapChain()->GetDesc();
 		uint32_t currentImageIndex = GetSwapChain()->GetCurrentImageIndex();
 		IV3DFrameBuffer* pFrameBuffer = m_OverlayFrameBuffers[currentImageIndex];
-		uint64_t simpleVertexOffset = 0;
 
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
@@ -2622,8 +2722,8 @@ protected:
 
 		// 初期化
 		pCommandBuffer->BindPipeline(m_OverlayCopyPipelineHandle->GetPtr());
-		pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pOverlayCopyPipelineLayout, 0, 1, &m_pOverlayCopyDescriptorSet, 0, nullptr);
-		pCommandBuffer->BindVertexBuffers(0, 1, &m_pSimpleVertexBuffer, &simpleVertexOffset);
+		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pOverlayCopyPipelineLayout, 0, m_pOverlayCopyDescriptorSet);
+		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
 		pCommandBuffer->Draw(4, 1, 0, 0);
 
 		// オーバーレイ
@@ -2636,28 +2736,27 @@ protected:
 		// クリーンアップ
 		// ----------------------------------------------------------------------------------------------------
 
-		Array1<IV3DImageView*, 5> imageViews;
+		pCommandBuffer->Barrier(m_pFinishBarrierSet);
 
-		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_0, &imageViews[0]);
-		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_COLOR_1, &imageViews[1]);
-		m_pImageEffectFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_IMAGE_EFFECT_LDR_COLOR_1, &imageViews[2]);
-		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_0, &imageViews[3]);
-		m_pGeometryFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_GEOMETRY_BUFFER_1, &imageViews[4]);
+		IV3DImageView* pBackBufferView;
+		pFrameBuffer->GetAttachment(GRAPHICS_ATTACHMENT_TYPE_FINISH_BACK_BUFFER, &pBackBufferView);
 
-		V3DBarrierImageViewDesc barrier{};
-		barrier.srcStageMask = V3D_PIPELINE_STAGE_FRAGMENT_SHADER;
-		barrier.dstStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		barrier.srcAccessMask = V3D_ACCESS_SHADER_READ;
-		barrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
-		barrier.srcLayout = V3D_IMAGE_LAYOUT_SHADER_READ_ONLY;
-		barrier.dstLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		V3DPipelineBarrier pipelineBarrier{};
+		pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE;
 
-		pCommandBuffer->BarrierImageViews(TO_UI32(imageViews.size()), imageViews.data(), barrier);
+		V3DImageViewMemoryBarrier memoryBarrier{};
+		memoryBarrier.srcAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;
+		memoryBarrier.dstAccessMask = V3D_ACCESS_COLOR_ATTACHMENT_WRITE;// V3D_ACCESS_MEMORY_READ;
+		memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+		memoryBarrier.srcLayout = V3D_IMAGE_LAYOUT_COLOR_ATTACHMENT;
+		memoryBarrier.dstLayout = V3D_IMAGE_LAYOUT_PRESENT_SRC;
+		memoryBarrier.pImageView = pBackBufferView;
 
-		for (IV3DImageView* pImageView : imageViews)
-		{
-			SAFE_RELEASE(pImageView);
-		}
+		pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+		SAFE_RELEASE(pBackBufferView);
 	}
 
 #ifdef ENABLE_MULTITHREAD
@@ -2846,6 +2945,7 @@ protected:
 		DrawObject* pDrawObject = &(*pDrawObjects)[first];
 		DrawObject* pDrawObjectEnd = pDrawObject + count;
 
+		IV3DPipeline* pPrePipeline = nullptr;
 		uint64_t preMaterialKey = 0;
 		uint64_t preMeshKey = 0;
 
@@ -2854,25 +2954,47 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, pViewport);
 		pCommandBuffer->SetScissor(0, 1, pScissor);
 
+		uint32_t dynOffsets[2];
+		IV3DDescriptorSet* descSets[2];
+
 		while (pDrawObject != pDrawObjectEnd)
 		{
 			const MeshSubset& meshSubset = pDrawObject->meshSubset;
 
-			if (pDrawObject->materialKey != preMaterialKey)
+			if (pDrawObject->pPipeline != pPrePipeline)
 			{
 				pCommandBuffer->BindPipeline(pDrawObject->pPipeline);
-				pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, pDrawObject->pPipelineLayout, 1, 1, &pDrawObject->pMaterialDescriptorSet, 1, &pDrawObject->materialDynamicOffset);
+				pPrePipeline = pDrawObject->pPipeline;
+			}
+
+			descSets[0] = pDrawObject->pMeshDescriptorSet;
+
+			if (pDrawObject->materialKey != preMaterialKey)
+			{
+				descSets[0] = pDrawObject->pMeshDescriptorSet;
+				descSets[1] = pDrawObject->pMaterialDescriptorSet;
+
+				dynOffsets[0] = pDrawObject->meshDynamicOffset;
+				dynOffsets[1] = pDrawObject->materialDynamicOffset;
+
+				pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, pDrawObject->pPipelineLayout, 0, 2, descSets, 2, dynOffsets);
+//				pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, pDrawObject->pPipelineLayout, 0, pDrawObject->pMeshDescriptorSet, 1, &pDrawObject->meshDynamicOffset);
+//				pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, pDrawObject->pPipelineLayout, 1, pDrawObject->pMaterialDescriptorSet, 1, &pDrawObject->materialDynamicOffset);
+
 				preMaterialKey = pDrawObject->materialKey;
+			}
+			else
+			{
+				pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, pDrawObject->pPipelineLayout, 0, pDrawObject->pMeshDescriptorSet, 1, &pDrawObject->meshDynamicOffset);
 			}
 
 			if (pDrawObject->meshKey != preMeshKey)
 			{
-				pCommandBuffer->BindVertexBuffers(0, 1, &pDrawObject->pMeshBuffer, &pDrawObject->meshVertexOffset);
+//				pCommandBuffer->BindVertexBuffers(0, 1, &pDrawObject->pMeshBuffer, &pDrawObject->meshVertexOffset);
+				pCommandBuffer->BindVertexBuffer(0, pDrawObject->pMeshBuffer, pDrawObject->meshVertexOffset);
 				pCommandBuffer->BindIndexBuffer(pDrawObject->pMeshBuffer, pDrawObject->meshIndexOffset, pDrawObject->meshIndexType);
 				preMeshKey = pDrawObject->meshKey;
 			}
-
-			pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, pDrawObject->pPipelineLayout, 0, 1, &pDrawObject->pMeshDescriptorSet, 1, &pDrawObject->meshDynamicOffset);
 
 			pCommandBuffer->DrawIndexed(meshSubset.indexCount, 1, meshSubset.firstIndex, 0, 0);
 
@@ -2957,7 +3079,7 @@ private:
 
 	IV3DQueryPool* m_pQueryPool = nullptr;
 	bool m_bQueryActive = false;
-	bool m_bQueryEnable = true;
+	bool m_bQueryEnable = false;
 
 	/****************/
 	/* ブライトパス */
@@ -3105,6 +3227,8 @@ private:
 	GraphicsPipelineHandle m_OverlayCopyPipelineHandle = nullptr;
 	IV3DPipelineLayout* m_pOverlayCopyPipelineLayout = nullptr;
 	IV3DDescriptorSet* m_pOverlayCopyDescriptorSet = nullptr;
+
+	IV3DBarrierSet* m_pFinishBarrierSet = nullptr;
 
 	void BeginParallelCommandBuffer(const DrawParallelData* pData)
 	{

@@ -38,7 +38,7 @@ void StaticMesh::SetWorldMatrix(const Matrix4x4& worldMatrix)
 
 void StaticMesh::BindVertexIndexBuffer(IV3DCommandBuffer* pCommandBuffer)
 {
-	pCommandBuffer->BindVertexBuffers(0, 1, &m_pBuffer, &m_VertexOffset);
+	pCommandBuffer->BindVertexBuffer(0, m_pBuffer, m_VertexOffset);
 	pCommandBuffer->BindIndexBuffer(m_pBuffer, m_IndexOffset, m_IndexType);
 }
 
@@ -46,7 +46,7 @@ void StaticMesh::BindDescriptorSet(IV3DCommandBuffer* pCommandBuffer)
 {
 	uint32_t dynamicOffset = m_UniformDynamicOffsetHandle.GetOffset();
 
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 1, &dynamicOffset);
+	pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet, 1, &dynamicOffset);
 }
 
 uint32_t StaticMesh::GetSubsetCount() const
@@ -63,9 +63,9 @@ void StaticMesh::Draw(IV3DCommandBuffer* pCommandBuffer)
 {
 	uint32_t dynamicOffset = m_UniformDynamicOffsetHandle.GetOffset();
 
-	pCommandBuffer->BindVertexBuffers(0, 1, &m_pBuffer, &m_VertexOffset);
+	pCommandBuffer->BindVertexBuffer(0, m_pBuffer, m_VertexOffset);
 	pCommandBuffer->BindIndexBuffer(m_pBuffer, m_IndexOffset, m_IndexType);
-	pCommandBuffer->BindDescriptorSets(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, 1, &m_pDescriptorSet, 1, &dynamicOffset);
+	pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pPipelineLayout, 0, m_pDescriptorSet, 1, &dynamicOffset);
 
 	const MeshSubset* pSubset = m_Subsets.data();
 	const MeshSubset* pSubsetEnd = pSubset + m_Subsets.size();

@@ -1040,37 +1040,43 @@ bool Mesh::DownloadVertexIndexBuffer(IV3DBuffer* pSrcBuffer, IV3DBuffer** ppDstB
 		return false;
 	}
 
-	V3DBarrierBufferDesc barrier{};
-	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-	barrier.offset = 0;
-	barrier.size = bufferDesc.size;
+	V3DPipelineBarrier pipelineBarrier{};
 
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-	barrier.srcAccessMask = V3D_ACCESS_VERTEX_READ | V3D_ACCESS_INDEX_READ;
-	barrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
-	pCommandBuffer->BarrierBuffer(pSrcBuffer, barrier);
+	V3DBufferMemoryBarrier memoryBarrier{};
+	memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.offset = 0;
+	memoryBarrier.size = bufferDesc.size;
 
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-	barrier.srcAccessMask = V3D_ACCESS_VERTEX_READ | V3D_ACCESS_INDEX_READ;
-	barrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	pCommandBuffer->BarrierBuffer(pBuffer, barrier);
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+	memoryBarrier.srcAccessMask = V3D_ACCESS_VERTEX_READ | V3D_ACCESS_INDEX_READ;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_READ;
+	memoryBarrier.pBuffer = pSrcBuffer;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
+
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+	memoryBarrier.srcAccessMask = V3D_ACCESS_VERTEX_READ | V3D_ACCESS_INDEX_READ;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.pBuffer = pBuffer;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	pCommandBuffer->CopyBuffer(pBuffer, 0, pSrcBuffer, 0, bufferDesc.size);
 
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_HOST;
-	barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	barrier.dstAccessMask = V3D_ACCESS_HOST_READ;
-	pCommandBuffer->BarrierBuffer(pBuffer, barrier);
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_HOST;
+	memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_HOST_READ;
+	memoryBarrier.pBuffer = pBuffer;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-	barrier.srcAccessMask = V3D_ACCESS_TRANSFER_READ;
-	barrier.dstAccessMask = V3D_ACCESS_VERTEX_READ | V3D_ACCESS_INDEX_READ;
-	pCommandBuffer->BarrierBuffer(pSrcBuffer, barrier);
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TRANSFER;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+	memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_READ;
+	memoryBarrier.dstAccessMask = V3D_ACCESS_VERTEX_READ | V3D_ACCESS_INDEX_READ;
+	memoryBarrier.pBuffer = pSrcBuffer;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	if (m_pGraphicsManager->FlushCommandBuffer() == false)
 	{
@@ -1215,25 +1221,28 @@ bool Mesh::UploadVertexIndexBuffer(uint64_t verticesSize, const void* pVertices,
 	copyBufferRanges[1].size = tempBufferSubresources[1].size;
 	pCommandBuffer->CopyBuffer(*ppDstBuffer, pTempBuffer, TO_UI32(copyBufferRanges.size()), copyBufferRanges.data());
 
-	V3DBarrierBufferDesc barrier;
-	barrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
-	barrier.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
-	barrier.dependencyFlags = 0;
-	barrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
-	barrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	V3DPipelineBarrier pipelineBarrier{};
+	pipelineBarrier.srcStageMask = V3D_PIPELINE_STAGE_TOP_OF_PIPE;
+	pipelineBarrier.dstStageMask = V3D_PIPELINE_STAGE_VERTEX_INPUT;
+
+	V3DBufferMemoryBarrier memoryBarrier{};
+	memoryBarrier.srcAccessMask = V3D_ACCESS_TRANSFER_WRITE;
+	memoryBarrier.srcQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.dstQueueFamily = V3D_QUEUE_FAMILY_IGNORED;
 
 	// バーテックスのバリア
-	barrier.dstAccessMask = V3D_ACCESS_VERTEX_READ;
-	barrier.offset = bufferMemoryLayouts[0].offset;
-	barrier.size = bufferMemoryLayouts[0].stride;
-	pCommandBuffer->BarrierBuffer(*ppDstBuffer, barrier);
+	memoryBarrier.dstAccessMask = V3D_ACCESS_VERTEX_READ;
+	memoryBarrier.pBuffer = *ppDstBuffer;
+	memoryBarrier.offset = bufferMemoryLayouts[0].offset;
+	memoryBarrier.size = bufferMemoryLayouts[0].stride;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	// インデックスのバリア
-	barrier.dstAccessMask = V3D_ACCESS_INDEX_READ;
-	barrier.offset = bufferMemoryLayouts[1].offset;
-	barrier.size = bufferMemoryLayouts[1].stride;
-	pCommandBuffer->BarrierBuffer(*ppDstBuffer, barrier);
+	memoryBarrier.dstAccessMask = V3D_ACCESS_INDEX_READ;
+	memoryBarrier.pBuffer = *ppDstBuffer;
+	memoryBarrier.offset = bufferMemoryLayouts[1].offset;
+	memoryBarrier.size = bufferMemoryLayouts[1].stride;
+	pCommandBuffer->Barrier(pipelineBarrier, memoryBarrier);
 
 	if (m_pGraphicsManager->FlushCommandBuffer() == false)
 	{
