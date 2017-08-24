@@ -4045,39 +4045,6 @@ public:
 		const V3DSize2D& size ) = 0;
 
 	//! @brief レンダーパスを開始します。
-	//! @param[in] pRenderPass レンダーパスです。
-	//! @param[in] pFrameBuffer 指定したレンダーパスに対応するフレームバッファーです。
-	//! @param[in] subpassContentInline サブパスのコマンドの記録方法です。
-	//! - サブパスのコマンドをこのコマンドバッファーに記録する場合は true を指定します。<br>
-	//! またサブパスのコマンドをセカンダリコマンドバッファーで記録して、このコマンドバッファーで実行する場合は false を指定してください。
-	//! @param[in] pRenderArea レンダリング領域です。
-	//! - レンダリング領域は、アタッチメントの範囲 ( width height ) を超えて指定してはいけません。<br>
-	//! また nullptr を指定した場合は、アタッチメント全体をレンダリング領域とします。
-	//! @remarks
-	//! <table class="cmdbuff">
-	//!   <tr><th>サポートするコマンドバッファー</th><th>レンダーパス内での使用</th><th>パイプラインステージの制限</th><th>サポートするキュー</th></tr>
-	//!   <tr>
-	//!     <td> ::V3D_COMMAND_BUFFER_TYPE_PRIMARY </td>
-	//!     <td> 無効 </td>
-	//!     <td>
-	//!       ::V3D_PIPELINE_STAGE_TOP_OF_PIPE <br>
-	//!       ::V3D_PIPELINE_STAGE_VERTEX_INPUT <br>
-	//!       ::V3D_PIPELINE_STAGE_VERTEX_SHADER <br>
-	//!       ::V3D_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER <br>
-	//!       ::V3D_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER <br>
-	//!       ::V3D_PIPELINE_STAGE_GEOMETRY_SHADER <br>
-	//!       ::V3D_PIPELINE_STAGE_FRAGMENT_SHADER <br>
-	//!       ::V3D_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS <br>
-	//!       ::V3D_PIPELINE_STAGE_LATE_FRAGMENT_TESTS <br>
-	//!       ::V3D_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT <br>
-	//!       ::V3D_PIPELINE_STAGE_BOTTOM_OF_PIPE <br>
-	//!     </td>
-	//!     <td> ::V3D_QUEUE_GRAPHICS </td>
-	//!   </tr>
-	//! </table>
-	virtual void BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea = nullptr) = 0;
-
-	//! @brief レンダーパスを開始します。
 	//! @param[in] pFrameBuffer フレームバッファーです。
 	//! @param[in] subpassContentInline サブパスのコマンドの記録方法です。
 	//! - サブパスのコマンドをこのコマンドバッファーに記録する場合は true を指定します。<br>

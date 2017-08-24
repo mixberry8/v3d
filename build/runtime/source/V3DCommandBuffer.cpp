@@ -1695,54 +1695,6 @@ void V3DCommandBuffer::ResolveImageView(IV3DImageView* pDstImageView, V3D_IMAGE_
 		resolveCount, m_Temp.imageResolves.data());
 }
 
-void V3DCommandBuffer::BeginRenderPass(IV3DRenderPass* pRenderPass, IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea)
-{
-#ifdef V3D_DEBUG
-	if (Debug_Command_FirstCheck() == false)
-	{
-		return;
-	}
-
-	if ((pRenderPass == nullptr) || (pFrameBuffer == nullptr))
-	{
-		V3D_LOG_S_PRINT_ERROR(Log_IV3DCommandBuffer_BeginRenderPass << V3D_LOG_S_DEBUG_NAME(m_DebugName.c_str()) << Log_Error_InvalidArgument << V3D_LOG_S_PTR(pRenderPass) << V3D_LOG_S_PTR(pFrameBuffer));
-		return;
-	}
-#endif //V3D_DEBUG
-
-	V3DRenderPass* pInternalRenderPass = static_cast<V3DRenderPass*>(pRenderPass);
-	const V3DRenderPass::Source& renserPassSource = pInternalRenderPass->GetSource();
-
-	V3DFrameBuffer* pInternalFrameBuffer = static_cast<V3DFrameBuffer*>(pFrameBuffer);
-	const V3DFrameBuffer::Source& frameBufferSource = pInternalFrameBuffer->GetSource();
-
-	VkRenderPassBeginInfo info;
-	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	info.pNext = nullptr;
-	info.renderPass = renserPassSource.renderPass;
-	info.framebuffer = frameBufferSource.framebuffer;
-
-	if (pRenderArea != nullptr)
-	{
-		info.renderArea.offset.x = pRenderArea->x;
-		info.renderArea.offset.y = pRenderArea->y;
-		info.renderArea.extent.width = pRenderArea->width;
-		info.renderArea.extent.height = pRenderArea->height;
-	}
-	else
-	{
-		info.renderArea.offset.x = 0;
-		info.renderArea.offset.y = 0;
-		info.renderArea.extent = frameBufferSource.extent;
-	}
-
-	info.clearValueCount = renserPassSource.clearValueCount;
-	info.pClearValues = renserPassSource.pClearValues;
-
-	vkCmdBeginRenderPass(m_Source.commandBuffer, &info, (subpassContentInline == true)? VK_SUBPASS_CONTENTS_INLINE : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-}
-
-
 void V3DCommandBuffer::BeginRenderPass(IV3DFrameBuffer* pFrameBuffer, bool subpassContentInline, const V3DRectangle2D* pRenderArea)
 {
 #ifdef V3D_DEBUG

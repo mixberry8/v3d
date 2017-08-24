@@ -2203,7 +2203,7 @@ protected:
 		uint32_t frame = GetSwapChain()->GetCurrentImageIndex();
 		std::vector<IV3DCommandBuffer*>& commandBuffers = m_DrawGeometryParallelData.commandBuffers[frame];
 
-		pCommandBuffer->BeginRenderPass(m_GeometryRenderPassHandle->GetPtr(), m_pGeometryFrameBuffer, false);
+		pCommandBuffer->BeginRenderPass(m_pGeometryFrameBuffer, false);
 		pCommandBuffer->ExecuteCommandBuffer(TO_UI32(commandBuffers.size()), commandBuffers.data());
 
 #else //ENABLE_MULTITHREAD
@@ -2230,7 +2230,7 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
-		pCommandBuffer->BeginRenderPass(m_DistantViewRenderPassHandle->GetPtr(), m_pDistantViewFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(m_pDistantViewFrameBuffer, true);
 
 		m_SkyDome.Draw(pCommandBuffer);
 
@@ -2247,7 +2247,7 @@ protected:
 
 		DEBUG_MARKER_CODE(pCommandBuffer->BeginDebugMarker("Ssao", color));
 
-		pCommandBuffer->BeginRenderPass(m_SsaoRenderPassHandle->GetPtr(), m_pSsaoFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(m_pSsaoFrameBuffer, true);
 
 		if (m_SsaoEnable == true)
 		{
@@ -2311,7 +2311,7 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, &viewport);
 		pCommandBuffer->SetScissor(0, 1, &viewport.rect);
 
-		pCommandBuffer->BeginRenderPass(m_BlurRenderPassHandle->GetPtr(), m_pBlurFrameBuffer[0], true);
+		pCommandBuffer->BeginRenderPass(m_pBlurFrameBuffer[0], true);
 
 		pCommandBuffer->PushConstant(m_pBlurDawnSamplingPipelineLayout, 0, &samplingConstant);
 		pCommandBuffer->BindPipeline(m_BlurDawnSamplingPipelineHandle->GetPtr());
@@ -2359,7 +2359,7 @@ protected:
 
 			std::vector<IV3DCommandBuffer*>& commandBuffers = m_DrawShadowParallelData.commandBuffers[frame];
 
-			pCommandBuffer->BeginRenderPass(m_ShadowRenderPassHandle->GetPtr(), m_pShadowFrameBuffer, false);
+			pCommandBuffer->BeginRenderPass(m_pShadowFrameBuffer, false);
 			pCommandBuffer->ExecuteCommandBuffer(TO_UI32(commandBuffers.size()), commandBuffers.data());
 
 #else //ENABLE_MULTITHREAD
@@ -2379,7 +2379,7 @@ protected:
 		}
 		else
 		{
-			pCommandBuffer->BeginRenderPass(m_ShadowRenderPassHandle->GetPtr(), m_pShadowFrameBuffer, true);
+			pCommandBuffer->BeginRenderPass(m_pShadowFrameBuffer, true);
 			pCommandBuffer->EndRenderPass();
 		}
 
@@ -2394,7 +2394,7 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
-		pCommandBuffer->BeginRenderPass(m_LightingRenderPassHandle->GetPtr(), m_pLightingFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(m_pLightingFrameBuffer, true);
 
 		// サブパス 0 : ディレクショナル
 		pCommandBuffer->BindPipeline(m_DirectionalLightingStage.pipelineHandle->GetPtr());
@@ -2472,7 +2472,7 @@ protected:
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
 		pCommandBuffer->PushConstant(m_pBrightPassPipelineLayout, 0, &m_BrightPassConstant);
-		pCommandBuffer->BeginRenderPass(m_BrightPassRenderPassHandle->GetPtr(), m_pBrightPassFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(m_pBrightPassFrameBuffer, true);
 		pCommandBuffer->BindPipeline(m_BrightPassPipelineHandle->GetPtr());
 		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pBrightPassPipelineLayout, 0, m_pBrightPassDescriptorSet);
 		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
@@ -2489,7 +2489,7 @@ protected:
 
 		for (uint32_t i = 0; i < 2; i++)
 		{
-			pCommandBuffer->BeginRenderPass(m_BlurRenderPassHandle->GetPtr(), m_pBlurFrameBuffer[i], true);
+			pCommandBuffer->BeginRenderPass(m_pBlurFrameBuffer[i], true);
 
 			const V3DFrameBufferDesc& frameBufferDesc = m_pBlurFrameBuffer[i]->GetDesc();
 			uint32_t dstWidth = frameBufferDesc.attachmentWidth;
@@ -2563,7 +2563,7 @@ protected:
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
 		pCommandBuffer->PushConstant(m_pComposite2PipelineLayout, 0, &comp2Constant);
-		pCommandBuffer->BeginRenderPass(m_CompositeRenderPassHandle->GetPtr(), m_pCompositeFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(m_pCompositeFrameBuffer, true);
 		pCommandBuffer->BindPipeline(m_Composite2PipelineHandle->GetPtr());
 		pCommandBuffer->BindDescriptorSet(V3D_PIPELINE_TYPE_GRAPHICS, m_pComposite2PipelineLayout, 0, m_pBloomComposite2DescriptorSet);
 		pCommandBuffer->BindVertexBuffer(0, m_pSimpleVertexBuffer);
@@ -2625,7 +2625,7 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
-		pCommandBuffer->BeginRenderPass(m_ImageEffectRenderPassHandle->GetPtr(), m_pImageEffectFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(m_pImageEffectFrameBuffer, true);
 
 		// 補正 ( ガンマ、コントラスト )
 		DrawImageEffect_Correction(pCommandBuffer, page++);
@@ -2718,7 +2718,7 @@ protected:
 		pCommandBuffer->SetViewport(0, 1, &m_DrawGeometryParallelData.viewport);
 		pCommandBuffer->SetScissor(0, 1, &m_DrawGeometryParallelData.scissor);
 
-		pCommandBuffer->BeginRenderPass(m_OverlayRenderPassHandle->GetPtr(), pFrameBuffer, true);
+		pCommandBuffer->BeginRenderPass(pFrameBuffer, true);
 
 		// 初期化
 		pCommandBuffer->BindPipeline(m_OverlayCopyPipelineHandle->GetPtr());
