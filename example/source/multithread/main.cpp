@@ -384,7 +384,7 @@ protected:
 
 		// レンダーパスを開始
 		// 第三引数はサブパスのコマンドがセカンダリコマンドバッファーに記録されるので false を指定します。
-		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, false);
+		pCommandBufer->BeginRenderPass(pFrameBuffer, false);
 
 		pCommandBufer->ExecuteCommandBuffer(m_ParallelManager.GetThreadCount(), m_ParallelData.commandBuffers[m_ParallelData.frame].data());
 

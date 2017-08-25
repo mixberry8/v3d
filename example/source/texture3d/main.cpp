@@ -272,7 +272,7 @@ protected:
 			return false;
 		}
 
-		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
+		pCommandBufer->BeginRenderPass(pFrameBuffer, true);
 
 		V3DViewport viewport{};
 		viewport.rect.width = swapChainDesc.imageWidth;

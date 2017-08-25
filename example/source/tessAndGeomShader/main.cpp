@@ -455,7 +455,7 @@ protected:
 		}
 
 		// レンダーパスを開始
-		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
+		pCommandBufer->BeginRenderPass(pFrameBuffer, true);
 
 		// サブパス 0 - メッシュの描画
 		V3DViewport viewport{};

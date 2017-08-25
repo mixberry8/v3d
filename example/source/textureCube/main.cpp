@@ -271,7 +271,7 @@ protected:
 			return false;
 		}
 
-		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
+		pCommandBufer->BeginRenderPass(pFrameBuffer, true);
 
 		const V3DSwapChainDesc& swapChainDesc = GetSwapChain()->GetDesc();
 

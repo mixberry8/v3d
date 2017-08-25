@@ -377,7 +377,7 @@ protected:
 		/* レンダーパス - メッシュの描画 */
 		/*********************************/
 
-		pCommandBufer->BeginRenderPass(m_pRenderPass, pFrameBuffer, true);
+		pCommandBufer->BeginRenderPass(pFrameBuffer, true);
 
 		V3DViewport viewport{};
 		viewport.rect.width = swapChainDesc.imageWidth;
@@ -460,7 +460,7 @@ protected:
 		/* レンダーパス - テキストの描画 */
 		/*********************************/
 
-		pCommandBufer->BeginRenderPass(m_pTextRenderPass, pTextFrameBuffer, true);
+		pCommandBufer->BeginRenderPass(pTextFrameBuffer, true);
 
 		m_Font.Flush(pCommandBufer);
 
