@@ -25,8 +25,8 @@ Copyright (c) 2017 mixberry<br>
 
 @section prepare_section 準備
 v3d を使用するためには以下のものがインストールされている必要があります。<br>
-- Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio Community 2015 Update 3
-- Vulkan SDK 1.0.51.0
+- Microsoft Visual Studio 2015 Update 3 または Microsoft Visual Studio 2017
+- Vulkan SDK 1.0.57.0
 
 @section structure_section 構成
 - bin
